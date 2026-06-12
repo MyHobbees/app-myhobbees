@@ -1,0 +1,7 @@
+{
+  "files.eol": "\n",
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true,
+  "python.analysis.extraPaths": ["./code/packages"],
+  "python.analysis.typeCheckingMode": "off"
+}
