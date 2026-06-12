@@ -31,9 +31,10 @@ jobs:
       - name: Run Terraform
         run: python3.14 infrastructure/scripts/terraform.py fronts stg
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+          AWS__TFSTATE_BUCKET: ${{ secrets.AWS__TFSTATE_BUCKET }}
+          AWS__TFSTATE_REGION: ${{ secrets.AWS__TFSTATE_REGION }}
+          TF_STG__AWS_ACCESS_KEY: ${{ secrets.TF_STG__AWS_ACCESS_KEY }}
+          TF_STG__AWS_SECRET_KEY: ${{ secrets.TF_STG__AWS_SECRET_KEY }}
 
   ##############################################
   # DEPLOY - STG (branch: dev)
@@ -55,9 +56,8 @@ jobs:
       - name: Deploy
         run: python3.14 infrastructure/scripts/deploy.folder.py assets stg
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+          TF_STG__AWS_ACCESS_KEY: ${{ secrets.TF_STG__AWS_ACCESS_KEY }}
+          TF_STG__AWS_SECRET_KEY: ${{ secrets.TF_STG__AWS_SECRET_KEY }}
 
   ##############################################
   # TERRAFORM - PRD (branch: main)
@@ -80,9 +80,10 @@ jobs:
       - name: Run Terraform
         run: python3.14 infrastructure/scripts/terraform.py fronts prd
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+          AWS__TFSTATE_BUCKET: ${{ secrets.AWS__TFSTATE_BUCKET }}
+          AWS__TFSTATE_REGION: ${{ secrets.AWS__TFSTATE_REGION }}
+          TF_PRD__AWS_ACCESS_KEY: ${{ secrets.TF_PRD__AWS_ACCESS_KEY }}
+          TF_PRD__AWS_SECRET_KEY: ${{ secrets.TF_PRD__AWS_SECRET_KEY }}
 
   ##############################################
   # DEPLOY - PRD (branch: main)
@@ -104,6 +105,5 @@ jobs:
       - name: Deploy
         run: python3.14 infrastructure/scripts/deploy.folder.py assets prd
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+          TF_PRD__AWS_ACCESS_KEY: ${{ secrets.TF_PRD__AWS_ACCESS_KEY }}
+          TF_PRD__AWS_SECRET_KEY: ${{ secrets.TF_PRD__AWS_SECRET_KEY }}
