@@ -3,8 +3,11 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - dev
       - main
+      - dev
+  pull_request:
+    branches:
+      - "**"
 
 jobs:
   ##############################################
@@ -13,7 +16,7 @@ jobs:
   terraform-fronts-stg:
     name: Terraform Fronts (stg)
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/dev'
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -38,7 +41,7 @@ jobs:
   deploy-assets-stg:
     name: Deploy Assets (stg)
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/dev'
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -62,7 +65,7 @@ jobs:
   terraform-fronts-prd:
     name: Terraform Fronts (prd)
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -87,7 +90,7 @@ jobs:
   deploy-assets-prd:
     name: Deploy Assets (prd)
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
