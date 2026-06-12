@@ -1,0 +1,16 @@
+/*
+
+!.gitignore
+!README.md
+!docker-compose.yml
+!Dockerfile
+!Dockerfile.*
+
+!.vscode/
+!code/
+!environments/
+!infrastructure/
+!.github/
+
+.DS_Store
+**/.DS_Store
