@@ -29,3 +29,7 @@ variable "asset_endpoint" {
 variable "back_office_endpoint" {
   default = "https://d2w680tajopann.cloudfront.net"
 }
+
+variable "app_endpoint" {
+  default = "https://d1r0g3y5j3csmo.cloudfront.net"
+}
