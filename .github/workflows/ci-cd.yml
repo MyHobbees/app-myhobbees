@@ -74,7 +74,7 @@ jobs:
       - name: Install dependencies
         run: pip install boto3
       - name: Deploy
-        run: python3.14 infrastructure/scripts/deploy.folder.py back-office stg
+        run: python3.14 infrastructure/scripts/deploy.folder.py www-back-office stg
         env:
           TF_STG__AWS_ACCESS_KEY: ${{ secrets.TF_STG__AWS_ACCESS_KEY }}
           TF_STG__AWS_SECRET_KEY: ${{ secrets.TF_STG__AWS_SECRET_KEY }}
@@ -143,7 +143,7 @@ jobs:
       - name: Install dependencies
         run: pip install boto3
       - name: Deploy
-        run: python3.14 infrastructure/scripts/deploy.folder.py back-office prd
+        run: python3.14 infrastructure/scripts/deploy.folder.py www-back-office prd
         env:
           TF_PRD__AWS_ACCESS_KEY: ${{ secrets.TF_PRD__AWS_ACCESS_KEY }}
           TF_PRD__AWS_SECRET_KEY: ${{ secrets.TF_PRD__AWS_SECRET_KEY }}
