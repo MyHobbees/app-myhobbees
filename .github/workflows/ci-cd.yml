@@ -59,6 +59,26 @@ jobs:
           TF_STG__AWS_ACCESS_KEY: ${{ secrets.TF_STG__AWS_ACCESS_KEY }}
           TF_STG__AWS_SECRET_KEY: ${{ secrets.TF_STG__AWS_SECRET_KEY }}
 
+  deploy-back-office-stg:
+    name: Deploy Back Office (stg)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "26"
+      - name: Install dependencies
+        run: pip install boto3
+      - name: Deploy
+        run: python3.14 infrastructure/scripts/deploy.folder.py back-office stg
+        env:
+          TF_STG__AWS_ACCESS_KEY: ${{ secrets.TF_STG__AWS_ACCESS_KEY }}
+          TF_STG__AWS_SECRET_KEY: ${{ secrets.TF_STG__AWS_SECRET_KEY }}
+
   ##############################################
   # TERRAFORM - PRD (branch: main)
   ##############################################
@@ -104,6 +124,26 @@ jobs:
         run: pip install boto3
       - name: Deploy
         run: python3.14 infrastructure/scripts/deploy.folder.py assets prd
+        env:
+          TF_PRD__AWS_ACCESS_KEY: ${{ secrets.TF_PRD__AWS_ACCESS_KEY }}
+          TF_PRD__AWS_SECRET_KEY: ${{ secrets.TF_PRD__AWS_SECRET_KEY }}
+
+  deploy-back-office-prd:
+    name: Deploy Back Office (prd)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "26"
+      - name: Install dependencies
+        run: pip install boto3
+      - name: Deploy
+        run: python3.14 infrastructure/scripts/deploy.folder.py back-office prd
         env:
           TF_PRD__AWS_ACCESS_KEY: ${{ secrets.TF_PRD__AWS_ACCESS_KEY }}
           TF_PRD__AWS_SECRET_KEY: ${{ secrets.TF_PRD__AWS_SECRET_KEY }}

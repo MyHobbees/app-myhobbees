@@ -25,3 +25,7 @@ variable "cdn_price_class" {
 variable "asset_endpoint" {
   default = "https://d21jy08alsmk2z.cloudfront.net"
 }
+
+variable "back_office_endpoint" {
+  default = "https://d2w680tajopann.cloudfront.net"
+}
