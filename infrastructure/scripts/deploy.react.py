@@ -147,4 +147,4 @@ clear_s3(bucket_name)
 upload_to_s3(bucket_name, dist_path)
 
 # Clear CDN cache
-clear_cache_cdn(config[f"{bucket_suffix.upper()}_CDN_ID"])
+clear_cache_cdn(config[f"{bucket_suffix.upper().replace('-', '_')}_CDN_ID"])
