@@ -39,8 +39,6 @@ export async function loader({params, context}: Route.LoaderArgs) {
   const discountApplications = order.discountApplications.nodes;
 
   // Get fulfillment status from first fulfillment node
-  const fulfillmentStatus = order.fulfillments.nodes[0]?.status ?? 'N/A';
-
   // Get first discount value with proper type checking
   const firstDiscount = discountApplications[0]?.value;
 
@@ -69,7 +67,6 @@ export async function loader({params, context}: Route.LoaderArgs) {
     lineItems,
     discountValue,
     discountPercentage,
-    fulfillmentStatus,
   };
 }
 
@@ -79,12 +76,16 @@ export default function OrderRoute() {
     lineItems,
     discountValue,
     discountPercentage,
-    fulfillmentStatus,
   } = useLoaderData<typeof loader>();
   return (
     <div className="account-order">
       <h2>Commande {order.name}</h2>
-      <p>Passée le {new Date(order.processedAt!).toLocaleDateString('fr-FR')}</p>
+      <p>
+        Passée le{' '}
+        {order.processedAt
+          ? new Date(order.processedAt).toLocaleDateString('fr-FR')
+          : 'date indisponible'}
+      </p>
       {order.confirmationNumber && (
         <p>Confirmation : {order.confirmationNumber}</p>
       )}
@@ -112,9 +113,6 @@ export default function OrderRoute() {
                 <th scope="row" colSpan={3}>
                   <p>Réductions</p>
                 </th>
-                <th scope="row">
-                  <p>Réductions</p>
-                </th>
                 <td>
                   {discountPercentage ? (
                     <span>-{discountPercentage} %</span>
@@ -128,30 +126,21 @@ export default function OrderRoute() {
               <th scope="row" colSpan={3}>
                 <p>Sous-total</p>
               </th>
-              <th scope="row">
-                <p>Sous-total</p>
-              </th>
               <td>
-                <Money data={order.subtotal!} />
+                {order.subtotal ? <Money data={order.subtotal} /> : '—'}
               </td>
             </tr>
             <tr>
               <th scope="row" colSpan={3}>
                 Taxes
               </th>
-              <th scope="row">
-                <p>Taxes</p>
-              </th>
               <td>
-                <Money data={order.totalTax!} />
+                {order.totalTax ? <Money data={order.totalTax} /> : '—'}
               </td>
             </tr>
             <tr>
               <th scope="row" colSpan={3}>
                 Total
-              </th>
-              <th scope="row">
-                <p>Total</p>
               </th>
               <td>
                 <Money data={order.totalPrice!} />
@@ -179,9 +168,7 @@ export default function OrderRoute() {
             <p>Aucune adresse de livraison définie.</p>
           )}
           <h3>Statut</h3>
-          <div>
-            <p>{fulfillmentStatus}</p>
-          </div>
+          <p>{getFulfillmentStatusLabel(order.fulfillmentStatus)}</p>
         </div>
       </div>
       <br />
@@ -192,6 +179,25 @@ export default function OrderRoute() {
       </p>
     </div>
   );
+}
+
+const FULFILLMENT_STATUS_LABELS: Record<string, string> = {
+  FULFILLED: 'Traitée',
+  IN_PROGRESS: 'En cours',
+  ON_HOLD: 'En attente',
+  OPEN: 'Non traitée',
+  PARTIALLY_FULFILLED: 'Partiellement traitée',
+  PENDING_FULFILLMENT: 'Traitement en attente',
+  READY_FOR_DELIVERY: 'Prête à être livrée',
+  READY_FOR_PICKUP: 'Prête à être récupérée',
+  RESTOCKED: 'Remise en stock',
+  SCHEDULED: 'Planifiée',
+  UNFULFILLED: 'Non traitée',
+};
+
+function getFulfillmentStatusLabel(status?: string | null) {
+  if (!status) return 'Non renseigné';
+  return FULFILLMENT_STATUS_LABELS[status] ?? status;
 }
 
 function OrderLineRow({lineItem}: {lineItem: OrderLineItemFullFragment}) {
@@ -211,11 +217,11 @@ function OrderLineRow({lineItem}: {lineItem: OrderLineItemFullFragment}) {
         </div>
       </td>
       <td>
-        <Money data={lineItem.price!} />
+        {lineItem.price ? <Money data={lineItem.price} /> : '—'}
       </td>
       <td>{lineItem.quantity}</td>
       <td>
-        <Money data={lineItem.totalDiscount!} />
+        {lineItem.totalPrice ? <Money data={lineItem.totalPrice} /> : '—'}
       </td>
     </tr>
   );
