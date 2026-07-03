@@ -2,6 +2,7 @@ import {Suspense} from 'react';
 import {Await, NavLink} from 'react-router';
 import type {FooterQuery, HeaderQuery} from 'storefrontapi.generated';
 import {getMenuItemUrl} from '~/lib/menu';
+import {shouldUseFallbackMenu} from '~/lib/storefront';
 
 interface FooterProps {
   footer: Promise<FooterQuery | null>;
@@ -96,7 +97,13 @@ function FooterMenu({
   primaryDomainUrl: FooterProps['header']['shop']['primaryDomain']['url'];
   publicStoreDomain: string;
 }) {
-  const items = menu?.items.length ? menu.items : FALLBACK_FOOTER_MENU.items;
+  const useFallbackMenu = shouldUseFallbackMenu(
+    publicStoreDomain,
+    menu?.items.length ?? 0,
+  );
+  const items = useFallbackMenu
+    ? FALLBACK_FOOTER_MENU.items
+    : (menu?.items ?? FALLBACK_FOOTER_MENU.items);
 
   return (
     <nav className="footer-menu" aria-label="Informations légales">

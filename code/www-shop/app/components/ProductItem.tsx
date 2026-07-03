@@ -11,6 +11,7 @@ export function ProductItem({
   product,
   loading,
   featured = false,
+  demo = false,
 }: {
   product:
     | CollectionItemFragment
@@ -18,6 +19,7 @@ export function ProductItem({
     | RecommendedProductFragment;
   loading?: 'eager' | 'lazy';
   featured?: boolean;
+  demo?: boolean;
 }) {
   const variantUrl = useVariantUrl(product.handle);
   const image = product.featuredImage;
@@ -46,14 +48,18 @@ export function ProductItem({
         )}
       </div>
       <div className="product-item-content">
-        {featured ? <span className="product-badge">Box du mois</span> : null}
+        {demo ? (
+          <span className="product-badge">Produit de démonstration</span>
+        ) : null}
         <h3>{product.title}</h3>
         <p className="product-item-price">
           <Money data={product.priceRange.minVariantPrice} />
         </p>
         {featured ? (
           <span className="button button-primary product-item-cta">
-            Découvrir cette box
+            {demo
+              ? 'Voir le produit de démonstration'
+              : 'Découvrir cette box'}
           </span>
         ) : null}
       </div>

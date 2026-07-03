@@ -8,11 +8,11 @@ export function MockShopNotice() {
         <h2 id="mock-shop-notice-heading">Mode démonstration</h2>
         <p>
           Les produits affichés viennent de mock.shop, car aucune boutique
-          Shopify n’est encore connectée.
+          Shopify My Hobbees n’est encore connectée.
         </p>
-        <p>
-          Pour connecter une boutique, lance{' '}
-          <code>npx shopify hydrogen link</code> dans le terminal.
+        <p className="mock-shop-notice-secondary">
+          Les produits, collections et menus réels apparaîtront après la
+          connexion de la boutique Shopify.
         </p>
       </div>
     </section>

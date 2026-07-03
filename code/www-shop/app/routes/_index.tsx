@@ -8,6 +8,7 @@ import type {
 } from 'storefrontapi.generated';
 import {ProductItem} from '~/components/ProductItem';
 import {MockShopNotice} from '~/components/MockShopNotice';
+import {isMockShop} from '~/lib/storefront';
 
 export const meta: Route.MetaFunction = () => {
   return [
@@ -33,7 +34,7 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
   );
 
   return {
-    isShopLinked: Boolean(context.env.PUBLIC_STORE_DOMAIN),
+    isMockShop: isMockShop(context.env.PUBLIC_STORE_DOMAIN),
     featuredCollection: collections.nodes[0],
   };
 }
@@ -54,13 +55,16 @@ export default function Homepage() {
 
   return (
     <div className="home">
-      {data.isShopLinked ? null : (
+      {data.isMockShop ? (
         <div className="page-width mock-notice-wrapper">
           <MockShopNotice />
         </div>
-      )}
+      ) : null}
       <Hero collection={data.featuredCollection} />
-      <MonthlyBox products={data.recommendedProducts} />
+      <MonthlyBox
+        products={data.recommendedProducts}
+        isMockShop={data.isMockShop}
+      />
       <HowItWorks />
       <Reassurance />
     </div>
@@ -140,8 +144,10 @@ function HeroFallback() {
 
 function MonthlyBox({
   products,
+  isMockShop,
 }: {
   products: Promise<RecommendedProductsQuery | null>;
+  isMockShop: boolean;
 }) {
   return (
     <section className="monthly-box" aria-labelledby="monthly-box-title">
@@ -163,7 +169,12 @@ function MonthlyBox({
               const product = response?.products.nodes[0];
 
               return product ? (
-                <ProductItem product={product} featured loading="eager" />
+                <ProductItem
+                  product={product}
+                  featured
+                  demo={isMockShop}
+                  loading="eager"
+                />
               ) : (
                 <div className="empty-product-state">
                   <span aria-hidden="true">🐝</span>

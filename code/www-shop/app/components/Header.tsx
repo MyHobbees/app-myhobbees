@@ -8,6 +8,7 @@ import {
 import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
 import {useAside} from '~/components/Aside';
 import {getMenuItemUrl} from '~/lib/menu';
+import {shouldUseFallbackMenu} from '~/lib/storefront';
 
 interface HeaderProps {
   header: HeaderQuery;
@@ -67,7 +68,13 @@ export function HeaderMenu({
 }) {
   const className = `header-menu header-menu-${viewport}`;
   const {close} = useAside();
-  const items = menu?.items.length ? menu.items : FALLBACK_HEADER_MENU.items;
+  const useFallbackMenu = shouldUseFallbackMenu(
+    publicStoreDomain,
+    menu?.items.length ?? 0,
+  );
+  const items = useFallbackMenu
+    ? FALLBACK_HEADER_MENU.items
+    : (menu?.items ?? FALLBACK_HEADER_MENU.items);
 
   return (
     <nav className={className} aria-label="Navigation principale">
