@@ -70,6 +70,11 @@ backend_config = f'-backend-config="bucket={backend_bucket}" -backend-config="ke
 
 execute(f"cd infrastructure/terraform/{service} && terraform init {backend_config}")
 
+for secret in SERVICE_SECRETS.get(service, []):
+    if not os.getenv(f"TF_{env.upper()}__{secret.upper()}"):
+        print(f"Missing environment variable: TF_{env.upper()}__{secret.upper()}")
+        exit(-1)
+
 apply_vars = [
     tf_var("aws_access_key", backend_access_key),
     tf_var("aws_secret_key", backend_secret_key),
