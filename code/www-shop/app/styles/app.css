@@ -1061,6 +1061,13 @@ aside main {
   max-width: 720px;
 }
 
+.editorial-hero .editorial-hero-note {
+  color: var(--color-green);
+  font-size: 0.92rem;
+  font-weight: 700;
+  margin-top: 1.15rem;
+}
+
 .editorial-section {
   padding-block: 4.5rem;
 }
@@ -1084,12 +1091,12 @@ aside main {
   margin-bottom: 3.5rem;
 }
 
-.faq-list details {
+.accordion-list details {
   border-bottom: 1px solid var(--color-border);
   padding: 1.2rem 0;
 }
 
-.faq-list summary {
+.accordion-list summary {
   color: var(--color-green);
   cursor: pointer;
   display: flex;
@@ -1100,11 +1107,11 @@ aside main {
   list-style: none;
 }
 
-.faq-list summary::-webkit-details-marker {
+.accordion-list summary::-webkit-details-marker {
   display: none;
 }
 
-.faq-list summary::after {
+.accordion-list summary::after {
   color: var(--color-pink);
   content: "+";
   flex: 0 0 auto;
@@ -1114,13 +1121,17 @@ aside main {
   transition: transform 180ms ease;
 }
 
-.faq-list details[open] summary::after {
+.accordion-list details[open] summary::after {
   transform: rotate(45deg);
 }
 
-.faq-list details p {
+.accordion-content {
   color: var(--color-muted);
   margin: 1rem 2.5rem 0 0;
+}
+
+.accordion-content > :last-child {
+  margin-bottom: 0;
 }
 
 .faq-contact {
@@ -1160,6 +1171,165 @@ aside main {
   line-height: 1.2;
   margin: 0 auto;
   max-width: 900px;
+}
+
+/* Subscriptions */
+.subscriptions-plans-section,
+.subscription-comparison-section,
+.future-boxes {
+  padding-block: 4.5rem;
+}
+
+.subscriptions-plans {
+  display: grid;
+  gap: 1.4rem;
+}
+
+.subscription-plan {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  display: flex;
+  flex-direction: column;
+  padding: clamp(1.4rem, 4vw, 2rem);
+}
+
+.subscription-plan--featured {
+  background: color-mix(in srgb, var(--color-blue) 18%, var(--color-white));
+  border-color: var(--color-yellow);
+  box-shadow: var(--shadow-soft);
+}
+
+.subscription-plan--featured .product-badge {
+  background: var(--color-yellow);
+  color: var(--color-green);
+}
+
+.subscription-plan-heading {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: space-between;
+}
+
+.subscription-plan-label {
+  color: var(--color-brown);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.subscription-plan h3 {
+  font-size: clamp(1.7rem, 4vw, 2.35rem);
+  margin-bottom: 0.9rem;
+}
+
+.subscription-plan > p {
+  color: var(--color-muted);
+}
+
+.subscription-feature-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0 0 1.6rem;
+}
+
+.subscription-feature-list li {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.65rem;
+}
+
+.subscription-feature-list li span {
+  color: var(--color-green);
+  font-weight: 800;
+}
+
+.subscription-plan .button {
+  margin-top: auto;
+  width: 100%;
+}
+
+.subscriptions-app-note {
+  color: var(--color-muted);
+  font-size: 0.86rem;
+  margin: 1.4rem auto 0;
+  max-width: 760px;
+  text-align: center;
+}
+
+.subscription-comparison-section {
+  padding-top: 0;
+}
+
+.subscription-comparison-scroll {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  overflow-x: auto;
+}
+
+.subscription-comparison {
+  border-collapse: collapse;
+  min-width: 680px;
+  width: 100%;
+}
+
+.subscription-comparison th,
+.subscription-comparison td {
+  border-bottom: 1px solid var(--color-border);
+  padding: 1rem;
+  text-align: center;
+}
+
+.subscription-comparison th:first-child {
+  text-align: left;
+}
+
+.subscription-comparison thead {
+  background: var(--color-green);
+  color: var(--color-cream);
+}
+
+.subscription-comparison tbody tr:last-child th,
+.subscription-comparison tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.subscription-comparison .is-included {
+  color: var(--color-green);
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.subscription-comparison .is-not-included {
+  color: var(--color-muted);
+}
+
+.subscription-step {
+  min-height: 150px;
+  padding-top: 3.5rem;
+}
+
+.subscription-step h3 {
+  font-size: 1.15rem;
+}
+
+.future-boxes {
+  max-width: 760px;
+  text-align: center;
+}
+
+.future-boxes p {
+  color: var(--color-muted);
+}
+
+.product-subscription-details {
+  margin-top: 2rem;
+}
+
+.product-subscription-details h2 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  margin-bottom: 0.5rem;
 }
 
 /* Existing catalog and content routes */
@@ -1481,6 +1651,10 @@ aside main {
   .steps-grid,
   .reassurance-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  .subscriptions-plans {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .footer-grid {

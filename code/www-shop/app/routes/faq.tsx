@@ -1,5 +1,6 @@
 import {Link} from 'react-router';
 import type {Route} from './+types/faq';
+import {AccordionList} from '~/components/AccordionList';
 import {EditorialHero} from '~/components/EditorialHero';
 
 export const meta: Route.MetaFunction = () => [
@@ -59,14 +60,13 @@ export default function FaqPage() {
       />
 
       <section className="page-width faq-content" aria-label="Réponses aux questions fréquentes">
-        <div className="faq-list">
-          {FAQ_ITEMS.map((item) => (
-            <details key={item.question}>
-              <summary>{item.question}</summary>
-              <p>{item.answer}</p>
-            </details>
-          ))}
-        </div>
+        <AccordionList
+          className="faq-list"
+          items={FAQ_ITEMS.map((item) => ({
+            title: item.question,
+            content: <p>{item.answer}</p>,
+          }))}
+        />
 
         <div className="faq-contact">
           <h2>Tu as encore une question ?</h2>
