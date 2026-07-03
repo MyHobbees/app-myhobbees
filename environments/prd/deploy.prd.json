@@ -2,5 +2,9 @@
   "APP_NAME": "myhobbees",
   "ASSET_CDN_ID": "ETESA4P3XHG55",
   "BACK_OFFICE_CDN_ID": "E3E4777QPVRQFQ",
-  "APP_CDN_ID": "EHRJYI76OXF6I"
+  "APP_CDN_ID": "EHRJYI76OXF6I",
+  "DB_HOST": "",
+  "DB_PORT": 5432,
+  "API_URL": "",
+  "API_LAMBDA_NAME": "myhobbees-prd-api"
 }

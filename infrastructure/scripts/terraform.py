@@ -3,9 +3,12 @@ import sys
 import json
 
 # ------------------------------------------------------------ Inputs
-SERVICES = ['fronts']
+SERVICES = ['fronts', 'database', 'api']
 ENVIRONMENTS = ['stg', 'prd']
-SERVICE_SECRETS = {}
+SERVICE_SECRETS = {
+    'database': ['db_password'],
+    'api':      ['db_app_password', 'jwt_secret']
+}
 
 if len(sys.argv) != 3:
   print('Usage: terraform.py <service> <environment>')
