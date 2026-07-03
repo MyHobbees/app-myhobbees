@@ -26,7 +26,7 @@ export function Header({
 }: HeaderProps) {
   return (
     <>
-      <div className="announcement-bar" role="status">
+      <div className="announcement-bar">
         🐝 Livraison offerte dès 59 € d’achat
       </div>
       <header className="header">

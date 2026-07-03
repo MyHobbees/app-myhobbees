@@ -990,6 +990,11 @@ aside main {
   min-width: max-content;
 }
 
+.footer .newsletter-note {
+  font-size: 0.78rem;
+  margin-top: 0.55rem;
+}
+
 .footer-bottom {
   border-top: 1px solid rgba(255, 253, 249, 0.18);
   display: flex;

@@ -117,7 +117,11 @@ function Hero({
 
 function HeroFallback() {
   return (
-    <div className="hero-fallback" aria-label="Illustration créative My Hobbees">
+    <div
+      className="hero-fallback"
+      aria-label="Illustration créative My Hobbees"
+      role="img"
+    >
       <div className="honeycomb honeycomb-one" />
       <div className="honeycomb honeycomb-two" />
       <div className="creative-card creative-card-main">

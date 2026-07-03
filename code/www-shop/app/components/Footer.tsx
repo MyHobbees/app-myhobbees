@@ -35,10 +35,7 @@ export function Footer({
             Reçois nos idées créatives, nouveautés et surprises directement
             dans ta boîte mail.
           </p>
-          <form
-            className="newsletter-form"
-            onSubmit={(event) => event.preventDefault()}
-          >
+          <form className="newsletter-form" aria-describedby="newsletter-note">
             <label className="sr-only" htmlFor="newsletter-email">
               Adresse e-mail
             </label>
@@ -48,9 +45,15 @@ export function Footer({
               name="email"
               placeholder="ton@email.fr"
               type="email"
+              disabled
             />
-            <button type="submit">Je m’inscris</button>
+            <button type="submit" disabled>
+              Je m’inscris
+            </button>
           </form>
+          <p className="newsletter-note" id="newsletter-note">
+            L’inscription sera bientôt disponible.
+          </p>
         </section>
 
         <section className="footer-links" aria-labelledby="footer-links-title">
