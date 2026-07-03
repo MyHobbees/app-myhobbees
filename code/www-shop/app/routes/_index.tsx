@@ -1,14 +1,11 @@
 import {Suspense} from 'react';
 import {Await, Link, useLoaderData} from 'react-router';
-import {Image} from '@shopify/hydrogen';
 import type {Route} from './+types/_index';
-import type {
-  FeaturedCollectionFragment,
-  RecommendedProductsQuery,
-} from 'storefrontapi.generated';
+import type {RecommendedProductsQuery} from 'storefrontapi.generated';
 import {ProductItem} from '~/components/ProductItem';
 import {MockShopNotice} from '~/components/MockShopNotice';
 import {isMockShop} from '~/lib/storefront';
+import boxMyHobbees from '~/assets/box-my-hobbees.png';
 
 export const meta: Route.MetaFunction = () => {
   return [
@@ -28,14 +25,9 @@ export async function loader(args: Route.LoaderArgs) {
   return {...deferredData, ...criticalData};
 }
 
-async function loadCriticalData({context}: Route.LoaderArgs) {
-  const {collections} = await context.storefront.query(
-    FEATURED_COLLECTION_QUERY,
-  );
-
+function loadCriticalData({context}: Route.LoaderArgs) {
   return {
     isMockShop: isMockShop(context.env.PUBLIC_STORE_DOMAIN),
-    featuredCollection: collections.nodes[0],
   };
 }
 
@@ -60,7 +52,7 @@ export default function Homepage() {
           <MockShopNotice />
         </div>
       ) : null}
-      <Hero collection={data.featuredCollection} />
+      <Hero />
       <MonthlyBox
         products={data.recommendedProducts}
         isMockShop={data.isMockShop}
@@ -71,11 +63,7 @@ export default function Homepage() {
   );
 }
 
-function Hero({
-  collection,
-}: {
-  collection?: FeaturedCollectionFragment;
-}) {
+function Hero() {
   return (
     <section className="home-hero" aria-labelledby="hero-title">
       <div className="page-width hero-grid">
@@ -91,19 +79,14 @@ function Hero({
           </Link>
         </div>
         <div className="hero-visual">
-          {collection?.image ? (
-            <Image
-              alt={
-                collection.image.altText ||
-                `Univers créatif ${collection.title}`
-              }
-              data={collection.image}
-              loading="eager"
-              sizes="(min-width: 64rem) 46vw, 92vw"
-            />
-          ) : (
-            <HeroFallback />
-          )}
+          <img
+            alt="Box créative surprise My Hobbees"
+            decoding="async"
+            height="1254"
+            loading="eager"
+            src={boxMyHobbees}
+            width="1254"
+          />
           <div className="hero-note">
             <span aria-hidden="true">✦</span>
             <strong>Une nouvelle surprise</strong>
@@ -112,29 +95,6 @@ function Hero({
         </div>
       </div>
     </section>
-  );
-}
-
-function HeroFallback() {
-  return (
-    <div
-      className="hero-fallback"
-      aria-label="Illustration créative My Hobbees"
-      role="img"
-    >
-      <div className="honeycomb honeycomb-one" />
-      <div className="honeycomb honeycomb-two" />
-      <div className="creative-card creative-card-main">
-        <span aria-hidden="true">✂️</span>
-        <strong>Crée</strong>
-      </div>
-      <div className="creative-card creative-card-small" aria-hidden="true">
-        🧶
-      </div>
-      <span className="hero-bee" aria-hidden="true">
-        🐝
-      </span>
-    </div>
   );
 }
 
@@ -304,29 +264,6 @@ function Reassurance() {
     </section>
   );
 }
-
-const FEATURED_COLLECTION_QUERY = `#graphql
-  fragment FeaturedCollection on Collection {
-    id
-    title
-    image {
-      id
-      url
-      altText
-      width
-      height
-    }
-    handle
-  }
-  query FeaturedCollection($country: CountryCode, $language: LanguageCode)
-    @inContext(country: $country, language: $language) {
-    collections(first: 1, sortKey: UPDATED_AT, reverse: true) {
-      nodes {
-        ...FeaturedCollection
-      }
-    }
-  }
-` as const;
 
 const RECOMMENDED_PRODUCTS_QUERY = `#graphql
   fragment RecommendedProduct on Product {
