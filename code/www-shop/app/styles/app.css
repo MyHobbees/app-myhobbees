@@ -108,16 +108,20 @@ a:hover {
 
 button,
 .button {
+  --button-stitch: color-mix(in srgb, var(--color-brown) 60%, var(--color-yellow) 40%);
   align-items: center;
   border: 1px solid var(--color-yellow);
   border-radius: 999px;
+  color: var(--color-text);
   cursor: pointer;
   display: inline-flex;
   font: inherit;
   font-weight: 750;
+  gap: 0.5rem;
   justify-content: center;
   min-height: 46px;
   padding: 0.75rem 1.3rem;
+  position: relative;
   text-decoration: none;
   transition:
     background-color 180ms ease,
@@ -130,13 +134,49 @@ button,
 button,
 .button-primary {
   background: var(--color-yellow);
-  color: var(--color-green);
 }
 
 .button-secondary {
+  --button-stitch: color-mix(in srgb, var(--color-green) 55%, var(--color-blue) 45%);
   background: var(--color-blue);
   border-color: var(--color-blue);
-  color: var(--color-green);
+}
+
+.button-outline {
+  background: transparent;
+  border-color: var(--color-yellow);
+  color: var(--color-brown);
+}
+
+.button-icon {
+  border-radius: var(--radius-small);
+  min-height: 44px;
+  padding: 0;
+  width: 44px;
+}
+
+.button-icon svg {
+  height: 20px;
+  width: 20px;
+}
+
+/* Stitched sticker border: every filled button shows a dashed inset
+   outline; the outline variant only picks it up once it fills on hover. */
+button::after,
+.button-primary::after,
+.button-secondary::after,
+.button-icon::after,
+.button-outline:hover::after {
+  border: 2px dashed var(--button-stitch);
+  border-radius: inherit;
+  content: "";
+  inset: 5px;
+  pointer-events: none;
+  position: absolute;
+}
+
+.button-outline:not(:hover)::after {
+  content: none;
 }
 
 button:hover,
@@ -152,12 +192,39 @@ button:hover,
   border-color: var(--color-blue);
 }
 
+.button-outline:hover {
+  background: var(--color-yellow);
+  color: var(--color-text);
+}
+
+button:active,
+.button:active {
+  background: color-mix(in srgb, var(--color-yellow) 80%, var(--color-brown));
+  box-shadow: none;
+  transform: translateY(0);
+}
+
+.button-secondary:active {
+  background: color-mix(in srgb, var(--color-blue) 80%, var(--color-green));
+  border-color: color-mix(in srgb, var(--color-blue) 80%, var(--color-green));
+}
+
+.button-outline:active {
+  background: color-mix(in srgb, var(--color-yellow) 80%, var(--color-brown));
+  color: var(--color-text);
+}
+
 button:disabled,
 .button:disabled,
 button[aria-disabled="true"] {
   cursor: not-allowed;
   opacity: 0.52;
   transform: none;
+}
+
+.button-outline:disabled,
+.button-outline[aria-disabled="true"] {
+  background: transparent;
 }
 
 button.reset {
@@ -167,6 +234,11 @@ button.reset {
   box-shadow: none;
   min-height: auto;
   padding: 0;
+}
+
+button.reset::after,
+.overlay .close-outside::after {
+  content: none;
 }
 
 :focus-visible {
@@ -256,9 +328,27 @@ code {
 }
 
 .text-link {
-  display: inline-block;
+  align-items: center;
+  display: inline-flex;
   font-weight: 750;
+  gap: 0.35rem;
   margin-top: 1.4rem;
+}
+
+.text-link svg {
+  height: 1em;
+  width: 1em;
+}
+
+.text-link:active {
+  color: color-mix(in srgb, var(--color-pink) 75%, var(--color-brown));
+}
+
+.text-link[aria-disabled="true"] {
+  color: color-mix(in srgb, var(--color-pink) 35%, var(--color-white));
+  cursor: not-allowed;
+  pointer-events: none;
+  text-decoration: none;
 }
 
 .section-heading.centered {
@@ -1387,6 +1477,10 @@ aside main {
   font-size: 0.95rem;
   min-height: 40px;
   padding: 0.45rem 0.85rem;
+}
+
+.product-options-item::after {
+  content: none;
 }
 
 .product-option-label-swatch {
