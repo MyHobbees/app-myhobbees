@@ -138,6 +138,9 @@ dist_path = f"{project_path}/dist"
 
 execute(f"cd {project_path} && npm install")
 
+# Bake the API base URL into the web build (Expo public env convention).
+os.environ["EXPO_PUBLIC_API_URL"] = config.get("API_URL", "")
+
 # Expo web export -> static site in dist/
 execute(f"cd {project_path} && npx expo export --platform web")
 

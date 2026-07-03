@@ -11,3 +11,18 @@ services:
     ports:
       - 3000:3000
     tty: true
+
+  postgres:
+    image: postgres:18
+    container_name: myhobbees-postgres
+    environment:
+      POSTGRES_DB: myhobbees_loc
+      POSTGRES_USER: myhobbees
+      POSTGRES_PASSWORD: myhobbees
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

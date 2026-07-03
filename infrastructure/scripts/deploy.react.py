@@ -138,6 +138,9 @@ dist_path = f"{project_path}/dist"
 
 execute(f"cd {project_path} && npm install")
 
+# Bake the API base URL into the build (Vite public env convention).
+os.environ["VITE_API_URL"] = config.get("API_URL", "")
+
 execute(f"cd {project_path} && npm run build")
 
 # Clear existing S3 contents

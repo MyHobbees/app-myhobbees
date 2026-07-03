@@ -3,9 +3,12 @@ import sys
 import json
 
 # ------------------------------------------------------------ Inputs
-SERVICES = ['fronts']
+SERVICES = ['fronts', 'database', 'api']
 ENVIRONMENTS = ['stg', 'prd']
-SERVICE_SECRETS = {}
+SERVICE_SECRETS = {
+    'database': ['db_password'],
+    'api':      ['db_app_password', 'jwt_secret']
+}
 
 if len(sys.argv) != 3:
   print('Usage: terraform.py <service> <environment>')
@@ -66,6 +69,11 @@ backend_secret_key = os.getenv(f"TF_{env.upper()}__AWS_SECRET_KEY")
 backend_config = f'-backend-config="bucket={backend_bucket}" -backend-config="key={backend_key}" -backend-config="region={backend_region}" -backend-config="access_key={backend_access_key}" -backend-config="secret_key={backend_secret_key}"'
 
 execute(f"cd infrastructure/terraform/{service} && terraform init {backend_config}")
+
+for secret in SERVICE_SECRETS.get(service, []):
+    if not os.getenv(f"TF_{env.upper()}__{secret.upper()}"):
+        print(f"Missing environment variable: TF_{env.upper()}__{secret.upper()}")
+        exit(-1)
 
 apply_vars = [
     tf_var("aws_access_key", backend_access_key),
