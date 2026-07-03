@@ -62,7 +62,8 @@ def get_db_connection():
             port=config['DB_PORT'],
             dbname=f"{config['APP_NAME'].replace('-', '_')}_{env}",
             user=os.getenv(f"TF_{env.upper()}__DB_USERNAME"),
-            password=os.getenv(f"TF_{env.upper()}__DB_PASSWORD")
+            password=os.getenv(f"TF_{env.upper()}__DB_PASSWORD"),
+            sslmode='require'
         )
         conn.autocommit = True
         return conn
