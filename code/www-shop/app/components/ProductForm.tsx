@@ -9,9 +9,11 @@ import {useAside} from './Aside';
 import type {ProductFragment} from 'storefrontapi.generated';
 
 export function ProductForm({
+  addToCartLabel = 'Ajouter au panier',
   productOptions,
   selectedVariant,
 }: {
+  addToCartLabel?: string;
   productOptions: MappedProductOptions[];
   selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
 }) {
@@ -118,7 +120,7 @@ export function ProductForm({
             : []
         }
       >
-        {selectedVariant?.availableForSale ? 'Ajouter au panier' : 'Épuisé'}
+        {selectedVariant?.availableForSale ? addToCartLabel : 'Épuisé'}
       </AddToCartButton>
     </div>
   );

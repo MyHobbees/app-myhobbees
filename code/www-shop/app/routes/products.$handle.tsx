@@ -11,7 +11,14 @@ import {
 import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
+import {AccordionList} from '~/components/AccordionList';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+import {isMockShop} from '~/lib/storefront';
+import {
+  getSubscriptionCtaLabel,
+  getSubscriptionKind,
+  type SubscriptionKind,
+} from '~/lib/subscriptions';
 
 export const meta: Route.MetaFunction = ({data}) => {
   return [
@@ -60,6 +67,7 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
   redirectIfHandleIsLocalized(request, {handle, data: product});
 
   return {
+    isMockShop: isMockShop(context.env.PUBLIC_STORE_DOMAIN),
     product,
   };
 }
@@ -77,7 +85,7 @@ function loadDeferredData({context, params}: Route.LoaderArgs) {
 }
 
 export default function Product() {
-  const {product} = useLoaderData<typeof loader>();
+  const {isMockShop, product} = useLoaderData<typeof loader>();
 
   // Optimistically selects a variant with given available variant information
   const selectedVariant = useOptimisticVariant(
@@ -96,11 +104,20 @@ export default function Product() {
   });
 
   const {title, descriptionHtml} = product;
+  const subscriptionKind = isMockShop
+    ? null
+    : getSubscriptionKind(product);
+  const addToCartLabel = isMockShop
+    ? 'Ajouter le produit de démonstration'
+    : getSubscriptionCtaLabel(subscriptionKind);
 
   return (
     <div className="product">
       <ProductImage image={selectedVariant?.image} />
       <div className="product-main">
+        {isMockShop ? (
+          <span className="product-badge">Produit de démonstration</span>
+        ) : null}
         <h1>{title}</h1>
         <ProductPrice
           price={selectedVariant?.price}
@@ -108,17 +125,23 @@ export default function Product() {
         />
         <br />
         <ProductForm
+          addToCartLabel={addToCartLabel}
           productOptions={productOptions}
           selectedVariant={selectedVariant}
         />
         <br />
         <br />
         <p>
-          <strong>Description de la box</strong>
+          <strong>
+            {subscriptionKind ? 'Cette formule' : 'Description du produit'}
+          </strong>
         </p>
         <br />
         <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
         <br />
+        {subscriptionKind ? (
+          <ProductSubscriptionDetails kind={subscriptionKind} />
+        ) : null}
       </div>
       <Analytics.ProductView
         data={{
@@ -136,6 +159,58 @@ export default function Product() {
         }}
       />
     </div>
+  );
+}
+
+function ProductSubscriptionDetails({kind}: {kind: SubscriptionKind}) {
+  const items = [
+    {
+      title: 'Ce qui est inclus',
+      content: (
+        <p>
+          Retrouve dans la description de la formule le contenu de la box et
+          les services inclus dans ton abonnement mensuel.
+        </p>
+      ),
+    },
+    {
+      title: 'Pour quel niveau ?',
+      content: (
+        <p>
+          Les activités My Hobbees sont pensées pour être accessibles aux
+          débutants et progresser à son rythme.
+        </p>
+      ),
+    },
+    {
+      title: 'Livraison et retours',
+      content: (
+        <p>
+          Les modalités applicables sont précisées lors de la commande et dans
+          les politiques de livraison et de remboursement de la boutique.
+        </p>
+      ),
+    },
+    {
+      title: 'Accès à l’application My Hobbees',
+      content: (
+        <p>
+          {kind === 'box-app'
+            ? 'Cette formule inclut l’accès à l’application My Hobbees lorsqu’elle sera disponible.'
+            : 'Selon la formule choisie, tu pourras accéder à l’application My Hobbees pour suivre des tutoriels vidéo, retrouver tes contenus et échanger avec la communauté.'}
+        </p>
+      ),
+    },
+  ];
+
+  return (
+    <section
+      className="product-subscription-details"
+      aria-labelledby="product-details-title"
+    >
+      <h2 id="product-details-title">En savoir plus sur la formule</h2>
+      <AccordionList items={items} />
+    </section>
   );
 }
 
@@ -182,6 +257,11 @@ const PRODUCT_FRAGMENT = `#graphql
     title
     vendor
     handle
+    productType
+    tags
+    subscriptionTier: metafield(namespace: "custom", key: "subscription_tier") {
+      value
+    }
     descriptionHtml
     description
     encodedVariantExistence
