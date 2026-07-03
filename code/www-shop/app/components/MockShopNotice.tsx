@@ -5,14 +5,14 @@ export function MockShopNotice() {
       aria-labelledby="mock-shop-notice-heading"
     >
       <div className="inner">
-        <h2 id="mock-shop-notice-heading">Welcome to Hydrogen!</h2>
+        <h2 id="mock-shop-notice-heading">Mode démonstration</h2>
         <p>
-          You&rsquo;re seeing mocked products because no store is connected to
-          this project yet.
+          Les produits affichés viennent de mock.shop, car aucune boutique
+          Shopify n’est encore connectée.
         </p>
         <p>
-          Link a store by running <code>npx shopify hydrogen link</code> in your
-          terminal.
+          Pour connecter une boutique, lance{' '}
+          <code>npx shopify hydrogen link</code> dans le terminal.
         </p>
       </div>
     </section>

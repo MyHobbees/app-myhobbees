@@ -57,12 +57,10 @@ export function PageLayout({
 
 function CartAside({cart}: {cart: PageLayoutProps['cart']}) {
   return (
-    <Aside type="cart" heading="CART">
-      <Suspense fallback={<p>Loading cart ...</p>}>
+    <Aside type="cart" heading="PANIER">
+      <Suspense fallback={<p>Chargement du panier…</p>}>
         <Await resolve={cart}>
-          {(cart) => {
-            return <CartMain cart={cart} layout="aside" />;
-          }}
+          {(cart) => <CartMain cart={cart} layout="aside" />}
         </Await>
       </Suspense>
     </Aside>
@@ -72,24 +70,23 @@ function CartAside({cart}: {cart: PageLayoutProps['cart']}) {
 function SearchAside() {
   const queriesDatalistId = useId();
   return (
-    <Aside type="search" heading="SEARCH">
+    <Aside type="search" heading="RECHERCHE">
       <div className="predictive-search">
-        <br />
         <SearchFormPredictive>
           {({fetchResults, goToSearch, inputRef}) => (
-            <>
+            <div className="predictive-search-controls">
               <input
+                aria-label="Rechercher dans la boutique"
                 name="q"
                 onChange={fetchResults}
                 onFocus={fetchResults}
-                placeholder="Search"
+                placeholder="Que recherches-tu ?"
                 ref={inputRef}
                 type="search"
                 list={queriesDatalistId}
               />
-              &nbsp;
-              <button onClick={goToSearch}>Search</button>
-            </>
+              <button onClick={goToSearch}>Rechercher</button>
+            </div>
           )}
         </SearchFormPredictive>
 
@@ -98,7 +95,7 @@ function SearchAside() {
             const {articles, collections, pages, products, queries} = items;
 
             if (state === 'loading' && term.current) {
-              return <div>Loading...</div>;
+              return <div>Recherche en cours…</div>;
             }
 
             if (!total) {
@@ -137,8 +134,7 @@ function SearchAside() {
                     to={`${SEARCH_ENDPOINT}?q=${term.current}`}
                   >
                     <p>
-                      View all results for <q>{term.current}</q>
-                      &nbsp; →
+                      Voir tous les résultats pour <q>{term.current}</q> →
                     </p>
                   </Link>
                 ) : null}
@@ -158,17 +154,14 @@ function MobileMenuAside({
   header: PageLayoutProps['header'];
   publicStoreDomain: PageLayoutProps['publicStoreDomain'];
 }) {
-  return (
-    header.menu &&
-    header.shop.primaryDomain?.url && (
-      <Aside type="mobile" heading="MENU">
-        <HeaderMenu
-          menu={header.menu}
-          viewport="mobile"
-          primaryDomainUrl={header.shop.primaryDomain.url}
-          publicStoreDomain={publicStoreDomain}
-        />
-      </Aside>
-    )
-  );
+  return header.shop.primaryDomain?.url ? (
+    <Aside type="mobile" heading="MENU">
+      <HeaderMenu
+        menu={header.menu}
+        viewport="mobile"
+        primaryDomainUrl={header.shop.primaryDomain.url}
+        publicStoreDomain={publicStoreDomain}
+      />
+    </Aside>
+  ) : null;
 }
