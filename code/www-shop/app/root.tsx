@@ -81,7 +81,7 @@ export function links() {
     },
     {
       rel: 'stylesheet',
-      href: 'https://fonts.googleapis.com/css2?family=ABeeZee&family=Fredoka:wght@500;600;700&display=swap',
+      href: 'https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Hind:wght@400;500;600;700&display=swap',
     },
     {rel: 'icon', type: 'image/svg+xml', href: favicon},
   ];
