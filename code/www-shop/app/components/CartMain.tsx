@@ -52,7 +52,7 @@ export function CartMain({layout, cart: originalCart}: CartMainProps) {
   return (
     <section
       className={className}
-      aria-label={layout === 'page' ? 'Cart page' : 'Cart drawer'}
+      aria-label={layout === 'page' ? 'Page du panier' : 'Panier latéral'}
     >
       <CartEmpty hidden={linesCount} layout={layout} />
       <div className="cart-details">
@@ -102,7 +102,7 @@ function CartEmpty({
       </p>
       <br />
       <Link to="/collections" onClick={close} prefetch="viewport">
-        Continue shopping →
+        Continuer mes découvertes →
       </Link>
     </div>
   );

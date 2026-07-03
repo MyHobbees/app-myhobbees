@@ -30,7 +30,7 @@ type OrdersLoaderData = {
 };
 
 export const meta: Route.MetaFunction = () => {
-  return [{title: 'Orders'}];
+  return [{title: 'Mes commandes | My Hobbees'}];
 };
 
 export async function loader({request, context}: Route.LoaderArgs) {
@@ -97,18 +97,18 @@ function EmptyOrders({hasFilters = false}: {hasFilters?: boolean}) {
     <div>
       {hasFilters ? (
         <>
-          <p>No orders found matching your search.</p>
+          <p>Aucune commande ne correspond à ta recherche.</p>
           <br />
           <p>
-            <Link to="/account/orders">Clear filters →</Link>
+            <Link to="/account/orders">Effacer les filtres →</Link>
           </p>
         </>
       ) : (
         <>
-          <p>You haven&apos;t placed any orders yet.</p>
+          <p>Tu n’as pas encore passé de commande.</p>
           <br />
           <p>
-            <Link to="/collections">Start Shopping →</Link>
+            <Link to="/collections">Découvrir les box →</Link>
           </p>
         </>
       )}
@@ -153,25 +153,25 @@ function OrderSearchForm({
       ref={formRef}
       onSubmit={handleSubmit}
       className="order-search-form"
-      aria-label="Search orders"
+      aria-label="Rechercher dans les commandes"
     >
       <fieldset className="order-search-fieldset">
-        <legend className="order-search-legend">Filter Orders</legend>
+        <legend className="order-search-legend">Filtrer les commandes</legend>
 
         <div className="order-search-inputs">
           <input
             type="search"
             name={ORDER_FILTER_FIELDS.NAME}
-            placeholder="Order #"
-            aria-label="Order number"
+            placeholder="N° de commande"
+            aria-label="Numéro de commande"
             defaultValue={currentFilters.name || ''}
             className="order-search-input"
           />
           <input
             type="search"
             name={ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER}
-            placeholder="Confirmation #"
-            aria-label="Confirmation number"
+            placeholder="N° de confirmation"
+            aria-label="Numéro de confirmation"
             defaultValue={currentFilters.confirmationNumber || ''}
             className="order-search-input"
           />
@@ -179,7 +179,7 @@ function OrderSearchForm({
 
         <div className="order-search-buttons">
           <button type="submit" disabled={isSearching}>
-            {isSearching ? 'Searching' : 'Search'}
+            {isSearching ? 'Recherche…' : 'Rechercher'}
           </button>
           {hasFilters && (
             <button
@@ -190,7 +190,7 @@ function OrderSearchForm({
                 formRef.current?.reset();
               }}
             >
-              Clear
+              Effacer
             </button>
           )}
         </div>
@@ -207,14 +207,14 @@ function OrderItem({order}: {order: OrderItemFragment}) {
         <Link to={`/account/orders/${btoa(order.id)}`}>
           <strong>#{order.number}</strong>
         </Link>
-        <p>{new Date(order.processedAt).toDateString()}</p>
+        <p>{new Date(order.processedAt).toLocaleDateString('fr-FR')}</p>
         {order.confirmationNumber && (
-          <p>Confirmation: {order.confirmationNumber}</p>
+          <p>Confirmation : {order.confirmationNumber}</p>
         )}
         <p>{order.financialStatus}</p>
         {fulfillmentStatus && <p>{fulfillmentStatus}</p>}
         <Money data={order.totalPrice} />
-        <Link to={`/account/orders/${btoa(order.id)}`}>View Order →</Link>
+        <Link to={`/account/orders/${btoa(order.id)}`}>Voir la commande →</Link>
       </fieldset>
       <br />
     </>
