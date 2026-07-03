@@ -49,7 +49,7 @@ variable "db_username" {
 }
 
 variable "db_host" {
-  default = ""
+  default = "myhobbees-prd-database.crqio8s068o9.eu-west-3.rds.amazonaws.com"
 }
 
 variable "db_port" {
@@ -82,7 +82,7 @@ variable "db_deletion_protection" {
 }
 
 variable "db_app_username" {
-  default = "myhobbees_app"
+  default = "myhobbees"
 }
 
 variable "db_app_password" {
