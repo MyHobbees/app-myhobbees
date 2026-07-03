@@ -1,7 +1,7 @@
 export function MockShopNotice() {
   return (
     <section
-      className="mock-shop-notice"
+      className="notice-callout"
       aria-labelledby="mock-shop-notice-heading"
     >
       <div className="inner">
@@ -10,7 +10,7 @@ export function MockShopNotice() {
           Les produits affichés viennent de mock.shop, car aucune boutique
           Shopify My Hobbees n’est encore connectée.
         </p>
-        <p className="mock-shop-notice-secondary">
+        <p className="notice-callout-secondary">
           Les produits, collections et menus réels apparaîtront après la
           connexion de la boutique Shopify.
         </p>

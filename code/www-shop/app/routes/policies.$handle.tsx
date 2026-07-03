@@ -1,6 +1,8 @@
 import {Link, useLoaderData} from 'react-router';
+import {ArrowLeft} from 'lucide-react';
 import type {Route} from './+types/policies.$handle';
 import {type Shop} from '@shopify/hydrogen/storefront-api-types';
+import {EditorialHero} from '~/components/EditorialHero';
 
 type SelectedPolicies = keyof Pick<
   Shop,
@@ -45,16 +47,23 @@ export default function Policy() {
   const {policy} = useLoaderData<typeof loader>();
 
   return (
-    <div className="policy">
-      <br />
-      <br />
-      <div>
-        <Link to="/policies">← Retour aux politiques</Link>
-      </div>
-      <br />
-      <h1>{policy.title}</h1>
-      <div dangerouslySetInnerHTML={{__html: policy.body}} />
-    </div>
+    <article className="editorial-page policy-page" aria-labelledby="policy-title">
+      <EditorialHero
+        description="Les informations légales et contractuelles de la boutique My Hobbees."
+        headingId="policy-title"
+        title={policy.title}
+      />
+      <section className="page-width policy-content">
+        <Link className="text-link policy-back-link" to="/policies">
+          <ArrowLeft aria-hidden="true" />
+          Retour aux informations légales
+        </Link>
+        <div
+          className="policy-body"
+          dangerouslySetInnerHTML={{__html: policy.body}}
+        />
+      </section>
+    </article>
   );
 }
 
