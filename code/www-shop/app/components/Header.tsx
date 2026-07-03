@@ -1,5 +1,6 @@
 import {Suspense} from 'react';
 import {Await, NavLink, useAsyncValue} from 'react-router';
+import {Hexagon, Menu, Search, ShoppingCart, UserRound} from 'lucide-react';
 import {
   type CartViewPayload,
   useAnalytics,
@@ -28,7 +29,8 @@ export function Header({
   return (
     <>
       <div className="announcement-bar">
-        🐝 Livraison offerte dès 59 € d’achat
+        <Hexagon aria-hidden="true" size={16} />
+        <span>Livraison offerte dès 59 € d’achat</span>
       </div>
       <header className="header">
         <NavLink
@@ -126,7 +128,7 @@ function HeaderCtas({
         prefetch="intent"
         to="/account"
       >
-        <AccountIcon />
+        <UserRound aria-hidden="true" />
         <span className="header-action-label">
           <Suspense fallback="Compte">
             <Await resolve={isLoggedIn} errorElement="Compte">
@@ -149,7 +151,7 @@ function HeaderMenuMobileToggle() {
       onClick={() => open('mobile')}
       type="button"
     >
-      <MenuIcon />
+      <Menu aria-hidden="true" />
     </button>
   );
 }
@@ -163,7 +165,7 @@ function SearchToggle() {
       onClick={() => open('search')}
       type="button"
     >
-      <SearchIcon />
+      <Search aria-hidden="true" />
       <span className="header-action-label">Recherche</span>
     </button>
   );
@@ -189,7 +191,7 @@ function CartBadge({count}: {count: number}) {
         } as CartViewPayload);
       }}
     >
-      <CartIcon />
+      <ShoppingCart aria-hidden="true" />
       <span className="header-action-label">Panier</span>
       <span aria-hidden="true" className="cart-count">
         {count}
@@ -212,42 +214,6 @@ function CartBanner() {
   const originalCart = useAsyncValue() as CartApiQueryFragment | null;
   const cart = useOptimisticCart(originalCart);
   return <CartBadge count={cart?.totalQuantity ?? 0} />;
-}
-
-function MenuIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24">
-      <path d="M4 7h16M4 12h16M4 17h16" />
-    </svg>
-  );
-}
-
-function SearchIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24">
-      <circle cx="11" cy="11" r="6" />
-      <path d="m16 16 4 4" />
-    </svg>
-  );
-}
-
-function AccountIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24">
-      <circle cx="12" cy="8" r="4" />
-      <path d="M4.5 21a7.5 7.5 0 0 1 15 0" />
-    </svg>
-  );
-}
-
-function CartIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24">
-      <path d="M3 4h2l2.4 10.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L21 7H6" />
-      <circle cx="10" cy="20" r="1" />
-      <circle cx="18" cy="20" r="1" />
-    </svg>
-  );
 }
 
 const FALLBACK_HEADER_MENU = {

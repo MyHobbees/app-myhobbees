@@ -1,5 +1,6 @@
 import {useOptimisticCart} from '@shopify/hydrogen';
 import {Link} from 'react-router';
+import {ArrowRight} from 'lucide-react';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import {useAside} from '~/components/Aside';
 import {CartLineItem, type CartLine} from '~/components/CartLineItem';
@@ -102,7 +103,7 @@ function CartEmpty({
       </p>
       <br />
       <Link to="/collections" onClick={close} prefetch="viewport">
-        Continuer mes découvertes →
+        Continuer mes découvertes <ArrowRight aria-hidden="true" />
       </Link>
     </div>
   );

@@ -6,6 +6,7 @@ import {
 } from 'react-router';
 import type {Route} from './+types/account.orders._index';
 import {useRef} from 'react';
+import {ArrowRight} from 'lucide-react';
 import {
   Money,
   getPaginationVariables,
@@ -100,7 +101,9 @@ function EmptyOrders({hasFilters = false}: {hasFilters?: boolean}) {
           <p>Aucune commande ne correspond à ta recherche.</p>
           <br />
           <p>
-            <Link to="/account/orders">Effacer les filtres →</Link>
+            <Link to="/account/orders">
+              Effacer les filtres <ArrowRight aria-hidden="true" />
+            </Link>
           </p>
         </>
       ) : (
@@ -108,7 +111,9 @@ function EmptyOrders({hasFilters = false}: {hasFilters?: boolean}) {
           <p>Tu n’as pas encore passé de commande.</p>
           <br />
           <p>
-            <Link to="/collections">Découvrir les box →</Link>
+            <Link to="/collections">
+              Découvrir les box <ArrowRight aria-hidden="true" />
+            </Link>
           </p>
         </>
       )}
@@ -214,7 +219,9 @@ function OrderItem({order}: {order: OrderItemFragment}) {
         <p>{order.financialStatus}</p>
         {fulfillmentStatus && <p>{fulfillmentStatus}</p>}
         <Money data={order.totalPrice} />
-        <Link to={`/account/orders/${btoa(order.id)}`}>Voir la commande →</Link>
+        <Link to={`/account/orders/${btoa(order.id)}`}>
+          Voir la commande <ArrowRight aria-hidden="true" />
+        </Link>
       </fieldset>
       <br />
     </>

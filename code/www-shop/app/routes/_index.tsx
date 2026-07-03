@@ -1,5 +1,14 @@
 import {Suspense} from 'react';
 import {Await, Link, useLoaderData} from 'react-router';
+import {
+  ArrowRight,
+  BadgeCheck,
+  Heart,
+  PackageCheck,
+  PackageOpen,
+  RefreshCw,
+  Sparkles,
+} from 'lucide-react';
 import type {Route} from './+types/_index';
 import type {RecommendedProductsQuery} from 'storefrontapi.generated';
 import {ProductItem} from '~/components/ProductItem';
@@ -88,7 +97,9 @@ function Hero() {
             width="1254"
           />
           <div className="hero-note">
-            <span aria-hidden="true">✦</span>
+            <span aria-hidden="true">
+              <Sparkles />
+            </span>
             <strong>Une nouvelle surprise</strong>
             <small>à découvrir chaque mois</small>
           </div>
@@ -116,7 +127,7 @@ function MonthlyBox({
             nouvelle activité chaque mois.
           </p>
           <Link className="text-link" to="/abonnements">
-            Comparer les abonnements <span aria-hidden="true">→</span>
+            Comparer les abonnements <ArrowRight aria-hidden="true" />
           </Link>
         </div>
         <Suspense fallback={<ProductCardSkeleton />}>
@@ -133,7 +144,7 @@ function MonthlyBox({
                 />
               ) : (
                 <div className="empty-product-state">
-                  <span aria-hidden="true">🐝</span>
+                  <PackageOpen aria-hidden="true" />
                   <h3>La prochaine box se prépare</h3>
                   <p>Reviens bientôt pour découvrir la nouvelle surprise.</p>
                 </div>
@@ -162,18 +173,18 @@ function HowItWorks() {
       title: 'Choisis tes envies',
       description:
         'Indique les univers créatifs que tu aimerais découvrir.',
-      icon: 'heart' as const,
+      Icon: Heart,
     },
     {
       title: 'Reçois ta surprise',
       description: 'Nous préparons une box pensée pour te faire créer.',
-      icon: 'box' as const,
+      Icon: PackageOpen,
     },
     {
       title: 'Crée à ton rythme',
       description:
         'Suis le guide, découvre et profite de ton moment créatif.',
-      icon: 'sparkle' as const,
+      Icon: Sparkles,
     },
   ];
 
@@ -185,14 +196,14 @@ function HowItWorks() {
           <h2 id="how-title">Comment ça marche ?</h2>
         </div>
         <ol className="steps-grid">
-          {steps.map((step, index) => (
-            <li key={step.title} className="step-card">
+          {steps.map(({description, Icon, title}, index) => (
+            <li key={title} className="step-card">
               <span className="step-number">0{index + 1}</span>
               <span className="step-icon">
-                <StepIcon type={step.icon} />
+                <Icon aria-hidden="true" />
               </span>
-              <h3>{step.title}</h3>
-              <p>{step.description}</p>
+              <h3>{title}</h3>
+              <p>{description}</p>
             </li>
           ))}
         </ol>
@@ -201,46 +212,20 @@ function HowItWorks() {
   );
 }
 
-function StepIcon({type}: {type: 'heart' | 'box' | 'sparkle'}) {
-  if (type === 'heart') {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24">
-        <path d="M20.8 5.7a5.2 5.2 0 0 0-7.4 0L12 7.1l-1.4-1.4a5.2 5.2 0 0 0-7.4 7.4L12 21l8.8-7.9a5.2 5.2 0 0 0 0-7.4Z" />
-      </svg>
-    );
-  }
-
-  if (type === 'box') {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24">
-        <path d="m4 7 8-4 8 4-8 4-8-4Z" />
-        <path d="m4 7 8 4v10l-8-4V7Zm16 0-8 4v10l8-4V7Z" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24">
-      <path d="M12 2c.5 5.5 2.5 7.5 8 8-5.5.5-7.5 2.5-8 8-.5-5.5-2.5-7.5-8-8 5.5-.5 7.5-2.5 8-8Z" />
-      <path d="M19 16c.2 2.1.9 2.8 3 3-2.1.2-2.8.9-3 3-.2-2.1-.9-2.8-3-3 2.1-.2 2.8-.9 3-3Z" />
-    </svg>
-  );
-}
-
 function Reassurance() {
   const items = [
     {
-      icon: '✓',
+      Icon: PackageCheck,
       title: 'Tout est inclus',
       description: 'Le matériel et le guide sont réunis dans ta box.',
     },
     {
-      icon: '✦',
+      Icon: BadgeCheck,
       title: 'Accessible aux débutants',
       description: 'Chaque activité est pensée pour se lancer sereinement.',
     },
     {
-      icon: '↻',
+      Icon: RefreshCw,
       title: 'Une surprise chaque mois',
       description: 'Un nouvel univers créatif pour nourrir ta curiosité.',
     },
@@ -249,14 +234,14 @@ function Reassurance() {
   return (
     <section className="reassurance" aria-label="Les avantages My Hobbees">
       <div className="page-width reassurance-grid">
-        {items.map((item) => (
-          <article key={item.title} className="reassurance-item">
+        {items.map(({description, Icon, title}) => (
+          <article key={title} className="reassurance-item">
             <span aria-hidden="true" className="reassurance-icon">
-              {item.icon}
+              <Icon />
             </span>
             <div>
-              <h3>{item.title}</h3>
-              <p>{item.description}</p>
+              <h3>{title}</h3>
+              <p>{description}</p>
             </div>
           </article>
         ))}

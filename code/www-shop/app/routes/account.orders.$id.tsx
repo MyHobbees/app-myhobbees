@@ -1,6 +1,7 @@
 import {redirect, useLoaderData} from 'react-router';
 import type {Route} from './+types/account.orders.$id';
 import {Money, Image} from '@shopify/hydrogen';
+import {ArrowRight} from 'lucide-react';
 import type {
   OrderLineItemFullFragment,
   OrderQuery,
@@ -127,7 +128,7 @@ export default function OrderRoute() {
                 <p>Sous-total</p>
               </th>
               <td>
-                {order.subtotal ? <Money data={order.subtotal} /> : '—'}
+                {order.subtotal ? <Money data={order.subtotal} /> : '-'}
               </td>
             </tr>
             <tr>
@@ -135,7 +136,7 @@ export default function OrderRoute() {
                 Taxes
               </th>
               <td>
-                {order.totalTax ? <Money data={order.totalTax} /> : '—'}
+                {order.totalTax ? <Money data={order.totalTax} /> : '-'}
               </td>
             </tr>
             <tr>
@@ -174,7 +175,7 @@ export default function OrderRoute() {
       <br />
       <p>
         <a target="_blank" href={order.statusPageUrl} rel="noreferrer">
-          Voir le statut de la commande →
+          Voir le statut de la commande <ArrowRight aria-hidden="true" />
         </a>
       </p>
     </div>
@@ -217,11 +218,11 @@ function OrderLineRow({lineItem}: {lineItem: OrderLineItemFullFragment}) {
         </div>
       </td>
       <td>
-        {lineItem.price ? <Money data={lineItem.price} /> : '—'}
+        {lineItem.price ? <Money data={lineItem.price} /> : '-'}
       </td>
       <td>{lineItem.quantity}</td>
       <td>
-        {lineItem.totalPrice ? <Money data={lineItem.totalPrice} /> : '—'}
+        {lineItem.totalPrice ? <Money data={lineItem.totalPrice} /> : '-'}
       </td>
     </tr>
   );

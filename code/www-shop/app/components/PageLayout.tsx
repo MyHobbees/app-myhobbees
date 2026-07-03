@@ -1,5 +1,6 @@
 import {Await, Link} from 'react-router';
 import {Suspense, useId} from 'react';
+import {ArrowRight} from 'lucide-react';
 import type {
   CartApiQueryFragment,
   FooterQuery,
@@ -134,7 +135,8 @@ function SearchAside() {
                     to={`${SEARCH_ENDPOINT}?q=${term.current}`}
                   >
                     <p>
-                      Voir tous les résultats pour <q>{term.current}</q> →
+                      Voir tous les résultats pour <q>{term.current}</q>{' '}
+                      <ArrowRight aria-hidden="true" />
                     </p>
                   </Link>
                 ) : null}

@@ -1,5 +1,6 @@
 import {Link} from 'react-router';
 import {Image, Money} from '@shopify/hydrogen';
+import {Palette, Scissors, Sparkles} from 'lucide-react';
 import type {
   ProductItemFragment,
   CollectionItemFragment,
@@ -41,9 +42,9 @@ export function ProductItem({
           />
         ) : (
           <div className="product-media-fallback" aria-hidden="true">
-            <span>✂</span>
-            <span>✦</span>
-            <span>🧶</span>
+            <Scissors />
+            <Sparkles />
+            <Palette />
           </div>
         )}
       </div>

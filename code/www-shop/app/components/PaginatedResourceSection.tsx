@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {Pagination} from '@shopify/hydrogen';
+import {ArrowDown, ArrowUp} from 'lucide-react';
 
 /**
  * Encapsulates the previous and next pagination behaviors.
@@ -32,7 +33,7 @@ export function PaginatedResourceSection<NodesType>({
                 'Chargement…'
               ) : (
                 <span>
-                  <span aria-hidden="true">↑</span> Voir les précédents
+                  <ArrowUp aria-hidden="true" /> Voir les précédents
                 </span>
               )}
             </PreviousLink>
@@ -52,7 +53,7 @@ export function PaginatedResourceSection<NodesType>({
                 'Chargement…'
               ) : (
                 <span>
-                  Voir plus <span aria-hidden="true">↓</span>
+                  Voir plus <ArrowDown aria-hidden="true" />
                 </span>
               )}
             </NextLink>

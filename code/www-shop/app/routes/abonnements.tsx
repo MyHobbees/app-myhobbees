@@ -1,4 +1,5 @@
 import {Link} from 'react-router';
+import {Check, Minus} from 'lucide-react';
 import type {Route} from './+types/abonnements';
 import {EditorialHero} from '~/components/EditorialHero';
 
@@ -106,7 +107,7 @@ export default function SubscriptionsPage() {
               <ul className="subscription-feature-list">
                 {plan.features.map((feature) => (
                   <li key={feature}>
-                    <span aria-hidden="true">✓</span>
+                    <Check aria-hidden="true" />
                     {feature}
                   </li>
                 ))}
@@ -183,14 +184,13 @@ export default function SubscriptionsPage() {
 }
 
 function Availability({included}: {included: boolean}) {
+  const Icon = included ? Check : Minus;
+
   return (
     <td>
-      <span
-        aria-label={included ? 'Inclus' : 'Non inclus'}
-        className={included ? 'is-included' : 'is-not-included'}
-        role="img"
-      >
-        {included ? '✓' : '—'}
+      <span className={included ? 'is-included' : 'is-not-included'}>
+        <Icon aria-hidden="true" />
+        <span className="sr-only">{included ? 'Inclus' : 'Non inclus'}</span>
       </span>
     </td>
   );
