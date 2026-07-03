@@ -20,11 +20,11 @@ import {PageLayout} from './components/PageLayout';
 export type RootLoader = typeof loader;
 
 export const meta: Route.MetaFunction = () => [
-  {title: 'My Hobbees | Box créatives surprise'},
+  {title: 'My Hobbees - Découvre un nouveau hobby à ton rythme'},
   {
     name: 'description',
     content:
-      'Des box créatives clés en main pour découvrir de nouveaux hobbies et prendre du temps pour soi.',
+      'My Hobbees propose des box créatives surprise pour découvrir de nouvelles activités, apprendre à ton rythme et prendre du temps pour toi.',
   },
 ];
 
@@ -69,6 +69,19 @@ export function links() {
     {
       rel: 'preconnect',
       href: 'https://shop.app',
+    },
+    {
+      rel: 'preconnect',
+      href: 'https://fonts.googleapis.com',
+    },
+    {
+      rel: 'preconnect',
+      href: 'https://fonts.gstatic.com',
+      crossOrigin: 'anonymous',
+    },
+    {
+      rel: 'stylesheet',
+      href: 'https://fonts.googleapis.com/css2?family=ABeeZee&family=Fredoka:wght@500;600;700&display=swap',
     },
     {rel: 'icon', type: 'image/svg+xml', href: favicon},
   ];

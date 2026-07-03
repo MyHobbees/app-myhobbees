@@ -12,11 +12,11 @@ import {isMockShop} from '~/lib/storefront';
 
 export const meta: Route.MetaFunction = () => {
   return [
-    {title: 'My Hobbees | Box créatives surprise'},
+    {title: 'My Hobbees - Découvre un nouveau hobby à ton rythme'},
     {
       name: 'description',
       content:
-        'Découvre chaque mois une nouvelle activité créative grâce aux box surprise My Hobbees, accessibles et prêtes à créer.',
+        'My Hobbees propose des box créatives surprise pour découvrir de nouvelles activités, apprendre à ton rythme et prendre du temps pour toi.',
     },
   ];
 };

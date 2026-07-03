@@ -119,16 +119,27 @@ function FooterMenu({
 
         return isExternal ? (
           <a href={url} key={item.id} rel="noopener noreferrer" target="_blank">
-            {item.title}
+            {getFooterItemTitle(item.title)}
           </a>
         ) : (
           <NavLink end key={item.id} prefetch="intent" to={url}>
-            {item.title}
+            {getFooterItemTitle(item.title)}
           </NavLink>
         );
       })}
     </nav>
   );
+}
+
+const FOOTER_TITLE_TRANSLATIONS: Record<string, string> = {
+  'Privacy Policy': 'Politique de confidentialité',
+  'Refund Policy': 'Politique de remboursement',
+  'Shipping Policy': 'Politique de livraison',
+  'Terms of Service': 'Conditions générales',
+};
+
+function getFooterItemTitle(title: string) {
+  return FOOTER_TITLE_TRANSLATIONS[title] ?? title;
 }
 
 const FALLBACK_FOOTER_MENU = {

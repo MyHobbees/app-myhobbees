@@ -19,11 +19,10 @@
   --radius-small: 12px;
   --radius-card: 22px;
   --radius-large: 34px;
+  --font-heading: "Fredoka", system-ui, sans-serif;
+  --font-body: "ABeeZee", system-ui, sans-serif;
   color: var(--color-text);
-  font-family:
-    Inter, ui-rounded, "Avenir Next", system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
-  font-synthesis: none;
+  font-family: var(--font-body);
 }
 
 * {
@@ -40,6 +39,7 @@ body {
   color: var(--color-text);
   display: flex;
   flex-direction: column;
+  font-family: var(--font-body);
   min-height: 100vh;
   margin: 0;
   padding: 0;
@@ -71,7 +71,8 @@ h3,
 h4,
 h5 {
   color: var(--color-green);
-  font-weight: 750;
+  font-family: var(--font-heading);
+  font-weight: 700;
   letter-spacing: -0.025em;
 }
 
@@ -506,6 +507,10 @@ aside main {
   font-size: 0.85rem;
   line-height: 1.45;
   margin-bottom: 0.2rem;
+}
+
+.mock-shop-notice-secondary {
+  color: var(--color-muted);
 }
 
 /* Homepage hero */
@@ -1057,8 +1062,27 @@ aside main {
 .page summary {
   color: var(--color-green);
   cursor: pointer;
+  display: flex;
+  font-family: var(--font-heading);
   font-weight: 750;
+  justify-content: space-between;
+  list-style: none;
   padding-right: 2rem;
+}
+
+.page summary::-webkit-details-marker {
+  display: none;
+}
+
+.page summary::after {
+  color: var(--color-pink);
+  content: "⌄";
+  margin-left: 1rem;
+  transition: transform 180ms ease;
+}
+
+.page details[open] summary::after {
+  transform: rotate(180deg);
 }
 
 .collections-grid,
