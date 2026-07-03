@@ -76,10 +76,6 @@ function Hero({
 }: {
   collection?: FeaturedCollectionFragment;
 }) {
-  const collectionUrl = collection?.handle
-    ? `/collections/${collection.handle}`
-    : '/collections/all';
-
   return (
     <section className="home-hero" aria-labelledby="hero-title">
       <div className="page-width hero-grid">
@@ -90,8 +86,8 @@ function Hero({
             Des box créatives clés en main pour t’inspirer, apprendre et
             prendre du temps pour toi.
           </p>
-          <Link className="button button-primary" to={collectionUrl}>
-            Découvrir nos box
+          <Link className="button button-primary" to="/abonnements">
+            Découvrir les abonnements
           </Link>
         </div>
         <div className="hero-visual">
@@ -159,8 +155,8 @@ function MonthlyBox({
             Une box créative surprise, pensée pour te faire découvrir une
             nouvelle activité chaque mois.
           </p>
-          <Link className="text-link" to="/collections/all">
-            Voir toutes nos box <span aria-hidden="true">→</span>
+          <Link className="text-link" to="/abonnements">
+            Comparer les abonnements <span aria-hidden="true">→</span>
           </Link>
         </div>
         <Suspense fallback={<ProductCardSkeleton />}>

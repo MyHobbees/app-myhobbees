@@ -263,12 +263,12 @@ const FALLBACK_HEADER_MENU = {
       items: [],
     },
     {
-      id: 'fallback-box',
+      id: 'fallback-subscriptions',
       resourceId: null,
       tags: [],
-      title: 'La box surprise',
+      title: 'Les abonnements',
       type: 'HTTP',
-      url: '/collections/all',
+      url: '/abonnements',
       items: [],
     },
     {
