@@ -11,7 +11,7 @@ RUN apt-get update -y \
     \
     && pip3 install boto3 python-lambda-local \
     && pip3 install flake8 flake8-use-fstring pep8-naming \
-    && pip3 install coverage python-dotenv
+    && pip3 install coverage python-dotenv psycopg2-binary
 
 WORKDIR /app
 COPY . /app
