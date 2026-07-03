@@ -98,5 +98,5 @@ variable "jwt_secret" {
 }
 
 variable "api_url" {
-  default = ""
+  default = "https://d0lz0ybs4c.execute-api.eu-west-3.amazonaws.com"
 }
