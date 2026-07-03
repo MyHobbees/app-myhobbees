@@ -112,7 +112,10 @@ export default function SubscriptionsPage() {
                   </li>
                 ))}
               </ul>
-              <Link className="button button-primary" to="/collections/all">
+              <Link
+                className="button button-primary"
+                to={plan.featured ? '/abonnements/box-app' : '/abonnements/box-creative'}
+              >
                 {plan.cta}
               </Link>
             </article>
