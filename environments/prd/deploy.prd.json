@@ -3,7 +3,7 @@
   "ASSET_CDN_ID": "ETESA4P3XHG55",
   "BACK_OFFICE_CDN_ID": "E3E4777QPVRQFQ",
   "APP_CDN_ID": "EHRJYI76OXF6I",
-  "DB_HOST": "",
+  "DB_HOST": "myhobbees-prd-database.crqio8s068o9.eu-west-3.rds.amazonaws.com",
   "DB_PORT": 5432,
   "API_URL": "",
   "API_LAMBDA_NAME": "myhobbees-prd-api"

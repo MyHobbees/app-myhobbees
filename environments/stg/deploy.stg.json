@@ -3,7 +3,7 @@
   "ASSET_CDN_ID": "E3LA5QOUAM12IY",
   "BACK_OFFICE_CDN_ID": "E24TBVYSQVHU6O",
   "APP_CDN_ID": "E322VVC5KBPMUQ",
-  "DB_HOST": "",
+  "DB_HOST": "myhobbees-stg-database.crqio8s068o9.eu-west-3.rds.amazonaws.com",
   "DB_PORT": 5432,
   "API_URL": "",
   "API_LAMBDA_NAME": "myhobbees-stg-api"
