@@ -7,6 +7,7 @@ import {
 } from '@shopify/hydrogen';
 import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
 import {useAside} from '~/components/Aside';
+import {getMenuItemUrl} from '~/lib/menu';
 
 interface HeaderProps {
   header: HeaderQuery;
@@ -73,6 +74,12 @@ export function HeaderMenu({
       {items.map((item) => {
         if (!item.url) return null;
 
+        const to = getMenuItemUrl(
+          item.url,
+          primaryDomainUrl,
+          publicStoreDomain,
+        );
+
         return (
           <NavLink
             className={({isActive, isPending}) =>
@@ -84,15 +91,11 @@ export function HeaderMenu({
                 .filter(Boolean)
                 .join(' ')
             }
-            end={item.url === '/'}
+            end={to === '/'}
             key={item.id}
             onClick={close}
             prefetch="intent"
-            to={getMenuItemUrl(
-              item.url,
-              primaryDomainUrl,
-              publicStoreDomain,
-            )}
+            to={to}
           >
             {item.title}
           </NavLink>
@@ -202,23 +205,6 @@ function CartBanner() {
   const originalCart = useAsyncValue() as CartApiQueryFragment | null;
   const cart = useOptimisticCart(originalCart);
   return <CartBadge count={cart?.totalQuantity ?? 0} />;
-}
-
-function getMenuItemUrl(
-  url: string,
-  primaryDomainUrl: string,
-  publicStoreDomain: string,
-) {
-  if (url.startsWith('/')) return url;
-
-  const isInternal =
-    url.includes('myshopify.com') ||
-    Boolean(publicStoreDomain && url.includes(publicStoreDomain)) ||
-    Boolean(primaryDomainUrl && url.includes(primaryDomainUrl));
-
-  if (!isInternal) return url;
-
-  return new URL(url, primaryDomainUrl).pathname;
 }
 
 function MenuIcon() {

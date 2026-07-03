@@ -1,6 +1,7 @@
 import {Suspense} from 'react';
 import {Await, NavLink} from 'react-router';
 import type {FooterQuery, HeaderQuery} from 'storefrontapi.generated';
+import {getMenuItemUrl} from '~/lib/menu';
 
 interface FooterProps {
   footer: Promise<FooterQuery | null>;
@@ -118,23 +119,6 @@ function FooterMenu({
       })}
     </nav>
   );
-}
-
-function getMenuItemUrl(
-  url: string,
-  primaryDomainUrl: string,
-  publicStoreDomain: string,
-) {
-  if (url.startsWith('/')) return url;
-
-  const isInternal =
-    url.includes('myshopify.com') ||
-    Boolean(publicStoreDomain && url.includes(publicStoreDomain)) ||
-    Boolean(primaryDomainUrl && url.includes(primaryDomainUrl));
-
-  if (!isInternal) return url;
-
-  return new URL(url, primaryDomainUrl).pathname;
 }
 
 const FALLBACK_FOOTER_MENU = {
