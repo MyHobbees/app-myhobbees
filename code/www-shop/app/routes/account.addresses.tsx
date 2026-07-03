@@ -376,114 +376,117 @@ export function AddressForm({
   const action = useActionData<ActionResponse>();
   const error = action?.error?.[addressId];
   const isDefaultAddress = defaultAddress?.id === addressId;
+  const fieldIdPrefix = addressId.replace(/[^a-zA-Z0-9_-]/g, '-');
+  const fieldId = (name: string) => `${fieldIdPrefix}-${name}`;
+
   return (
     <Form id={addressId}>
       <fieldset>
         <input type="hidden" name="addressId" defaultValue={addressId} />
-        <label htmlFor="firstName">Prénom*</label>
+        <label htmlFor={fieldId('firstName')}>Prénom*</label>
         <input
           aria-label="Prénom"
           autoComplete="given-name"
           defaultValue={address?.firstName ?? ''}
-          id="firstName"
+          id={fieldId('firstName')}
           name="firstName"
           placeholder="Prénom"
           required
           type="text"
         />
-        <label htmlFor="lastName">Nom*</label>
+        <label htmlFor={fieldId('lastName')}>Nom*</label>
         <input
           aria-label="Nom"
           autoComplete="family-name"
           defaultValue={address?.lastName ?? ''}
-          id="lastName"
+          id={fieldId('lastName')}
           name="lastName"
           placeholder="Nom"
           required
           type="text"
         />
-        <label htmlFor="company">Entreprise</label>
+        <label htmlFor={fieldId('company')}>Entreprise</label>
         <input
           aria-label="Entreprise"
           autoComplete="organization"
           defaultValue={address?.company ?? ''}
-          id="company"
+          id={fieldId('company')}
           name="company"
           placeholder="Entreprise"
           type="text"
         />
-        <label htmlFor="address1">Adresse*</label>
+        <label htmlFor={fieldId('address1')}>Adresse*</label>
         <input
           aria-label="Adresse"
           autoComplete="address-line1"
           defaultValue={address?.address1 ?? ''}
-          id="address1"
+          id={fieldId('address1')}
           name="address1"
           placeholder="Adresse*"
           required
           type="text"
         />
-        <label htmlFor="address2">Complément d’adresse</label>
+        <label htmlFor={fieldId('address2')}>Complément d’adresse</label>
         <input
           aria-label="Complément d’adresse"
           autoComplete="address-line2"
           defaultValue={address?.address2 ?? ''}
-          id="address2"
+          id={fieldId('address2')}
           name="address2"
           placeholder="Complément d’adresse"
           type="text"
         />
-        <label htmlFor="city">Ville*</label>
+        <label htmlFor={fieldId('city')}>Ville*</label>
         <input
           aria-label="Ville"
           autoComplete="address-level2"
           defaultValue={address?.city ?? ''}
-          id="city"
+          id={fieldId('city')}
           name="city"
           placeholder="Ville"
           required
           type="text"
         />
-        <label htmlFor="zoneCode">Région / Département*</label>
+        <label htmlFor={fieldId('zoneCode')}>Région / Département*</label>
         <input
           aria-label="Région ou département"
           autoComplete="address-level1"
           defaultValue={address?.zoneCode ?? ''}
-          id="zoneCode"
+          id={fieldId('zoneCode')}
           name="zoneCode"
           placeholder="Région / Département"
           required
           type="text"
         />
-        <label htmlFor="zip">Code postal*</label>
+        <label htmlFor={fieldId('zip')}>Code postal*</label>
         <input
           aria-label="Code postal"
           autoComplete="postal-code"
           defaultValue={address?.zip ?? ''}
-          id="zip"
+          id={fieldId('zip')}
           name="zip"
           placeholder="Code postal"
           required
           type="text"
         />
-        <label htmlFor="territoryCode">Code pays*</label>
+        <label htmlFor={fieldId('territoryCode')}>Code pays*</label>
         <input
           aria-label="Code pays"
           autoComplete="country"
           defaultValue={address?.territoryCode ?? ''}
-          id="territoryCode"
+          id={fieldId('territoryCode')}
           name="territoryCode"
           placeholder="FR"
           required
           type="text"
           maxLength={2}
         />
-        <label htmlFor="phoneNumber">Téléphone</label>
+        <label htmlFor={fieldId('phoneNumber')}>Téléphone</label>
         <input
           aria-label="Numéro de téléphone"
           autoComplete="tel"
           defaultValue={address?.phoneNumber ?? ''}
-          id="phoneNumber"
+          id={fieldId('phoneNumber')}
           name="phoneNumber"
           placeholder="+16135551111"
           pattern="^\+?[1-9]\d{3,14}$"
@@ -492,11 +495,13 @@ export function AddressForm({
         <div>
           <input
             defaultChecked={isDefaultAddress}
-            id="defaultAddress"
+            id={fieldId('defaultAddress')}
             name="defaultAddress"
             type="checkbox"
           />
-          <label htmlFor="defaultAddress">Définir comme adresse par défaut</label>
+          <label htmlFor={fieldId('defaultAddress')}>
+            Définir comme adresse par défaut
+          </label>
         </div>
         {error ? (
           <p>
