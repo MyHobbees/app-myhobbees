@@ -97,6 +97,33 @@ variable "jwt_secret" {
   default   = ""
 }
 
+variable "shopify_store_domain" {
+  type    = string
+  default = ""
+}
+
+variable "shopify_client_id" {
+  type    = string
+  default = ""
+}
+
+variable "shopify_client_secret" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "admin_email" {
+  type    = string
+  default = ""
+}
+
+variable "admin_password_hash" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
 variable "api_url" {
   default = "https://d0lz0ybs4c.execute-api.eu-west-3.amazonaws.com"
 }

@@ -7,7 +7,7 @@ SERVICES = ['fronts', 'database', 'api']
 ENVIRONMENTS = ['stg', 'prd']
 SERVICE_SECRETS = {
     'database': ['db_password'],
-    'api':      ['db_app_password', 'jwt_secret']
+    'api':      ['db_app_password', 'jwt_secret', 'shopify_store_domain', 'shopify_client_id', 'shopify_client_secret', 'admin_email', 'admin_password_hash']
 }
 
 if len(sys.argv) != 3:

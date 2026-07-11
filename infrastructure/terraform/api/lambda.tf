@@ -56,6 +56,13 @@ resource "aws_lambda_function" "Api" {
       DB_USERNAME = var.db_app_username
       DB_PASSWORD = var.db_app_password
       JWT_SECRET  = var.jwt_secret
+
+      SHOPIFY_STORE_DOMAIN  = var.shopify_store_domain
+      SHOPIFY_CLIENT_ID     = var.shopify_client_id
+      SHOPIFY_CLIENT_SECRET = var.shopify_client_secret
+
+      ADMIN_EMAIL         = var.admin_email
+      ADMIN_PASSWORD_HASH = var.admin_password_hash
     }
   }
 

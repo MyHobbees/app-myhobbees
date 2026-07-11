@@ -19,7 +19,9 @@ func New() *chi.Mux {
 	r.Mount("/health", routes.Health())
 
 	r.Route("/v1", func(r chi.Router) {
+		r.Mount("/auth", routes.Auth())
 		r.Mount("/example", routes.Example())
+		r.Mount("/shopify", routes.Shopify())
 	})
 
 	r.NotFound(func(w http.ResponseWriter, _ *http.Request) {
