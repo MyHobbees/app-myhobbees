@@ -3,14 +3,23 @@ import {
   Boxes,
   LayoutDashboard,
   LogOut,
+  Monitor,
+  Moon,
   Package,
   Store,
+  Sun,
   Users,
   Wrench,
 } from 'lucide-react'
 import { Link, useLocation } from 'react-router'
 
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Separator } from '@/components/ui/separator'
 import {
   Sidebar,
@@ -27,6 +36,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar'
 import { useAuthStore } from '@/stores/auth'
+import { useThemeStore, type Theme } from '@/stores/theme'
 
 type NavItem = {
   title: string
@@ -53,6 +63,41 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     ],
   },
 ]
+
+const themeOptions: { value: Theme; label: string; icon: typeof Sun }[] = [
+  { value: 'light', label: 'Clair', icon: Sun },
+  { value: 'dark', label: 'Sombre', icon: Moon },
+  { value: 'system', label: 'Système', icon: Monitor },
+]
+
+function ThemeToggle() {
+  const theme = useThemeStore((s) => s.theme)
+  const setTheme = useThemeStore((s) => s.setTheme)
+  const CurrentIcon =
+    themeOptions.find((o) => o.value === theme)?.icon ?? Monitor
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label="Changer de thème">
+          <CurrentIcon />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {themeOptions.map((option) => (
+          <DropdownMenuItem
+            key={option.value}
+            onClick={() => setTheme(option.value)}
+            className={option.value === theme ? 'text-brand' : undefined}
+          >
+            <option.icon />
+            {option.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation()
@@ -110,6 +155,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           <Separator orientation="vertical" className="h-6" />
           <div className="ml-auto flex items-center gap-3">
             <span className="text-sm text-muted-foreground">{email}</span>
+            <ThemeToggle />
             <Button variant="ghost" size="sm" onClick={logout}>
               <LogOut />
               Déconnexion
