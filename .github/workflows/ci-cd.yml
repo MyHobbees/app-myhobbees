@@ -85,6 +85,11 @@ jobs:
           TF_STG__AWS_SECRET_KEY: ${{ secrets.TF_STG__AWS_SECRET_KEY }}
           TF_STG__JWT_SECRET: ${{ secrets.TF_STG__JWT_SECRET }}
           TF_STG__DB_APP_PASSWORD: ${{ secrets.TF_STG__DB_APP_PASSWORD }}
+          TF_STG__SHOPIFY_STORE_DOMAIN: ${{ secrets.TF_STG__SHOPIFY_STORE_DOMAIN }}
+          TF_STG__SHOPIFY_CLIENT_ID: ${{ secrets.TF_STG__SHOPIFY_CLIENT_ID }}
+          TF_STG__SHOPIFY_CLIENT_SECRET: ${{ secrets.TF_STG__SHOPIFY_CLIENT_SECRET }}
+          TF_STG__ADMIN_EMAIL: ${{ secrets.TF_STG__ADMIN_EMAIL }}
+          TF_STG__ADMIN_PASSWORD_HASH: ${{ secrets.TF_STG__ADMIN_PASSWORD_HASH }}
 
   ##############################################
   # DEPLOY - STG (branch: dev)
@@ -263,6 +268,11 @@ jobs:
           TF_PRD__AWS_SECRET_KEY: ${{ secrets.TF_PRD__AWS_SECRET_KEY }}
           TF_PRD__JWT_SECRET: ${{ secrets.TF_PRD__JWT_SECRET }}
           TF_PRD__DB_APP_PASSWORD: ${{ secrets.TF_PRD__DB_APP_PASSWORD }}
+          TF_PRD__SHOPIFY_STORE_DOMAIN: ${{ secrets.TF_PRD__SHOPIFY_STORE_DOMAIN }}
+          TF_PRD__SHOPIFY_CLIENT_ID: ${{ secrets.TF_PRD__SHOPIFY_CLIENT_ID }}
+          TF_PRD__SHOPIFY_CLIENT_SECRET: ${{ secrets.TF_PRD__SHOPIFY_CLIENT_SECRET }}
+          TF_PRD__ADMIN_EMAIL: ${{ secrets.TF_PRD__ADMIN_EMAIL }}
+          TF_PRD__ADMIN_PASSWORD_HASH: ${{ secrets.TF_PRD__ADMIN_PASSWORD_HASH }}
 
   ##############################################
   # DEPLOY - PRD (branch: main)
