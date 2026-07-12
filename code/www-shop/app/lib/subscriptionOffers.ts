@@ -1,7 +1,7 @@
 import type {SubscriptionKind} from '~/lib/subscriptions';
 import boxMyHobbees from '~/assets/box-my-hobbees.png';
 
-export type SubscriptionOfferSlug = 'box-creative' | 'box-app';
+export type SubscriptionOfferSlug = 'box-creative' | 'box-app' | 'app-only';
 
 export interface SubscriptionOfferMedia {
   alt: string;
@@ -39,12 +39,14 @@ export interface SubscriptionOfferPrice {
 /**
  * Lets a future Shopify product/selling plan be wired to this offer without
  * touching the page markup — see the "Préparation future Shopify" note in
- * SubscriptionOfferPage.
+ * SubscriptionOfferPage. `subscriptionKind` is nullable because the product
+ * classification in ~/lib/subscriptions.ts only recognizes 'box' | 'box-app'
+ * today — an app-only offer has no matching kind yet.
  */
 export interface SubscriptionOfferFutureShopify {
   productHandle: string | null;
   sellingPlanId: string | null;
-  subscriptionKind: SubscriptionKind;
+  subscriptionKind: SubscriptionKind | null;
 }
 
 export interface SubscriptionOffer {
@@ -64,24 +66,6 @@ export interface SubscriptionOffer {
   tagline: string;
   title: string;
 }
-
-export const SUBSCRIPTION_OFFER_FAQ = [
-  {
-    title: 'Pour quel niveau ?',
-    content:
-      'Les formules My Hobbees sont pensées pour être accessibles, même si tu débutes. Chaque activité est accompagnée d’un guide clair pour avancer à ton rythme.',
-  },
-  {
-    title: 'Comment fonctionne la surprise ?',
-    content:
-      'Tu choisis les univers créatifs qui t’attirent. Nous préparons ensuite une activité surprise pour te faire découvrir un nouveau moment créatif.',
-  },
-  {
-    title: 'Livraison et retours',
-    content:
-      'Les informations de livraison et de retour seront précisées lors de la mise en ligne de la boutique et au moment de la commande.',
-  },
-] as const;
 
 export const SUBSCRIPTION_OFFERS: Record<SubscriptionOfferSlug, SubscriptionOffer> = {
   'box-creative': {
@@ -179,5 +163,43 @@ export const SUBSCRIPTION_OFFERS: Record<SubscriptionOfferSlug, SubscriptionOffe
     tagline:
       'Reçois ta box créative surprise et prolonge l’expérience dans l’application My Hobbees.',
     title: 'Box + accès à l’application',
+  },
+  'app-only': {
+    badge: '100% APPLICATION',
+    cadence: 'Accès continu à l’application, sans box mensuelle',
+    editorial: {
+      title: 'Apprends à ton rythme, sans attendre la prochaine box',
+      description:
+        'Envie d’avancer tout de suite ? Le parcours d’apprentissage te donne accès à toutes les ressources de l’application My Hobbees, sans attendre l’envoi d’une box.',
+    },
+    finalCtaLabel: 'Être informé du lancement',
+    future: {
+      productHandle: null,
+      sellingPlanId: null,
+      subscriptionKind: null,
+    },
+    included: [
+      'Accès complet à l’application My Hobbees',
+      'Tutoriels vidéo pas à pas',
+      'Suivi de ta progression',
+      'Accès à la communauté créative',
+      'Défis et inspirations créatives chaque mois',
+      'Contenus exclusifs liés à chaque activité',
+    ],
+    media: {
+      alt: 'Application My Hobbees',
+      src: boxMyHobbees,
+    },
+    reassurance:
+      'Aucun paiement aujourd’hui : sois informé·e dès l’ouverture de ce parcours.',
+    seo: {
+      title: 'Parcours d’apprentissage — My Hobbees',
+      description:
+        'Découvre le parcours d’apprentissage My Hobbees : l’application, ses tutoriels vidéo et sa communauté, sans box mensuelle.',
+    },
+    slug: 'app-only',
+    tagline:
+      'Progresse à ton rythme grâce à l’application My Hobbees, sans recevoir de box physique.',
+    title: 'Parcours d’apprentissage',
   },
 };

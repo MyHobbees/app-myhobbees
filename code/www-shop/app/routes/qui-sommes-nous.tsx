@@ -1,9 +1,11 @@
 import {Link} from 'react-router';
+import {UserRound} from 'lucide-react';
 import type {Route} from './+types/qui-sommes-nous';
 import {EditorialHero} from '~/components/EditorialHero';
+import {FaqSection} from '~/components/FaqSection';
 
 export const meta: Route.MetaFunction = () => [
-  {title: 'Qui sommes-nous ? \u2014 My Hobbees'},
+  {title: 'Qui sommes-nous ? — My Hobbees'},
   {
     name: 'description',
     content:
@@ -29,6 +31,15 @@ const COMMITMENTS = [
   },
 ] as const;
 
+/** No team photos yet — swap the placeholder icon in TeamMember for a real one when they exist. */
+const TEAM_MEMBERS = [
+  'Aurore Dimech',
+  'Brunic Feyou',
+  'Dimitri Zindovic',
+  'Antoine Schmerber-Perraud',
+  'Mahmut-Ali Topal',
+] as const;
+
 export default function AboutPage() {
   return (
     <article
@@ -36,67 +47,88 @@ export default function AboutPage() {
       aria-labelledby="about-title"
     >
       <EditorialHero
-        description="My Hobbees, c’est l’envie de remettre plus de créativité, de curiosité et de temps pour soi dans le quotidien."
+        description="My Hobbees est né de l’envie de partager une passion pour la création manuelle et de la rendre accessible à toutes et tous, sans pression ni jugement."
         headingId="about-title"
-        title="Qui sommes-nous ?"
+        title="Une histoire de passion…"
         tone="blush"
       />
 
-      <section className="page-width editorial-section about-story">
-        <div className="editorial-copy">
-          <h2>La créativité, sans prise de tête</h2>
+      <section className="about-ambition" aria-labelledby="ambition-title">
+        <div className="page-width editorial-section section-heading centered">
+          <h2 id="ambition-title">
+            Une ambition : faciliter l’accès à l’art pour toutes et tous
+          </h2>
           <p>
-            My Hobbees est né d’une idée simple : il devrait être facile de
-            découvrir une nouvelle activité créative sans passer des heures à
-            chercher le bon matériel, les bons outils ou le bon tutoriel.
+            Nous pensons que la créativité ne devrait jamais être réservée à
+            quelques initié·es. My Hobbees imagine des box et des outils
+            pensés pour que chacun·e puisse se lancer, quel que soit son
+            niveau de départ.
           </p>
-          <p>
-            Nous imaginons des box prêtes à explorer, pensées pour transformer
-            un moment ordinaire en une parenthèse créative.
-          </p>
-        </div>
-      </section>
-
-      <section className="about-mission" aria-labelledby="mission-title">
-        <div className="page-width editorial-section">
-          <div className="section-heading centered">
-            <h2 id="mission-title">Notre mission</h2>
-            <p>
-              Te donner envie d’essayer, de créer et de prendre confiance, une
-              activité après l’autre.
-            </p>
-          </div>
-          <ul className="steps-grid about-values-grid">
-            {COMMITMENTS.map((commitment) => (
-              <li className="step-card about-value-card" key={commitment.title}>
-                <h3>{commitment.title}</h3>
-                <p>{commitment.description}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      <section className="page-width editorial-section about-concept">
-        <div className="editorial-copy">
-          <h2>Une surprise pensée pour toi</h2>
-          <p>
-            Tu indiques les univers créatifs qui t’attirent. Ensuite, My
-            Hobbees prépare une activité surprise à découvrir à ton rythme.
-          </p>
-          <Link className="button button-primary" to="/collections/all">
-            Découvrir la box surprise
+          <Link className="button button-primary" to="/abonnements">
+            Découvrir nos abonnements
           </Link>
+        </div>
+      </section>
+
+      <section className="page-width editorial-section about-values" aria-labelledby="values-title">
+        <div className="section-heading centered">
+          <h2 id="values-title">Nos valeurs</h2>
+          <p>Trois convictions guident chacune de nos créations.</p>
+        </div>
+        <ul className="steps-grid about-values-grid">
+          {COMMITMENTS.map((commitment) => (
+            <li className="step-card about-value-card" key={commitment.title}>
+              <h3>{commitment.title}</h3>
+              <p>{commitment.description}</p>
+            </li>
+          ))}
+        </ul>
+        <div className="about-values-cta">
+          <Link className="button button-primary" to="/abonnements">
+            Découvrir nos abonnements
+          </Link>
+        </div>
+      </section>
+
+      <section className="about-team" aria-labelledby="team-title">
+        <div className="page-width">
+          <h2 id="team-title">Nos membres</h2>
+          <div className="team-hive">
+            <div className="team-row">
+              {TEAM_MEMBERS.slice(0, 3).map((name) => (
+                <TeamMember key={name} name={name} />
+              ))}
+            </div>
+            <div className="team-row">
+              {TEAM_MEMBERS.slice(3).map((name) => (
+                <TeamMember key={name} name={name} />
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
       <section className="about-closing" aria-label="Notre philosophie">
         <div className="page-width">
           <blockquote>
-            Créer, ce n’est pas être parfait. C’est prendre le temps d’essayer.
+            Pour créer, par besoin d’être parfait… Il suffit de prendre le
+            temps d’essayer !
           </blockquote>
         </div>
       </section>
+
+      <FaqSection />
     </article>
+  );
+}
+
+function TeamMember({name}: {name: string}) {
+  return (
+    <div className="team-member">
+      <span aria-hidden="true" className="team-member-avatar">
+        <UserRound />
+      </span>
+      <span className="team-member-name">{name}</span>
+    </div>
   );
 }

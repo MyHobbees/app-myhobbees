@@ -2,6 +2,7 @@ import {Link} from 'react-router';
 import {Check, Minus} from 'lucide-react';
 import type {Route} from './+types/abonnements';
 import {EditorialHero} from '~/components/EditorialHero';
+import {FaqSection} from '~/components/FaqSection';
 
 export const meta: Route.MetaFunction = () => [
   {
@@ -17,24 +18,24 @@ export const meta: Route.MetaFunction = () => [
 
 const PLANS = [
   {
-    badge: 'L’ESSENTIEL',
-    title: 'Box créative surprise',
+    title: 'Parcours d’apprentissage',
     description:
-      'Reçois chaque mois une box surprise avec le matériel, les outils et le guide nécessaires pour découvrir une nouvelle activité créative.',
+      'Progresse à ton rythme grâce à l’application My Hobbees, sans recevoir de box physique.',
     features: [
-      'Une activité créative surprise chaque mois',
-      'Le matériel nécessaire',
-      'Un guide pas à pas',
-      'Des activités adaptées aux débutants',
-      'Une petite surprise My Hobbees',
+      'Accès complet à l’application My Hobbees',
+      'Tutoriels vidéo pas à pas',
+      'Suivi de ta progression',
+      'Accès à la communauté créative',
+      'Défis et inspirations créatives chaque mois',
+      'Contenus exclusifs liés à chaque activité',
     ],
-    cta: 'Choisir cette formule',
+    cta: 'Découvrir l’application',
+    to: '/abonnements/app-only',
     featured: false,
   },
   {
-    badge: 'L’EXPÉRIENCE COMPLÈTE',
-    label: 'Le plus complet',
-    title: 'Box + accès à l’application',
+    badge: 'Recommandé',
+    title: 'Formule complète',
     description:
       'Reçois ta box créative surprise et profite de l’expérience My Hobbees complète dans l’application.',
     features: [
@@ -45,20 +46,36 @@ const PLANS = [
       'Défis et inspirations créatives',
       'Contenus exclusifs liés à ton activité',
     ],
-    cta: 'Choisir l’expérience complète',
+    cta: 'Profiter de l’expérience complète',
+    to: '/abonnements/box-app',
     featured: true,
+  },
+  {
+    title: 'Box créative surprise',
+    description:
+      'Reçois chaque mois une box surprise avec le matériel, les outils et le guide nécessaires pour découvrir une nouvelle activité créative.',
+    features: [
+      'Une activité créative surprise chaque mois',
+      'Le matériel nécessaire',
+      'Un guide pas à pas',
+      'Des activités adaptées aux débutants',
+      'Une petite surprise My Hobbees',
+    ],
+    cta: 'Découvrir nos boxes',
+    to: '/abonnements/box-creative',
+    featured: false,
   },
 ] as const;
 
 const COMPARISON_ROWS = [
-  ['Box créative chaque mois', true, true],
-  ['Matériel inclus', true, true],
-  ['Guide pas à pas', true, true],
-  ['Tutoriels vidéo', false, true],
-  ['Suivi de progression', false, true],
-  ['Communauté My Hobbees', false, true],
-  ['Défis créatifs', false, true],
-  ['Contenus exclusifs', false, true],
+  ['Box créative chaque mois', false, true, true],
+  ['Matériel inclus', false, true, true],
+  ['Guide pas à pas', false, true, true],
+  ['Tutoriels vidéo', true, true, false],
+  ['Suivi de progression', true, true, false],
+  ['Communauté My Hobbees', true, true, false],
+  ['Défis créatifs', true, true, false],
+  ['Contenus exclusifs', true, true, false],
 ] as const;
 
 const STEPS = [
@@ -96,12 +113,11 @@ export default function SubscriptionsPage() {
               }`}
               key={plan.title}
             >
-              <div className="subscription-plan-heading">
-                <span className="product-badge">{plan.badge}</span>
-                {'label' in plan ? (
-                  <span className="subscription-plan-label">{plan.label}</span>
-                ) : null}
-              </div>
+              {'badge' in plan ? (
+                <div className="subscription-plan-heading">
+                  <span className="product-badge">{plan.badge}</span>
+                </div>
+              ) : null}
               <h3>{plan.title}</h3>
               <p>{plan.description}</p>
               <ul className="subscription-feature-list">
@@ -113,8 +129,8 @@ export default function SubscriptionsPage() {
                 ))}
               </ul>
               <Link
-                className="button button-primary"
-                to={plan.featured ? '/abonnements/box-app' : '/abonnements/box-creative'}
+                className={`button ${plan.featured ? 'button-primary' : 'button-secondary'}`}
+                to={plan.to}
               >
                 {plan.cta}
               </Link>
@@ -139,16 +155,18 @@ export default function SubscriptionsPage() {
             <thead>
               <tr>
                 <th scope="col">Fonctionnalité</th>
+                <th scope="col">Parcours d’apprentissage</th>
+                <th scope="col">Formule complète</th>
                 <th scope="col">Box créative surprise</th>
-                <th scope="col">Box + Application</th>
               </tr>
             </thead>
             <tbody>
-              {COMPARISON_ROWS.map(([feature, box, app]) => (
+              {COMPARISON_ROWS.map(([feature, appOnly, complete, box]) => (
                 <tr key={feature}>
                   <th scope="row">{feature}</th>
+                  <Availability included={appOnly} />
+                  <Availability included={complete} />
                   <Availability included={box} />
-                  <Availability included={app} />
                 </tr>
               ))}
             </tbody>
@@ -182,6 +200,8 @@ export default function SubscriptionsPage() {
           Bientôt disponible
         </button>
       </section>
+
+      <FaqSection />
     </article>
   );
 }

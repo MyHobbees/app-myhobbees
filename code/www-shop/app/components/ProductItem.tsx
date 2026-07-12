@@ -4,7 +4,6 @@ import {Palette, Scissors, Sparkles} from 'lucide-react';
 import type {
   ProductItemFragment,
   CollectionItemFragment,
-  RecommendedProductFragment,
 } from 'storefrontapi.generated';
 import {useVariantUrl} from '~/lib/variants';
 
@@ -14,10 +13,7 @@ export function ProductItem({
   featured = false,
   demo = false,
 }: {
-  product:
-    | CollectionItemFragment
-    | ProductItemFragment
-    | RecommendedProductFragment;
+  product: CollectionItemFragment | ProductItemFragment;
   loading?: 'eager' | 'lazy';
   featured?: boolean;
   demo?: boolean;

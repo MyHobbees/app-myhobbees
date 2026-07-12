@@ -36,9 +36,9 @@ export function Footer({
                 Profite de tous les tutoriels associés à nos boxes en
                 téléchargeant l’application !
               </p>
-              <button type="button" className="button button-primary" disabled>
+              <a className="button button-primary" href="#telecharger-app">
                 Télécharger l’app
-              </button>
+              </a>
             </section>
 
             <section

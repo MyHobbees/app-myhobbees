@@ -1,6 +1,6 @@
 import {Suspense} from 'react';
 import {Await, NavLink, useAsyncValue} from 'react-router';
-import {Hexagon, Menu, Search, ShoppingCart, UserRound} from 'lucide-react';
+import {Menu, ShoppingCart, UserRound} from 'lucide-react';
 import {
   type CartViewPayload,
   useAnalytics,
@@ -28,10 +28,6 @@ export function Header({
 }: HeaderProps) {
   return (
     <>
-      <div className="announcement-bar">
-        <Hexagon aria-hidden="true" size={16} />
-        <span>Livraison offerte dès 59 € d’achat</span>
-      </div>
       <header className="header">
         <NavLink
           aria-label="My Hobbees, accueil"
@@ -78,38 +74,44 @@ export function HeaderMenu({
     ? FALLBACK_HEADER_MENU.items
     : (menu?.items ?? FALLBACK_HEADER_MENU.items);
 
+  const renderItem = (item: (typeof items)[number]) => {
+    if (!item.url) return null;
+
+    const to = getMenuItemUrl(item.url, primaryDomainUrl, publicStoreDomain);
+
+    return (
+      <NavLink
+        className={({isActive, isPending}) =>
+          [
+            'header-menu-item',
+            isActive ? 'is-active' : '',
+            isPending ? 'is-pending' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')
+        }
+        end={to === '/'}
+        key={item.id}
+        onClick={close}
+        prefetch="intent"
+        to={to}
+      >
+        {item.title}
+      </NavLink>
+    );
+  };
+
   return (
     <nav className={className} aria-label="Navigation principale">
-      {items.map((item) => {
-        if (!item.url) return null;
-
-        const to = getMenuItemUrl(
-          item.url,
-          primaryDomainUrl,
-          publicStoreDomain,
-        );
-
-        return (
-          <NavLink
-            className={({isActive, isPending}) =>
-              [
-                'header-menu-item',
-                isActive ? 'is-active' : '',
-                isPending ? 'is-pending' : '',
-              ]
-                .filter(Boolean)
-                .join(' ')
-            }
-            end={to === '/'}
-            key={item.id}
-            onClick={close}
-            prefetch="intent"
-            to={to}
-          >
-            {item.title}
-          </NavLink>
-        );
-      })}
+      {items[0] ? renderItem(items[0]) : null}
+      <span
+        aria-disabled="true"
+        className="header-menu-item header-menu-item--soon"
+      >
+        <span className="header-menu-item-badge">Prochainement</span>
+        Nos boxes
+      </span>
+      {items.slice(1).map(renderItem)}
     </nav>
   );
 }
@@ -121,15 +123,13 @@ function HeaderCtas({
   return (
     <nav className="header-ctas" aria-label="Actions rapides">
       <HeaderMenuMobileToggle />
-      <SearchToggle />
       <NavLink
-        aria-label="Mon compte"
-        className="header-action"
+        className="header-action button button-primary button-icon"
         prefetch="intent"
         to="/account"
       >
         <UserRound aria-hidden="true" />
-        <span className="header-action-label">
+        <span className="sr-only">
           <Suspense fallback="Compte">
             <Await resolve={isLoggedIn} errorElement="Compte">
               {(isLoggedIn) => (isLoggedIn ? 'Mon compte' : 'Connexion')}
@@ -156,21 +156,6 @@ function HeaderMenuMobileToggle() {
   );
 }
 
-function SearchToggle() {
-  const {open} = useAside();
-  return (
-    <button
-      aria-label="Rechercher"
-      className="header-action reset"
-      onClick={() => open('search')}
-      type="button"
-    >
-      <Search aria-hidden="true" />
-      <span className="header-action-label">Recherche</span>
-    </button>
-  );
-}
-
 function CartBadge({count}: {count: number}) {
   const {open} = useAside();
   const {publish, shop, cart, prevCart} = useAnalytics();
@@ -178,7 +163,7 @@ function CartBadge({count}: {count: number}) {
   return (
     <a
       aria-label={`Panier, ${count} article${count > 1 ? 's' : ''}`}
-      className="header-action"
+      className="header-action button button-secondary button-icon"
       href="/cart"
       onClick={(event) => {
         event.preventDefault();
@@ -192,7 +177,6 @@ function CartBadge({count}: {count: number}) {
       }}
     >
       <ShoppingCart aria-hidden="true" />
-      <span className="header-action-label">Panier</span>
       <span aria-hidden="true" className="cart-count">
         {count}
       </span>
@@ -220,19 +204,10 @@ const FALLBACK_HEADER_MENU = {
   id: 'my-hobbees-fallback-menu',
   items: [
     {
-      id: 'fallback-home',
-      resourceId: null,
-      tags: [],
-      title: 'Accueil',
-      type: 'HTTP',
-      url: '/',
-      items: [],
-    },
-    {
       id: 'fallback-subscriptions',
       resourceId: null,
       tags: [],
-      title: 'Les abonnements',
+      title: 'Nos abonnements',
       type: 'HTTP',
       url: '/abonnements',
       items: [],
@@ -241,18 +216,9 @@ const FALLBACK_HEADER_MENU = {
       id: 'fallback-about',
       resourceId: null,
       tags: [],
-      title: 'Qui sommes-nous ?',
+      title: 'Qui sommes-nous',
       type: 'HTTP',
       url: '/qui-sommes-nous',
-      items: [],
-    },
-    {
-      id: 'fallback-faq',
-      resourceId: null,
-      tags: [],
-      title: 'FAQ',
-      type: 'HTTP',
-      url: '/faq',
       items: [],
     },
   ],

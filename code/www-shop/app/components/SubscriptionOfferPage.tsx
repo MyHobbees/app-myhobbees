@@ -1,8 +1,8 @@
 import {Link} from 'react-router';
 import {Check} from 'lucide-react';
-import {AccordionList} from '~/components/AccordionList';
+import {FaqSection} from '~/components/FaqSection';
 import {Reassurance} from '~/components/Reassurance';
-import {SUBSCRIPTION_OFFER_FAQ, type SubscriptionOffer} from '~/lib/subscriptionOffers';
+import type {SubscriptionOffer} from '~/lib/subscriptionOffers';
 
 /**
  * Shared presentation for a subscription formula. Both /abonnements/box-creative
@@ -104,21 +104,6 @@ export function SubscriptionOfferPage({offer}: {offer: SubscriptionOffer}) {
         </section>
       ) : null}
 
-      <section
-        className="page-width subscription-offer-faq"
-        aria-labelledby="offer-faq-title"
-      >
-        <h2 className="sr-only" id="offer-faq-title">
-          Questions fréquentes sur cette formule
-        </h2>
-        <AccordionList
-          items={SUBSCRIPTION_OFFER_FAQ.map((item) => ({
-            title: item.title,
-            content: <p>{item.content}</p>,
-          }))}
-        />
-      </section>
-
       <Reassurance />
 
       <section
@@ -141,6 +126,8 @@ export function SubscriptionOfferPage({offer}: {offer: SubscriptionOffer}) {
           </Link>
         </div>
       </section>
+
+      <FaqSection />
     </article>
   );
 }
