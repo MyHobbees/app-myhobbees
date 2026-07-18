@@ -21,7 +21,7 @@ export async function loader({context}: Route.LoaderArgs) {
   });
 
   if (errors?.length || !data?.customer) {
-    throw new Error('Customer not found');
+    throw new Error('Client introuvable');
   }
 
   return remixData(
@@ -39,9 +39,9 @@ export default function AccountLayout() {
 
   const heading = customer
     ? customer.firstName
-      ? `Welcome, ${customer.firstName}`
-      : `Welcome to your account.`
-    : 'Account Details';
+      ? `Bonjour, ${customer.firstName}`
+      : 'Bienvenue dans ton espace client.'
+    : 'Mon compte';
 
   return (
     <div className="account">
@@ -72,15 +72,15 @@ function AccountMenu() {
   return (
     <nav role="navigation">
       <NavLink to="/account/orders" style={isActiveStyle}>
-        Orders &nbsp;
+        Commandes &nbsp;
       </NavLink>
       &nbsp;|&nbsp;
       <NavLink to="/account/profile" style={isActiveStyle}>
-        &nbsp; Profile &nbsp;
+        &nbsp; Profil &nbsp;
       </NavLink>
       &nbsp;|&nbsp;
       <NavLink to="/account/addresses" style={isActiveStyle}>
-        &nbsp; Addresses &nbsp;
+        &nbsp; Adresses &nbsp;
       </NavLink>
       &nbsp;|&nbsp;
       <Logout />
@@ -91,7 +91,7 @@ function AccountMenu() {
 function Logout() {
   return (
     <Form className="account-logout" method="POST" action="/account/logout">
-      &nbsp;<button type="submit">Sign out</button>
+      &nbsp;<button type="submit">Se déconnecter</button>
     </Form>
   );
 }

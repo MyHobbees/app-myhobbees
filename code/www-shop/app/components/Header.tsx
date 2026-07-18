@@ -1,5 +1,6 @@
 import {Suspense} from 'react';
 import {Await, NavLink, useAsyncValue} from 'react-router';
+import {Menu, ShoppingCart, UserRound} from 'lucide-react';
 import {
   type CartViewPayload,
   useAnalytics,
@@ -7,6 +8,8 @@ import {
 } from '@shopify/hydrogen';
 import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
 import {useAside} from '~/components/Aside';
+import {getMenuItemUrl} from '~/lib/menu';
+import {shouldUseFallbackMenu} from '~/lib/storefront';
 
 interface HeaderProps {
   header: HeaderQuery;
@@ -23,20 +26,30 @@ export function Header({
   cart,
   publicStoreDomain,
 }: HeaderProps) {
-  const {shop, menu} = header;
   return (
-    <header className="header">
-      <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
-        <strong>{shop.name}</strong>
-      </NavLink>
-      <HeaderMenu
-        menu={menu}
-        viewport="desktop"
-        primaryDomainUrl={header.shop.primaryDomain.url}
-        publicStoreDomain={publicStoreDomain}
-      />
-      <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
-    </header>
+    <>
+      <header className="header">
+        <NavLink
+          aria-label="My Hobbees, accueil"
+          className="brand"
+          prefetch="intent"
+          to="/"
+          end
+        >
+          <span aria-hidden="true" className="brand-mark">
+            MH
+          </span>
+          <strong>My Hobbees</strong>
+        </NavLink>
+        <HeaderMenu
+          menu={header.menu}
+          viewport="desktop"
+          primaryDomainUrl={header.shop.primaryDomain.url}
+          publicStoreDomain={publicStoreDomain}
+        />
+        <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
+      </header>
+    </>
   );
 }
 
@@ -51,46 +64,54 @@ export function HeaderMenu({
   viewport: Viewport;
   publicStoreDomain: HeaderProps['publicStoreDomain'];
 }) {
-  const className = `header-menu-${viewport}`;
+  const className = `header-menu header-menu-${viewport}`;
   const {close} = useAside();
+  const useFallbackMenu = shouldUseFallbackMenu(
+    publicStoreDomain,
+    menu?.items.length ?? 0,
+  );
+  const items = useFallbackMenu
+    ? FALLBACK_HEADER_MENU.items
+    : (menu?.items ?? FALLBACK_HEADER_MENU.items);
+
+  const renderItem = (item: (typeof items)[number]) => {
+    if (!item.url) return null;
+
+    const to = getMenuItemUrl(item.url, primaryDomainUrl, publicStoreDomain);
+
+    return (
+      <NavLink
+        className={({isActive, isPending}) =>
+          [
+            'header-menu-item',
+            isActive ? 'is-active' : '',
+            isPending ? 'is-pending' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')
+        }
+        end={to === '/'}
+        key={item.id}
+        onClick={close}
+        prefetch="intent"
+        to={to}
+      >
+        {item.title}
+      </NavLink>
+    );
+  };
 
   return (
-    <nav className={className} role="navigation">
-      {viewport === 'mobile' && (
-        <NavLink
-          end
-          onClick={close}
-          prefetch="intent"
-          style={activeLinkStyle}
-          to="/"
-        >
-          Home
-        </NavLink>
-      )}
-      {(menu || FALLBACK_HEADER_MENU).items.map((item) => {
-        if (!item.url) return null;
-
-        // if the url is internal, we strip the domain
-        const url =
-          item.url.includes('myshopify.com') ||
-          item.url.includes(publicStoreDomain) ||
-          item.url.includes(primaryDomainUrl)
-            ? new URL(item.url).pathname
-            : item.url;
-        return (
-          <NavLink
-            className="header-menu-item"
-            end
-            key={item.id}
-            onClick={close}
-            prefetch="intent"
-            style={activeLinkStyle}
-            to={url}
-          >
-            {item.title}
-          </NavLink>
-        );
-      })}
+    <nav className={className} aria-label="Navigation principale">
+      {items[0] ? renderItem(items[0]) : null}
+      <span
+        aria-disabled="true"
+        className="header-menu-item header-menu-item--soon"
+      >
+        <span className="header-menu-item-badge">Prochainement</span>
+        Nos boxes
+      </span>
+      {items.slice(1).map(renderItem)}
     </nav>
   );
 }
@@ -100,16 +121,22 @@ function HeaderCtas({
   cart,
 }: Pick<HeaderProps, 'isLoggedIn' | 'cart'>) {
   return (
-    <nav className="header-ctas" role="navigation">
+    <nav className="header-ctas" aria-label="Actions rapides">
       <HeaderMenuMobileToggle />
-      <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
-        <Suspense fallback="Sign in">
-          <Await resolve={isLoggedIn} errorElement="Sign in">
-            {(isLoggedIn) => (isLoggedIn ? 'Account' : 'Sign in')}
-          </Await>
-        </Suspense>
+      <NavLink
+        className="header-action button button-primary button-icon"
+        prefetch="intent"
+        to="/account"
+      >
+        <UserRound aria-hidden="true" />
+        <span className="sr-only">
+          <Suspense fallback="Compte">
+            <Await resolve={isLoggedIn} errorElement="Compte">
+              {(isLoggedIn) => (isLoggedIn ? 'Mon compte' : 'Connexion')}
+            </Await>
+          </Suspense>
+        </span>
       </NavLink>
-      <SearchToggle />
       <CartToggle cart={cart} />
     </nav>
   );
@@ -119,19 +146,12 @@ function HeaderMenuMobileToggle() {
   const {open} = useAside();
   return (
     <button
-      className="header-menu-mobile-toggle reset"
+      aria-label="Ouvrir le menu"
+      className="header-action header-menu-mobile-toggle reset"
       onClick={() => open('mobile')}
+      type="button"
     >
-      <h3>☰</h3>
-    </button>
-  );
-}
-
-function SearchToggle() {
-  const {open} = useAside();
-  return (
-    <button className="reset" onClick={() => open('search')}>
-      Search
+      <Menu aria-hidden="true" />
     </button>
   );
 }
@@ -142,9 +162,11 @@ function CartBadge({count}: {count: number}) {
 
   return (
     <a
+      aria-label={`Panier, ${count} article${count > 1 ? 's' : ''}`}
+      className="header-action button button-secondary button-icon"
       href="/cart"
-      onClick={(e) => {
-        e.preventDefault();
+      onClick={(event) => {
+        event.preventDefault();
         open('cart');
         publish('cart_viewed', {
           cart,
@@ -154,7 +176,10 @@ function CartBadge({count}: {count: number}) {
         } as CartViewPayload);
       }}
     >
-      Cart <span aria-label={`(items: ${count})`}>{count}</span>
+      <ShoppingCart aria-hidden="true" />
+      <span aria-hidden="true" className="cart-count">
+        {count}
+      </span>
     </a>
   );
 }
@@ -176,56 +201,25 @@ function CartBanner() {
 }
 
 const FALLBACK_HEADER_MENU = {
-  id: 'gid://shopify/Menu/199655587896',
+  id: 'my-hobbees-fallback-menu',
   items: [
     {
-      id: 'gid://shopify/MenuItem/461609500728',
+      id: 'fallback-subscriptions',
       resourceId: null,
       tags: [],
-      title: 'Collections',
+      title: 'Nos abonnements',
       type: 'HTTP',
-      url: '/collections',
+      url: '/abonnements',
       items: [],
     },
     {
-      id: 'gid://shopify/MenuItem/461609533496',
+      id: 'fallback-about',
       resourceId: null,
       tags: [],
-      title: 'Blog',
+      title: 'Qui sommes-nous',
       type: 'HTTP',
-      url: '/blogs/journal',
-      items: [],
-    },
-    {
-      id: 'gid://shopify/MenuItem/461609566264',
-      resourceId: null,
-      tags: [],
-      title: 'Policies',
-      type: 'HTTP',
-      url: '/policies',
-      items: [],
-    },
-    {
-      id: 'gid://shopify/MenuItem/461609599032',
-      resourceId: 'gid://shopify/Page/92591030328',
-      tags: [],
-      title: 'About',
-      type: 'PAGE',
-      url: '/pages/about',
+      url: '/qui-sommes-nous',
       items: [],
     },
   ],
 };
-
-function activeLinkStyle({
-  isActive,
-  isPending,
-}: {
-  isActive: boolean;
-  isPending: boolean;
-}) {
-  return {
-    fontWeight: isActive ? 'bold' : undefined,
-    color: isPending ? 'grey' : 'black',
-  };
-}
