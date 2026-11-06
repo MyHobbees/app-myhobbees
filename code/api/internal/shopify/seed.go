@@ -21,7 +21,14 @@ type OrderSpec struct {
 	ProcessedAt string   `json:"processedAt"`
 	Tags        []string `json:"tags,omitempty"`
 	ContractID  string   `json:"contractId,omitempty"`
+	Stage       string   `json:"stage,omitempty"`
 }
+
+const (
+	StageFulfilled = "fulfilled"
+	StagePreparing = "preparing"
+	StageCancelled = "cancelled"
+)
 
 type SeedOrdersResult struct {
 	Created   int  `json:"created"`
@@ -34,6 +41,7 @@ type CleanupResult struct {
 	Customers         int  `json:"customers"`
 	Products          int  `json:"products"`
 	SellingPlanGroups int  `json:"sellingPlanGroups"`
+	Skipped           int  `json:"skipped"`
 	Remaining         bool `json:"remaining"`
 	Throttled         bool `json:"throttled"`
 }
@@ -61,7 +69,7 @@ func (c *Client) SeedBase(ctx context.Context) (*SeedBase, error) {
 	base := &SeedBase{}
 
 	subscriptionDescription := "Une box surprise chaque mois pendant 12 mois, pour découvrir une nouvelle passion créative : crochet, tricot, broderie, macramé, peinture par numéros et bien d'autres."
-	subscriptionProductID, subscriptionVariantID, err := c.createProduct(ctx, "Box Passion — Abonnement mensuel", suffix, "29.90", subscriptionDescription)
+	subscriptionProductID, subscriptionVariantID, err := c.createProduct(ctx, "Box Passion — Abonnement mensuel", "", "29.00", subscriptionDescription, "abonnement")
 	if err != nil {
 		return base, err
 	}
@@ -71,15 +79,21 @@ func (c *Client) SeedBase(ctx context.Context) (*SeedBase, error) {
 		return base, err
 	}
 
+	productIDs := []string{subscriptionProductID}
 	boxVariantIDs := make([]string, 0, len(boxThemes))
 	for _, box := range boxThemes {
 		description := fmt.Sprintf("La box %s à l'unité : tout le matériel et le pas-à-pas pour découvrir cette passion.", strings.ToLower(box.theme))
-		_, variantID, err := c.createProduct(ctx, "Box "+box.theme, suffix, box.price, description)
+		productID, variantID, err := c.createProduct(ctx, "Box "+box.theme, suffix, box.price, description)
 		if err != nil {
 			return base, err
 		}
+		productIDs = append(productIDs, productID)
 		boxVariantIDs = append(boxVariantIDs, variantID)
 		base.Products++
+	}
+
+	if err := c.publishProducts(ctx, productIDs); err != nil && !isAccessDenied(err) {
+		return base, err
 	}
 
 	customers := [][2]string{
@@ -103,14 +117,24 @@ func (c *Client) SeedBase(ctx context.Context) (*SeedBase, error) {
 	}
 
 	orders := make([]OrderSpec, 0, 30)
+	lastCycleStages := []string{StageFulfilled, StagePreparing, ""}
 	for i := 0; i < 6; i++ {
 		customerID := customerIDs[i]
 		contractID := fmt.Sprintf("SUB-%s-%d", suffix, i+1)
-		start := time.Now().AddDate(0, 0, -(60 + rand.Intn(31)))
+		lastStage := lastCycleStages[i%len(lastCycleStages)]
+		daysBack := 60 + rand.Intn(31)
+		if lastStage != StageFulfilled {
+			daysBack = 60 + rand.Intn(6)
+		}
+		start := time.Now().AddDate(0, 0, -daysBack)
 		for cycle := 0; cycle < 3; cycle++ {
 			tags := []string{"subscription"}
 			if cycle > 0 {
 				tags = []string{"subscription", "subscription-renewal"}
+			}
+			stage := StageFulfilled
+			if cycle == 2 {
+				stage = lastStage
 			}
 			orders = append(orders, OrderSpec{
 				CustomerID:  customerID,
@@ -119,15 +143,34 @@ func (c *Client) SeedBase(ctx context.Context) (*SeedBase, error) {
 				ProcessedAt: start.AddDate(0, 0, cycle*30).Format(time.RFC3339),
 				Tags:        tags,
 				ContractID:  contractID,
+				Stage:       stage,
 			})
 		}
 	}
-	for i := 0; i < 12; i++ {
+	oneOffs := []struct {
+		stage    string
+		daysBack int
+	}{
+		{StageFulfilled, 12},
+		{StageFulfilled, 25},
+		{StageFulfilled, 41},
+		{StageFulfilled, 58},
+		{StageFulfilled, 76},
+		{StagePreparing, 1},
+		{StagePreparing, 3},
+		{"", 0},
+		{"", 1},
+		{"", 2},
+		{StageCancelled, 7},
+		{StageCancelled, 19},
+	}
+	for _, oneOff := range oneOffs {
 		orders = append(orders, OrderSpec{
 			CustomerID:  customerIDs[rand.Intn(len(customerIDs))],
 			VariantID:   boxVariantIDs[rand.Intn(len(boxVariantIDs))],
 			Quantity:    1 + rand.Intn(2),
-			ProcessedAt: time.Now().AddDate(0, 0, -rand.Intn(91)).Format(time.RFC3339),
+			ProcessedAt: time.Now().AddDate(0, 0, -oneOff.daysBack).Format(time.RFC3339),
+			Stage:       oneOff.stage,
 		})
 	}
 	base.Orders = orders
@@ -138,7 +181,8 @@ func (c *Client) SeedBase(ctx context.Context) (*SeedBase, error) {
 func (c *Client) SeedOrders(ctx context.Context, orders []OrderSpec) (*SeedOrdersResult, error) {
 	result := &SeedOrdersResult{}
 	for _, order := range orders {
-		if err := c.createOrder(ctx, order); err != nil {
+		orderID, err := c.createOrder(ctx, order)
+		if err != nil {
 			if isThrottled(err) {
 				result.Throttled = true
 				return result, nil
@@ -146,6 +190,13 @@ func (c *Client) SeedOrders(ctx context.Context, orders []OrderSpec) (*SeedOrder
 			return result, err
 		}
 		result.Created++
+		if err := c.applyStage(ctx, orderID, order.Stage); err != nil {
+			if isThrottled(err) {
+				result.Throttled = true
+				return result, nil
+			}
+			return result, err
+		}
 		for _, tag := range order.Tags {
 			if tag == "subscription-renewal" {
 				result.Renewals++
@@ -153,6 +204,41 @@ func (c *Client) SeedOrders(ctx context.Context, orders []OrderSpec) (*SeedOrder
 		}
 	}
 	return result, nil
+}
+
+func (c *Client) applyStage(ctx context.Context, orderID, stage string) error {
+	switch stage {
+	case StageFulfilled:
+		return c.fulfillOrderByGID(ctx, orderID)
+	case StageCancelled:
+		return c.cancelOrder(ctx, orderID)
+	}
+	return nil
+}
+
+func (c *Client) cancelOrder(ctx context.Context, id string) error {
+	query := `mutation($orderId: ID!, $reason: OrderCancelReason!, $refund: Boolean!, $restock: Boolean!) {
+		orderCancel(orderId: $orderId, reason: $reason, refund: $refund, restock: $restock, notifyCustomer: false) {
+			job { id }
+			orderCancelUserErrors { field message }
+		}
+	}`
+	variables := map[string]any{
+		"orderId": id,
+		"reason":  "CUSTOMER",
+		"refund":  false,
+		"restock": false,
+	}
+
+	var data struct {
+		OrderCancel struct {
+			OrderCancelUserErrors []userError `json:"orderCancelUserErrors"`
+		} `json:"orderCancel"`
+	}
+	if err := c.Query(ctx, query, variables, &data); err != nil {
+		return err
+	}
+	return checkUserErrors("orderCancel", data.OrderCancel.OrderCancelUserErrors)
 }
 
 const cleanupBatch = 15
@@ -171,11 +257,15 @@ func (c *Client) Cleanup(ctx context.Context) (*CleanupResult, error) {
 				result.Remaining = true
 				return result, nil
 			}
+			if isSubscriptionBound(err) {
+				result.Skipped++
+				continue
+			}
 			return result, err
 		}
 		result.Orders++
 	}
-	if len(orderIDs) == cleanupBatch {
+	if len(orderIDs) == cleanupBatch && result.Orders > 0 {
 		result.Remaining = true
 		return result, nil
 	}
@@ -191,11 +281,15 @@ func (c *Client) Cleanup(ctx context.Context) (*CleanupResult, error) {
 				result.Remaining = true
 				return result, nil
 			}
+			if isSubscriptionBound(err) {
+				result.Skipped++
+				continue
+			}
 			return result, err
 		}
 		result.Customers++
 	}
-	if len(customerIDs) == cleanupBatch {
+	if len(customerIDs) == cleanupBatch && result.Customers > 0 {
 		result.Remaining = true
 		return result, nil
 	}
@@ -211,11 +305,15 @@ func (c *Client) Cleanup(ctx context.Context) (*CleanupResult, error) {
 				result.Remaining = true
 				return result, nil
 			}
+			if isSubscriptionBound(err) {
+				result.Skipped++
+				continue
+			}
 			return result, err
 		}
 		result.Products++
 	}
-	if len(productIDs) == cleanupBatch {
+	if len(productIDs) == cleanupBatch && result.Products > 0 {
 		result.Remaining = true
 		return result, nil
 	}
@@ -231,15 +329,23 @@ func (c *Client) Cleanup(ctx context.Context) (*CleanupResult, error) {
 				result.Remaining = true
 				return result, nil
 			}
+			if isSubscriptionBound(err) {
+				result.Skipped++
+				continue
+			}
 			return result, err
 		}
 		result.SellingPlanGroups++
 	}
-	if len(groupIDs) == cleanupBatch {
+	if len(groupIDs) == cleanupBatch && result.SellingPlanGroups > 0 {
 		result.Remaining = true
 	}
 
 	return result, nil
+}
+
+func isSubscriptionBound(err error) bool {
+	return strings.Contains(strings.ToLower(err.Error()), "subscription contract")
 }
 
 func (c *Client) listIDs(ctx context.Context, connection string) ([]string, error) {
@@ -333,6 +439,50 @@ func (c *Client) deleteSellingPlanGroup(ctx context.Context, id string) error {
 	return checkUserErrors("sellingPlanGroupDelete", data.SellingPlanGroupDelete.UserErrors)
 }
 
+func (c *Client) publishProducts(ctx context.Context, productIDs []string) error {
+	var pubs struct {
+		Publications struct {
+			Nodes []struct {
+				ID string `json:"id"`
+			} `json:"nodes"`
+		} `json:"publications"`
+	}
+	if err := c.Query(ctx, `{ publications(first: 10) { nodes { id } } }`, nil, &pubs); err != nil {
+		return err
+	}
+	if len(pubs.Publications.Nodes) == 0 {
+		return nil
+	}
+
+	input := make([]map[string]any, 0, len(pubs.Publications.Nodes))
+	for _, pub := range pubs.Publications.Nodes {
+		input = append(input, map[string]any{"publicationId": pub.ID})
+	}
+	query := `mutation($id: ID!, $input: [PublicationInput!]!) {
+		publishablePublish(id: $id, input: $input) {
+			userErrors { field message }
+		}
+	}`
+	for _, id := range productIDs {
+		var data struct {
+			PublishablePublish struct {
+				UserErrors []userError `json:"userErrors"`
+			} `json:"publishablePublish"`
+		}
+		if err := c.Query(ctx, query, map[string]any{"id": id, "input": input}, &data); err != nil {
+			return err
+		}
+		if err := checkUserErrors("publishablePublish", data.PublishablePublish.UserErrors); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func isAccessDenied(err error) bool {
+	return strings.Contains(err.Error(), "Access denied")
+}
+
 func isThrottled(err error) bool {
 	msg := err.Error()
 	return strings.Contains(msg, "Too many attempts") ||
@@ -341,16 +491,20 @@ func isThrottled(err error) bool {
 		strings.Contains(msg, "context deadline exceeded")
 }
 
-func (c *Client) createProduct(ctx context.Context, title, suffix, price, description string) (string, string, error) {
+func (c *Client) createProduct(ctx context.Context, title, suffix, price, description string, tags ...string) (string, string, error) {
 	query := `mutation($input: ProductSetInput!) {
 		productSet(input: $input) {
 			product { id variants(first: 1) { nodes { id } } }
 			userErrors { field message }
 		}
 	}`
+	handle := slugify(title)
+	if suffix != "" {
+		handle = fmt.Sprintf("%s-%s", handle, suffix)
+	}
 	input := map[string]any{
 		"title":  title,
-		"handle": fmt.Sprintf("%s-%s", slugify(title), suffix),
+		"handle": handle,
 		"status": "ACTIVE",
 		"productOptions": []map[string]any{
 			{"name": "Title", "position": 1, "values": []map[string]any{{"name": "Default Title"}}},
@@ -361,6 +515,9 @@ func (c *Client) createProduct(ctx context.Context, title, suffix, price, descri
 	}
 	if description != "" {
 		input["descriptionHtml"] = "<p>" + description + "</p>"
+	}
+	if len(tags) > 0 {
+		input["tags"] = tags
 	}
 	variables := map[string]any{"input": input}
 
@@ -412,14 +569,6 @@ func (c *Client) createSellingPlanGroup(ctx context.Context, suffix string, prod
 					"deliveryPolicy": map[string]any{
 						"recurring": map[string]any{"interval": "MONTH", "intervalCount": 1},
 					},
-					"pricingPolicies": []map[string]any{
-						{
-							"fixed": map[string]any{
-								"adjustmentType":  "PERCENTAGE",
-								"adjustmentValue": map[string]any{"percentage": 10.0},
-							},
-						},
-					},
 				},
 			},
 		},
@@ -470,7 +619,7 @@ func (c *Client) createCustomer(ctx context.Context, firstName, lastName, suffix
 	return data.CustomerCreate.Customer.ID, nil
 }
 
-func (c *Client) createOrder(ctx context.Context, in OrderSpec) error {
+func (c *Client) createOrder(ctx context.Context, in OrderSpec) (string, error) {
 	query := `mutation($order: OrderCreateOrderInput!, $options: OrderCreateOptionsInput) {
 		orderCreate(order: $order, options: $options) {
 			order { id }
@@ -485,8 +634,12 @@ func (c *Client) createOrder(ctx context.Context, in OrderSpec) error {
 			{"variantId": in.VariantID, "quantity": in.Quantity},
 		},
 	}
-	if len(in.Tags) > 0 {
-		order["tags"] = in.Tags
+	tags := in.Tags
+	if in.Stage == StagePreparing {
+		tags = append(tags, PreparationTag)
+	}
+	if len(tags) > 0 {
+		order["tags"] = tags
 	}
 	if in.ContractID != "" {
 		order["note"] = fmt.Sprintf("Contrat %s", in.ContractID)
@@ -499,13 +652,19 @@ func (c *Client) createOrder(ctx context.Context, in OrderSpec) error {
 
 	var data struct {
 		OrderCreate struct {
+			Order struct {
+				ID string `json:"id"`
+			} `json:"order"`
 			UserErrors []userError `json:"userErrors"`
 		} `json:"orderCreate"`
 	}
 	if err := c.Query(ctx, query, variables, &data); err != nil {
-		return err
+		return "", err
 	}
-	return checkUserErrors("orderCreate", data.OrderCreate.UserErrors)
+	if err := checkUserErrors("orderCreate", data.OrderCreate.UserErrors); err != nil {
+		return "", err
+	}
+	return data.OrderCreate.Order.ID, nil
 }
 
 type userError struct {

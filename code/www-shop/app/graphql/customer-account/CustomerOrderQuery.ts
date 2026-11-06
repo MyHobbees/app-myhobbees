@@ -22,15 +22,7 @@ export const CUSTOMER_ORDER_QUERY = `#graphql
     price {
       ...OrderMoney
     }
-    discountAllocations {
-      allocatedAmount {
-        ...OrderMoney
-      }
-      discountApplication {
-        ...DiscountApplication
-      }
-    }
-    totalDiscount {
+    totalPrice {
       ...OrderMoney
     }
     image {
@@ -49,11 +41,6 @@ export const CUSTOMER_ORDER_QUERY = `#graphql
     statusPageUrl
     fulfillmentStatus
     processedAt
-    fulfillments(first: 1) {
-      nodes {
-        status
-      }
-    }
     totalTax {
       ...OrderMoney
     }

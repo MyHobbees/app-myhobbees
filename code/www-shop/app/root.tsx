@@ -19,6 +19,15 @@ import {PageLayout} from './components/PageLayout';
 
 export type RootLoader = typeof loader;
 
+export const meta: Route.MetaFunction = () => [
+  {title: 'My Hobbees - Découvre un nouveau hobby à ton rythme'},
+  {
+    name: 'description',
+    content:
+      'My Hobbees propose des box créatives surprise pour découvrir de nouvelles activités, apprendre à ton rythme et prendre du temps pour toi.',
+  },
+];
+
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
  */
@@ -60,6 +69,19 @@ export function links() {
     {
       rel: 'preconnect',
       href: 'https://shop.app',
+    },
+    {
+      rel: 'preconnect',
+      href: 'https://fonts.googleapis.com',
+    },
+    {
+      rel: 'preconnect',
+      href: 'https://fonts.gstatic.com',
+      crossOrigin: 'anonymous',
+    },
+    {
+      rel: 'stylesheet',
+      href: 'https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Hind:wght@400;500;600;700&display=swap',
     },
     {rel: 'icon', type: 'image/svg+xml', href: favicon},
   ];
@@ -145,7 +167,7 @@ export function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
 
   return (
-    <html lang="en">
+    <html lang="fr">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -185,7 +207,7 @@ export default function App() {
 
 export function ErrorBoundary() {
   const error = useRouteError();
-  let errorMessage = 'Unknown error';
+  let errorMessage = 'Une erreur inconnue est survenue';
   let errorStatus = 500;
 
   if (isRouteErrorResponse(error)) {
@@ -197,7 +219,7 @@ export function ErrorBoundary() {
 
   return (
     <div className="route-error">
-      <h1>Oops</h1>
+      <h1>Oups</h1>
       <h2>{errorStatus}</h2>
       {errorMessage && (
         <fieldset>

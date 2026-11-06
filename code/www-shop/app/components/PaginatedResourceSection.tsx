@@ -1,8 +1,9 @@
 import * as React from 'react';
 import {Pagination} from '@shopify/hydrogen';
+import {ArrowDown, ArrowUp} from 'lucide-react';
 
 /**
- * <PaginatedResourceSection> encapsulates the previous and next pagination behaviors throughout your application.
+ * Encapsulates the previous and next pagination behaviors.
  */
 export function PaginatedResourceSection<NodesType>({
   connection,
@@ -11,7 +12,10 @@ export function PaginatedResourceSection<NodesType>({
   resourcesClassName,
 }: {
   connection: React.ComponentProps<typeof Pagination<NodesType>>['connection'];
-  children: React.FunctionComponent<{node: NodesType; index: number}>;
+  children: (args: {
+    node: NodesType;
+    index: number;
+  }) => React.ReactElement | null;
   ariaLabel?: string;
   resourcesClassName?: string;
 }) {
@@ -26,10 +30,10 @@ export function PaginatedResourceSection<NodesType>({
           <div>
             <PreviousLink>
               {isLoading ? (
-                'Loading...'
+                'Chargement…'
               ) : (
                 <span>
-                  <span aria-hidden="true">↑</span> Load previous
+                  <ArrowUp aria-hidden="true" /> Voir les précédents
                 </span>
               )}
             </PreviousLink>
@@ -46,10 +50,10 @@ export function PaginatedResourceSection<NodesType>({
             )}
             <NextLink>
               {isLoading ? (
-                'Loading...'
+                'Chargement…'
               ) : (
                 <span>
-                  Load more <span aria-hidden="true">↓</span>
+                  Voir plus <ArrowDown aria-hidden="true" />
                 </span>
               )}
             </NextLink>

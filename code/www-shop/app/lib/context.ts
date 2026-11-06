@@ -45,15 +45,22 @@ export async function createHydrogenRouterContext(
     AppSession.init(request, [env.SESSION_SECRET]),
   ]);
 
+  const storefrontConfigured = Boolean(
+    env.PUBLIC_STORE_DOMAIN && env.PUBLIC_STOREFRONT_API_TOKEN,
+  );
+  const resolvedEnv = storefrontConfigured
+    ? env
+    : {...env, PUBLIC_STORE_DOMAIN: '', PUBLIC_STOREFRONT_API_TOKEN: ''};
+
   const hydrogenContext = createHydrogenContext(
     {
-      env,
+      env: resolvedEnv,
       request,
       cache,
       waitUntil,
       session,
       // Or detect from URL path based on locale subpath, cookies, or any other strategy
-      i18n: {language: 'EN', country: 'US'},
+      i18n: {language: 'FR', country: 'FR'},
       cart: {
         queryFragment: CART_QUERY_FRAGMENT,
       },

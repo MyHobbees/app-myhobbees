@@ -1,177 +1,174 @@
-import {Await, useLoaderData, Link} from 'react-router';
+import {Link, useLoaderData} from 'react-router';
 import type {Route} from './+types/_index';
-import {Suspense} from 'react';
-import {Image} from '@shopify/hydrogen';
-import type {
-  FeaturedCollectionFragment,
-  RecommendedProductsQuery,
-} from 'storefrontapi.generated';
-import {ProductItem} from '~/components/ProductItem';
 import {MockShopNotice} from '~/components/MockShopNotice';
+import {Reassurance} from '~/components/Reassurance';
+import {FaqSection} from '~/components/FaqSection';
+import {isMockShop} from '~/lib/storefront';
+import boxMyHobbees from '~/assets/box-my-hobbees.png';
 
 export const meta: Route.MetaFunction = () => {
-  return [{title: 'Hydrogen | Home'}];
+  return [
+    {title: 'My Hobbees - Découvre un nouveau hobby à ton rythme'},
+    {
+      name: 'description',
+      content:
+        'My Hobbees propose des box créatives surprise pour découvrir de nouvelles activités, apprendre à ton rythme et prendre du temps pour toi.',
+    },
+  ];
 };
 
-export async function loader(args: Route.LoaderArgs) {
-  // Start fetching non-critical data without blocking time to first byte
-  const deferredData = loadDeferredData(args);
-
-  // Await the critical data required to render initial state of the page
-  const criticalData = await loadCriticalData(args);
-
-  return {...deferredData, ...criticalData};
-}
-
-/**
- * Load data necessary for rendering content above the fold. This is the critical data
- * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
- */
-async function loadCriticalData({context}: Route.LoaderArgs) {
-  const [{collections}] = await Promise.all([
-    context.storefront.query(FEATURED_COLLECTION_QUERY),
-    // Add other queries here, so that they are loaded in parallel
-  ]);
-
+export async function loader({context}: Route.LoaderArgs) {
   return {
-    isShopLinked: Boolean(context.env.PUBLIC_STORE_DOMAIN),
-    featuredCollection: collections.nodes[0],
-  };
-}
-
-/**
- * Load data for rendering content below the fold. This data is deferred and will be
- * fetched after the initial page load. If it's unavailable, the page should still 200.
- * Make sure to not throw any errors here, as it will cause the page to 500.
- */
-function loadDeferredData({context}: Route.LoaderArgs) {
-  const recommendedProducts = context.storefront
-    .query(RECOMMENDED_PRODUCTS_QUERY)
-    .catch((error: Error) => {
-      // Log query errors, but don't throw them so the page can still render
-      console.error(error);
-      return null;
-    });
-
-  return {
-    recommendedProducts,
+    isMockShop: isMockShop(context.env.PUBLIC_STORE_DOMAIN),
   };
 }
 
 export default function Homepage() {
   const data = useLoaderData<typeof loader>();
+
   return (
     <div className="home">
-      {data.isShopLinked ? null : <MockShopNotice />}
-      <FeaturedCollection collection={data.featuredCollection} />
-      <RecommendedProducts products={data.recommendedProducts} />
+      {data.isMockShop ? (
+        <div className="page-width mock-notice-wrapper">
+          <MockShopNotice />
+        </div>
+      ) : null}
+      <Hero />
+      <DreamSection />
+      <MissionSection />
+      <AppPromoSection />
+      <Reassurance />
+      <FaqSection />
     </div>
   );
 }
 
-function FeaturedCollection({
-  collection,
-}: {
-  collection: FeaturedCollectionFragment;
-}) {
-  if (!collection) return null;
-  const image = collection?.image;
+function Hero() {
   return (
-    <Link
-      className="featured-collection"
-      to={`/collections/${collection.handle}`}
-    >
-      {image && (
-        <div className="featured-collection-image">
-          <Image
-            data={image}
-            sizes="100vw"
-            alt={image.altText || collection.title}
+    <section className="home-hero" aria-labelledby="hero-title">
+      <div className="page-width hero-grid">
+        <div className="hero-content">
+          <p className="eyebrow">Ta parenthèse créative, livrée chez toi</p>
+          <h1 id="hero-title">Découvre un nouveau hobby à ton rythme</h1>
+          <p className="hero-description">
+            Des box créatives clés en main pour t’inspirer, apprendre et
+            prendre du temps pour toi.
+          </p>
+          <div className="hero-actions">
+            <Link className="button button-primary" to="/abonnements">
+              Découvrir nos abonnements
+            </Link>
+            <Link className="button button-outline" to="/collections/all">
+              Découvrir nos boxes
+            </Link>
+          </div>
+        </div>
+        <div className="hero-visual">
+          <img
+            alt="Box créative surprise My Hobbees"
+            decoding="async"
+            height="1254"
+            loading="eager"
+            src={boxMyHobbees}
+            width="1254"
           />
         </div>
-      )}
-      <h1>{collection.title}</h1>
-    </Link>
-  );
-}
-
-function RecommendedProducts({
-  products,
-}: {
-  products: Promise<RecommendedProductsQuery | null>;
-}) {
-  return (
-    <section
-      className="recommended-products"
-      aria-labelledby="recommended-products"
-    >
-      <h2 id="recommended-products">Recommended Products</h2>
-      <Suspense fallback={<div>Loading...</div>}>
-        <Await resolve={products}>
-          {(response) => (
-            <div className="recommended-products-grid">
-              {response
-                ? response.products.nodes.map((product) => (
-                    <ProductItem key={product.id} product={product} />
-                  ))
-                : null}
-            </div>
-          )}
-        </Await>
-      </Suspense>
-      <br />
+      </div>
     </section>
   );
 }
 
-const FEATURED_COLLECTION_QUERY = `#graphql
-  fragment FeaturedCollection on Collection {
-    id
-    title
-    image {
-      id
-      url
-      altText
-      width
-      height
-    }
-    handle
-  }
-  query FeaturedCollection($country: CountryCode, $language: LanguageCode)
-    @inContext(country: $country, language: $language) {
-    collections(first: 1, sortKey: UPDATED_AT, reverse: true) {
-      nodes {
-        ...FeaturedCollection
-      }
-    }
-  }
-` as const;
+function DreamSection() {
+  const steps = [
+    {
+      title: 'Choisis tes envies',
+      description: 'Indique les univers créatifs que tu aimerais découvrir.',
+    },
+    {
+      title: 'Reçois ta surprise',
+      description: 'Nous préparons une box pensée pour te faire créer.',
+    },
+    {
+      title: 'Crée à ton rythme',
+      description:
+        'Suis le guide, découvre et profite de ton moment créatif.',
+    },
+  ];
 
-const RECOMMENDED_PRODUCTS_QUERY = `#graphql
-  fragment RecommendedProduct on Product {
-    id
-    title
-    handle
-    priceRange {
-      minVariantPrice {
-        amount
-        currencyCode
-      }
-    }
-    featuredImage {
-      id
-      url
-      altText
-      width
-      height
-    }
-  }
-  query RecommendedProducts ($country: CountryCode, $language: LanguageCode)
-    @inContext(country: $country, language: $language) {
-    products(first: 4, sortKey: UPDATED_AT, reverse: true) {
-      nodes {
-        ...RecommendedProduct
-      }
-    }
-  }
-` as const;
+  return (
+    <section className="dream-section" aria-labelledby="dream-title">
+      <div className="page-width">
+        <div className="section-heading centered">
+          <p className="eyebrow">Simple, doux et surprenant</p>
+          <h2 id="dream-title">Le tout en un rêve !</h2>
+          <p>
+            Chaque box est pensée comme un petit moment à toi : tu choisis
+            tes envies, on prépare la surprise, tu crées à ton rythme.
+          </p>
+        </div>
+        <ol className="steps-grid">
+          {steps.map((step, index) => (
+            <li className="product-item dream-card" key={step.title}>
+              <div className="product-item-media">
+                <img alt="" decoding="async" loading="lazy" src={boxMyHobbees} />
+              </div>
+              <div className="product-item-content">
+                <span className="step-number">0{index + 1}</span>
+                <h3>{step.title}</h3>
+                <p>{step.description}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <div className="dream-cta">
+          <Link className="button button-primary" to="/abonnements">
+            Découvrir nos abonnements
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MissionSection() {
+  return (
+    <section className="mission-section" aria-labelledby="mission-title">
+      <div className="page-width section-heading centered">
+        <h2 id="mission-title">Notre mission : t’aider à trouver ta passion</h2>
+        <p>
+          Nous croyons que la créativité se découvre en essayant, pas en
+          cherchant le matériel parfait. My Hobbees prépare tout pour que tu
+          puisses simplement commencer.
+        </p>
+        <Link className="button button-primary" to="/abonnements">
+          Découvrir nos abonnements
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+function AppPromoSection() {
+  return (
+    <section className="app-promo" aria-labelledby="app-promo-title">
+      <div className="page-width app-promo-grid">
+        <div className="app-promo-content">
+          <h2 id="app-promo-title">
+            Plus qu’une box, profite de tout un parcours !
+          </h2>
+          <p>
+            L’application My Hobbees prolonge l’expérience avec des
+            tutoriels vidéo, un suivi de ta progression et une communauté
+            créative.
+          </p>
+          <a className="button button-primary" href="#telecharger-app">
+            Télécharger l’app
+          </a>
+        </div>
+        <div className="app-promo-visual" aria-hidden="true">
+          <span>Aperçu de l’application à venir</span>
+        </div>
+      </div>
+    </section>
+  );
+}

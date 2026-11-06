@@ -108,7 +108,7 @@ export function DashboardPage() {
               className={cn(
                 'rounded-full border px-3 py-1.5 text-sm transition-colors',
                 period === p.key
-                  ? 'border-transparent bg-brand text-brand-foreground'
+                  ? 'border-transparent bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-muted',
               )}
             >
@@ -270,7 +270,7 @@ export function DashboardPage() {
                   </div>
                   <div className="h-1.5 w-full rounded-full bg-muted">
                     <div
-                      className="h-1.5 rounded-full bg-brand/60"
+                      className="h-1.5 rounded-full bg-primary"
                       style={{
                         width: `${Math.round((product.revenue / maxProductRevenue) * 100)}%`,
                       }}

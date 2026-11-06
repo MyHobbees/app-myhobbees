@@ -1,5 +1,6 @@
 import {useOptimisticCart} from '@shopify/hydrogen';
 import {Link} from 'react-router';
+import {ArrowRight} from 'lucide-react';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import {useAside} from '~/components/Aside';
 import {CartLineItem, type CartLine} from '~/components/CartLineItem';
@@ -52,7 +53,7 @@ export function CartMain({layout, cart: originalCart}: CartMainProps) {
   return (
     <section
       className={className}
-      aria-label={layout === 'page' ? 'Cart page' : 'Cart drawer'}
+      aria-label={layout === 'page' ? 'Page du panier' : 'Panier latéral'}
     >
       <CartEmpty hidden={linesCount} layout={layout} />
       <div className="cart-details">
@@ -102,7 +103,7 @@ function CartEmpty({
       </p>
       <br />
       <Link to="/collections" onClick={close} prefetch="viewport">
-        Continue shopping →
+        Continuer mes découvertes <ArrowRight aria-hidden="true" />
       </Link>
     </div>
   );

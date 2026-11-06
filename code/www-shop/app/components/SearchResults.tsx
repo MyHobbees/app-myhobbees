@@ -1,5 +1,6 @@
 import {Link} from 'react-router';
 import {Image, Money, Pagination} from '@shopify/hydrogen';
+import {ArrowDown, ArrowUp} from 'lucide-react';
 import {urlWithTrackingParams, type RegularSearchReturn} from '~/lib/search';
 
 type SearchItems = RegularSearchReturn['result']['items'];
@@ -103,7 +104,7 @@ function SearchResultsProducts({
 
   return (
     <div className="search-result">
-      <h2>Products</h2>
+      <h2>Produits</h2>
       <Pagination connection={products}>
         {({nodes, isLoading, NextLink, PreviousLink}) => {
           const ItemsMarkup = nodes.map((product) => {
@@ -135,7 +136,13 @@ function SearchResultsProducts({
             <div>
               <div>
                 <PreviousLink>
-                  {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
+                  {isLoading ? (
+                    'Chargement…'
+                  ) : (
+                    <span>
+                      <ArrowUp aria-hidden="true" /> Voir les précédents
+                    </span>
+                  )}
                 </PreviousLink>
               </div>
               <div>
@@ -144,7 +151,13 @@ function SearchResultsProducts({
               </div>
               <div>
                 <NextLink>
-                  {isLoading ? 'Loading...' : <span>Load more ↓</span>}
+                  {isLoading ? (
+                    'Chargement…'
+                  ) : (
+                    <span>
+                      Voir plus <ArrowDown aria-hidden="true" />
+                    </span>
+                  )}
                 </NextLink>
               </div>
             </div>
@@ -157,5 +170,5 @@ function SearchResultsProducts({
 }
 
 function SearchResultsEmpty() {
-  return <p>No results, try a different search.</p>;
+  return <p>Aucun résultat. Essaie une autre recherche.</p>;
 }

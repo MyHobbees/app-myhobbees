@@ -139,7 +139,6 @@ export function OrderDetailPage() {
         <div className="ml-auto flex items-center gap-2">
           {!isCancelled && !isFulfilled && !isPreparing && (
             <Button
-              className="bg-brand text-brand-foreground hover:bg-brand-deep"
               disabled={acting}
               onClick={() => runAction(prepareOrder)}
             >
@@ -148,7 +147,6 @@ export function OrderDetailPage() {
           )}
           {!isCancelled && !isFulfilled && isPreparing && (
             <Button
-              className="bg-brand text-brand-foreground hover:bg-brand-deep"
               disabled={acting}
               onClick={() => runAction(fulfillOrder)}
             >
