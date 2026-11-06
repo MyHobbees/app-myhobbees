@@ -9,7 +9,6 @@ import {
   useNavigation,
 } from 'react-router';
 import type {Route} from './+types/me-prevenir';
-import {EditorialHero} from '~/components/EditorialHero';
 import {readAttribution} from '~/lib/attribution';
 import {capture} from '~/lib/posthog';
 import {
@@ -157,135 +156,155 @@ export default function MePrevenir() {
       className="editorial-page me-prevenir-page"
       aria-labelledby="me-prevenir-title"
     >
-      <EditorialHero
-        description="Nos box créatives arrivent bientôt. Laisse-nous ton email pour être prévenu·e dès l’ouverture et nous aider à préparer le lancement."
-        headingId="me-prevenir-title"
-        title="Sois prévenu·e dès le lancement"
-      />
-
-      <section
-        className="page-width editorial-section me-prevenir-offers"
-        aria-labelledby="me-prevenir-offers-title"
-      >
-        <div className="section-heading centered">
-          <h2 id="me-prevenir-offers-title">Les abonnements à venir</h2>
-          <p>
-            Découvre le détail des formules en préparation sur la page{' '}
-            <Link className="text-link" to="/abonnements">
-              Nos abonnements
-            </Link>
-            .
+      <section className="me-prevenir-hero">
+        <div className="page-width me-prevenir-hero-content">
+          <h1 className="me-prevenir-title" id="me-prevenir-title">
+            Sois prévenu·e dès le lancement
+          </h1>
+          <p className="me-prevenir-intro">
+            Nos box créatives arrivent bientôt. Laisse-nous ton email pour
+            être prévenu·e dès l’ouverture et nous aider à préparer le
+            lancement.
           </p>
-        </div>
-        <ul className="steps-grid me-prevenir-offers-grid">
-          {offers.map((item) => (
-            <li className="step-card about-value-card" key={item.slug}>
-              <h3>{item.title}</h3>
-              <p>{item.tagline}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
 
-      <section
-        className="page-width editorial-section me-prevenir-form-section"
-        aria-labelledby="me-prevenir-form-title"
-      >
-        {actionData?.ok ? (
-          <div className="notice-callout me-prevenir-confirmation">
-            <div className="inner">
-              <h2 id="me-prevenir-form-title">Merci, c’est noté !</h2>
-              <p>
-                Nous te préviendrons par email dès l’ouverture des box et des
-                abonnements.
-              </p>
-            </div>
+          <div className="me-prevenir-card">
+            {actionData?.ok ? (
+              <div className="notice-callout me-prevenir-confirmation">
+                <div className="inner">
+                  <h2>Merci, c’est noté !</h2>
+                  <p>
+                    Nous te préviendrons par email dès l’ouverture des box et
+                    des abonnements.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <Form
+                action={`${location.pathname}${location.search}`}
+                className="me-prevenir-form"
+                method="post"
+              >
+                <div className="me-prevenir-field">
+                  <FieldBadge number={1} />
+                  <div className="me-prevenir-field-body">
+                    <label htmlFor="email">Email</label>
+                    <input
+                      autoComplete="email"
+                      className="me-prevenir-input"
+                      id="email"
+                      name="email"
+                      placeholder="ton@email.fr"
+                      required
+                      type="email"
+                    />
+                  </div>
+                </div>
+
+                <div className="me-prevenir-field">
+                  <FieldBadge number={2} />
+                  <fieldset className="me-prevenir-field-body">
+                    <legend>Quelles activités t’intéressent ?</legend>
+                    <div className="me-prevenir-chips">
+                      {ACTIVITIES.map((activity) => (
+                        <label className="me-prevenir-chip" key={activity}>
+                          <input
+                            name="activities"
+                            type="checkbox"
+                            value={activity}
+                          />
+                          {activity}
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                </div>
+
+                <div className="me-prevenir-field">
+                  <FieldBadge number={3} />
+                  <fieldset className="me-prevenir-field-body">
+                    <legend>Quel abonnement t’intéresse le plus ?</legend>
+                    <p className="me-prevenir-offers-note">
+                      Découvre le détail des formules en préparation sur la
+                      page{' '}
+                      <Link className="me-prevenir-offers-link" to="/abonnements">
+                        Nos abonnements
+                      </Link>
+                      .
+                    </p>
+                    <div className="me-prevenir-offer-cards">
+                      {offers.map((item) => (
+                        <label className="me-prevenir-offer-card" key={item.slug}>
+                          <input
+                            defaultChecked={offer?.slug === item.slug}
+                            name="subscription_interest"
+                            type="radio"
+                            value={item.title}
+                          />
+                          <span aria-hidden="true" className="me-prevenir-offer-radio" />
+                          <span className="me-prevenir-offer-title">{item.title}</span>
+                          <span className="me-prevenir-offer-text">{item.tagline}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                </div>
+
+                <div className="me-prevenir-field">
+                  <FieldBadge number={4} />
+                  <div className="me-prevenir-field-body">
+                    <label htmlFor="acquisition_channel">
+                      Comment nous as-tu connu ?
+                    </label>
+                    <select
+                      className="me-prevenir-select"
+                      defaultValue=""
+                      id="acquisition_channel"
+                      name="acquisition_channel"
+                      required
+                    >
+                      <option disabled value="">
+                        Choisis une réponse
+                      </option>
+                      {ACQUISITION_CHANNELS.map((channel) => (
+                        <option key={channel} value={channel}>
+                          {channel}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {actionData && !actionData.ok ? (
+                  <p className="me-prevenir-form-error" role="alert">
+                    <mark>
+                      <small>{actionData.error}</small>
+                    </mark>
+                  </p>
+                ) : null}
+
+                <button
+                  className="button button-primary me-prevenir-submit"
+                  disabled={submitting}
+                  type="submit"
+                >
+                  {submitting ? 'Envoi…' : 'Être informé·e'}
+                </button>
+              </Form>
+            )}
           </div>
-        ) : (
-          <Form
-            action={`${location.pathname}${location.search}`}
-            className="me-prevenir-form"
-            method="post"
-          >
-            <h2 id="me-prevenir-form-title">Être informé·e du lancement</h2>
-
-            <label htmlFor="email">Email</label>
-            <input
-              autoComplete="email"
-              id="email"
-              name="email"
-              placeholder="ton@email.fr"
-              required
-              type="email"
-            />
-
-            <fieldset>
-              <legend>Quelles activités t’intéressent ?</legend>
-              {ACTIVITIES.map((activity) => (
-                <label key={activity}>
-                  <input name="activities" type="checkbox" value={activity} />
-                  {activity}
-                </label>
-              ))}
-            </fieldset>
-
-            <label htmlFor="acquisition_channel">Comment nous as-tu connu ?</label>
-            <select
-              defaultValue=""
-              id="acquisition_channel"
-              name="acquisition_channel"
-              required
-            >
-              <option disabled value="">
-                Choisis une réponse
-              </option>
-              {ACQUISITION_CHANNELS.map((channel) => (
-                <option key={channel} value={channel}>
-                  {channel}
-                </option>
-              ))}
-            </select>
-
-            <label htmlFor="subscription_interest">
-              Quel abonnement t’intéresse le plus ?
-            </label>
-            <select
-              defaultValue={offer?.title ?? ''}
-              id="subscription_interest"
-              name="subscription_interest"
-              required
-            >
-              <option disabled value="">
-                Choisis une réponse
-              </option>
-              {offers.map((item) => (
-                <option key={item.slug} value={item.title}>
-                  {item.title}
-                </option>
-              ))}
-              <option value="Je ne sais pas encore">
-                Je ne sais pas encore
-              </option>
-            </select>
-
-            {actionData && !actionData.ok ? (
-              <p className="me-prevenir-form-error" role="alert">
-                <mark>
-                  <small>{actionData.error}</small>
-                </mark>
-              </p>
-            ) : null}
-
-            <button
-              className="button button-primary"
-              disabled={submitting}
-              type="submit"
-            >
-              {submitting ? 'Envoi…' : 'Être informé·e'}
-            </button>
-          </Form>
-        )}
+        </div>
       </section>
     </article>
+  );
+}
+
+function FieldBadge({number}: {number: 1 | 2 | 3 | 4}) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`me-prevenir-field-badge me-prevenir-field-badge--${number}`}
+    >
+      {number}
+    </span>
   );
 }

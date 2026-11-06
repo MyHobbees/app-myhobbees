@@ -22,6 +22,13 @@
   --color-dream-accent: #d9547a;
   --color-dream-blush: #f4b9aa;
   --color-dream-path: #e08c9f;
+  --color-me-prevenir-intro: #6e4f32;
+  --color-me-prevenir-border: #e6dcc6;
+  --color-me-prevenir-surface: #fffcf5;
+  --color-me-prevenir-placeholder: #9a8f7c;
+  --color-me-prevenir-card-border: #f0e4c8;
+  --color-me-prevenir-card-selected: #f3f7f1;
+  --color-me-prevenir-link: #e8436b;
   --color-border: rgba(78, 110, 88, 0.18);
   --shadow-soft: 0 18px 45px rgba(78, 110, 88, 0.1);
   --radius-small: 12px;
@@ -2327,39 +2334,327 @@ aside main {
   display: inline-block;
 }
 
-/* Me prévenir form */
-.me-prevenir-form-section {
+/* Me prévenir page */
+.me-prevenir-hero {
+  background-color: var(--color-cream);
+  padding-block: 6rem 6.5rem;
+}
+
+.me-prevenir-hero-content {
+  margin-inline: auto;
   text-align: center;
+}
+
+.me-prevenir-title {
+  color: var(--color-green);
+  font-size: clamp(2.75rem, 6vw, 5rem);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-inline: auto;
+  max-width: 51.25rem;
+  text-wrap: balance;
+}
+
+.me-prevenir-intro {
+  color: var(--color-me-prevenir-intro);
+  font-size: 1.3125rem;
+  line-height: 1.6;
+  margin-inline: auto;
+  margin-top: 1.5rem;
+  max-width: 40rem;
+}
+
+.me-prevenir-card {
+  background: var(--color-white);
+  border-radius: 2.25rem;
+  box-shadow: 0 20px 50px rgba(110, 79, 50, 0.1);
+  margin-inline: auto;
+  margin-top: 3.5rem;
+  max-width: 53.75rem;
+  padding: 3.5rem;
+  text-align: left;
+}
+
+.me-prevenir-confirmation {
+  margin-inline: auto;
 }
 
 .me-prevenir-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin-inline: auto;
-  max-width: 32rem;
-  text-align: left;
+  gap: 2.25rem;
 }
 
-.me-prevenir-form label {
+.me-prevenir-field {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: 48px 1fr;
+}
+
+.me-prevenir-field-body {
+  min-width: 0;
+}
+
+.me-prevenir-field-body fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.me-prevenir-field-body label,
+.me-prevenir-field-body legend {
+  color: var(--color-green);
+  display: block;
+  font-family: var(--font-heading);
+  font-size: 1.375rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.me-prevenir-field-badge {
+  align-items: center;
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  display: flex;
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  font-weight: 700;
+  height: 44px;
+  justify-content: center;
+  width: 48px;
+}
+
+.me-prevenir-field-badge--1 {
+  background: var(--color-green);
+  color: var(--color-cream);
+}
+
+.me-prevenir-field-badge--2 {
+  background: var(--color-dream-accent);
+  color: var(--color-white);
+}
+
+.me-prevenir-field-badge--3 {
+  background: var(--color-dream-blush);
+  color: var(--color-green);
+}
+
+.me-prevenir-field-badge--4 {
+  background: var(--color-dream-circle-2);
+  color: var(--color-green);
+}
+
+.me-prevenir-input,
+.me-prevenir-select {
+  background: var(--color-me-prevenir-surface);
+  border: 1.5px solid var(--color-me-prevenir-border);
+  border-radius: 999px;
+  color: var(--color-dream-text);
+  font-size: 1.0625rem;
+  height: 3.5rem;
+  padding-inline: 1.5rem;
+  width: 100%;
+}
+
+.me-prevenir-input::placeholder {
+  color: var(--color-me-prevenir-placeholder);
+}
+
+.me-prevenir-input:focus,
+.me-prevenir-select:focus {
+  border-color: var(--color-green);
+  outline: none;
+}
+
+.me-prevenir-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%234d6e57' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-position: right 1.25rem center;
+  background-repeat: no-repeat;
+  padding-right: 3rem;
+}
+
+.me-prevenir-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+}
+
+.me-prevenir-chip {
+  align-items: center;
+  background: var(--color-white);
+  border: 1.5px solid var(--color-me-prevenir-border);
+  border-radius: 999px;
+  color: var(--color-green);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 1rem;
+  font-weight: 600;
+  gap: 0.3rem;
+  height: 48px;
+  padding-inline: 1.375rem;
+  position: relative;
+}
+
+.me-prevenir-chip input {
+  height: 1px;
+  opacity: 0;
+  position: absolute;
+  width: 1px;
+}
+
+.me-prevenir-chip::before {
+  content: "+";
+}
+
+.me-prevenir-chip:has(input:checked) {
+  background: var(--color-green);
+  border-color: var(--color-green);
+  color: var(--color-cream);
+}
+
+.me-prevenir-chip:has(input:checked)::before {
+  content: "✓";
+}
+
+.me-prevenir-chip:has(input:focus-visible) {
+  outline: 2px solid var(--color-green);
+  outline-offset: 2px;
+}
+
+.me-prevenir-offers-note {
+  color: var(--color-dream-text);
+  font-size: 1rem;
+  font-weight: 400;
+  margin-bottom: 0.75rem;
+  margin-top: -0.25rem;
+}
+
+.me-prevenir-offers-link {
+  color: var(--color-me-prevenir-link);
   font-weight: 600;
 }
 
-.me-prevenir-form fieldset label {
-  align-items: center;
+.me-prevenir-offer-cards {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.me-prevenir-offer-card {
+  background: var(--color-me-prevenir-surface);
+  border: 2px solid var(--color-me-prevenir-card-border);
+  border-radius: 1.375rem;
+  cursor: pointer;
   display: flex;
-  font-weight: normal;
+  flex-direction: column;
   gap: 0.5rem;
+  padding: 1.25rem;
+  position: relative;
+}
+
+.me-prevenir-offer-card input {
+  height: 1px;
+  opacity: 0;
+  position: absolute;
+  width: 1px;
+}
+
+.me-prevenir-offer-card:has(input:checked) {
+  background: var(--color-me-prevenir-card-selected);
+  border-color: var(--color-green);
+}
+
+.me-prevenir-offer-card:has(input:focus-visible) {
+  outline: 2px solid var(--color-green);
+  outline-offset: 2px;
+}
+
+.me-prevenir-offer-radio {
+  border: 2px solid var(--color-green);
+  border-radius: 999px;
+  height: 20px;
+  position: relative;
+  width: 20px;
+}
+
+.me-prevenir-offer-card:has(input:checked) .me-prevenir-offer-radio::after {
+  background: var(--color-green);
+  border-radius: 999px;
+  content: "";
+  height: 10px;
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+}
+
+.me-prevenir-offer-title {
+  color: var(--color-green);
+  font-family: var(--font-heading);
+  font-size: 1.1875rem;
+  font-weight: 700;
+}
+
+.me-prevenir-offer-text {
+  color: var(--color-dream-text);
+  font-size: 0.9375rem;
+  line-height: 1.5;
 }
 
 .me-prevenir-form-error {
   color: var(--color-pink);
 }
 
-.me-prevenir-confirmation {
-  margin-inline: auto;
-  max-width: 32rem;
-  text-align: left;
+.me-prevenir-submit {
+  height: 3.75rem;
+  margin-left: 4.25rem;
+  width: calc(100% - 4.25rem);
+}
+
+@media (max-width: 64rem) {
+  .me-prevenir-title {
+    font-size: 3.75rem;
+  }
+
+  .me-prevenir-card {
+    padding: 2.5rem;
+  }
+
+  .me-prevenir-offer-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 48rem) {
+  .me-prevenir-title {
+    font-size: 2.625rem;
+  }
+
+  .me-prevenir-intro {
+    font-size: 1.0625rem;
+  }
+
+  .me-prevenir-card {
+    border-radius: 1.75rem;
+    padding: 1.5rem;
+  }
+
+  .me-prevenir-field {
+    gap: 0.875rem;
+    grid-template-columns: 36px 1fr;
+  }
+
+  .me-prevenir-field-badge {
+    font-size: 1rem;
+    height: 32px;
+    width: 36px;
+  }
+
+  .me-prevenir-submit {
+    margin-left: 0;
+    width: 100%;
+  }
 }
 
 .order-search-form {
