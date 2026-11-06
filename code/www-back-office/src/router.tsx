@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router'
 
 import { ProtectedRoute } from '@/components/layout/protected-route'
+import { AnalyticsPage } from '@/pages/analytics'
 import { CustomerDetailPage } from '@/pages/customer-detail'
 import { DashboardPage } from '@/pages/dashboard'
 import { CustomersPage } from '@/pages/customers'
@@ -28,6 +29,7 @@ export const router = createBrowserRouter([
       { path: 'customers/:id', element: <CustomerDetailPage /> },
       { path: 'shopify', element: <ShopifyStatusPage /> },
       { path: 'leads', element: <LeadsPage /> },
+      { path: 'analytics', element: <AnalyticsPage /> },
       { path: 'dev-tools', element: <DevToolsPage /> },
     ],
   },

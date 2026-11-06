@@ -268,6 +268,28 @@ export function getLeads() {
   return apiFetch<Lead[]>('/v1/leads')
 }
 
+export type PostHogDayCount = { date: string; count: number }
+export type PostHogEventCount = { event: string; count: number }
+export type PostHogOfferCount = { offer: string; count: number }
+
+export type PostHogOverview = {
+  days: number
+  visitors: number
+  ctaClicks: number
+  offerClicks: number
+  waitlistSignups: number
+  appClicks: number
+  visitorToEmailRate: number
+  ctaToEmailRate: number
+  pageviewsByDay: PostHogDayCount[]
+  eventCounts: PostHogEventCount[]
+  offerClicksByOffer: PostHogOfferCount[]
+}
+
+export function getPostHogOverview(days: number) {
+  return apiFetch<PostHogOverview>(`/v1/analytics/posthog/overview?days=${days}`)
+}
+
 export async function getShopifyStatus(): Promise<ShopifyStatus> {
   try {
     return await apiFetch<ShopifyStatus>('/v1/shopify/status')

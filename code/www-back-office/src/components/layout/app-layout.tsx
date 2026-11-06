@@ -9,6 +9,7 @@ import {
   Package,
   Store,
   Sun,
+  TrendingUp,
   Users,
   Wrench,
 } from 'lucide-react'
@@ -58,7 +59,10 @@ const navGroups: { label: string; items: NavItem[] }[] = [
   },
   {
     label: 'Lancement',
-    items: [{ title: 'Inscriptions', url: '/leads', icon: Mail }],
+    items: [
+      { title: 'Inscriptions', url: '/leads', icon: Mail },
+      { title: 'Analytics', url: '/analytics', icon: TrendingUp },
+    ],
   },
   {
     label: 'Système',
