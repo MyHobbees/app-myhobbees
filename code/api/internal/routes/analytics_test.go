@@ -6,24 +6,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/myhobbees/api/internal/auth"
 	"github.com/myhobbees/api/internal/jwt"
 )
 
-func TestAnalytics_RequiresAuth(t *testing.T) {
-	t.Setenv("JWT_SECRET", "test-secret-at-least-32-characters-long")
-
-	srv := httptest.NewServer(Analytics())
-	defer srv.Close()
-
-	res, err := http.Get(srv.URL + "/posthog/overview?days=7")
-	if err != nil {
-		t.Fatalf("get: %v", err)
-	}
-	defer res.Body.Close()
-	if res.StatusCode != http.StatusUnauthorized {
-		t.Fatalf("expected 401 without a token, got %d", res.StatusCode)
-	}
-}
+// Analytics() no longer applies auth.Middleware itself: that single
+// responsibility now lives in app.go's protected /v1 group (see
+// aidd_docs/tasks/.../review.md, double-auth finding). Tests here wrap it
+// the same way app.go does, so they still exercise the real composition.
+// The "no token at all" case is covered end-to-end in
+// internal/app/app_test.go, which is where the fail-closed guarantee
+// actually lives now.
 
 func TestAnalytics_PostHogNotConfigured(t *testing.T) {
 	secret := "test-secret-at-least-32-characters-long"
@@ -36,7 +29,7 @@ func TestAnalytics_PostHogNotConfigured(t *testing.T) {
 		t.Fatalf("sign: %v", err)
 	}
 
-	srv := httptest.NewServer(Analytics())
+	srv := httptest.NewServer(auth.Middleware(Analytics()))
 	defer srv.Close()
 
 	req, _ := http.NewRequest(http.MethodGet, srv.URL+"/posthog/overview?days=90", nil)

@@ -20,22 +20,25 @@ func New() *chi.Mux {
 	r.Mount("/health", routes.Health())
 
 	r.Route("/v1", func(r chi.Router) {
-		// Protected is the default for everything under /v1. Only the two
-		// explicit exceptions below (login, public lead capture) are
-		// mounted outside this group: any future r.Mount placed inside it
-		// is protected even if its own router forgets auth.Middleware.
+		// --- Routes publiques : pas de auth.Middleware ici, volontairement. ---
+		// Only these two routes bypass auth: Auth() exposes POST /login, and
+		// CreateLead is the public lead-capture endpoint code/www-shop's "Me
+		// prévenir" form posts to. Nothing else belongs in this section.
+		r.Mount("/auth", routes.Auth())
+		r.Post("/leads", routes.CreateLead)
+
+		// --- Tout le reste de /v1 est protégé par défaut. ---
+		// A single point of truth: anything mounted inside this group
+		// requires a valid Bearer token, whether or not its own router
+		// remembers to apply auth.Middleware itself. Add new protected
+		// routes here, not above.
 		r.Group(func(r chi.Router) {
 			r.Use(auth.Middleware)
 			r.Mount("/example", routes.Example())
 			r.Mount("/shopify", routes.Shopify())
 			r.Mount("/analytics", routes.Analytics())
+			r.Get("/leads", routes.ListLeads)
 		})
-
-		// Explicit public exceptions. Auth() only exposes POST /login.
-		// Leads() mixes a public POST / with a GET / it protects itself
-		// internally, so it is mounted here rather than in the group above.
-		r.Mount("/auth", routes.Auth())
-		r.Mount("/leads", routes.Leads())
 	})
 
 	r.NotFound(func(w http.ResponseWriter, _ *http.Request) {

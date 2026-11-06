@@ -8,14 +8,15 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/myhobbees/api/internal/auth"
 	"github.com/myhobbees/api/internal/httpjson"
 	"github.com/myhobbees/api/internal/shopify"
 )
 
+// Shopify is only ever mounted inside app.go's protected /v1 group, which
+// already applies auth.Middleware; it must not re-apply it here (see
+// aidd_docs/tasks/.../review.md finding: double auth check per request).
 func Shopify() chi.Router {
 	r := chi.NewRouter()
-	r.Use(auth.Middleware)
 
 	r.Get("/status", func(w http.ResponseWriter, req *http.Request) {
 		client, err := shopify.FromEnv()
