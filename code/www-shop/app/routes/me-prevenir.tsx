@@ -10,6 +10,7 @@ import {
 } from 'react-router';
 import type {Route} from './+types/me-prevenir';
 import {EditorialHero} from '~/components/EditorialHero';
+import {readAttribution} from '~/lib/attribution';
 import {capture} from '~/lib/posthog';
 import {
   SUBSCRIPTION_OFFERS,
@@ -91,6 +92,12 @@ export async function action({request, context}: Route.ActionArgs) {
     );
   }
 
+  // This page is usually reached via an in-site link or a same-origin form
+  // POST, so its own URL/Referer rarely carry the visitor's original utm_*
+  // or external referrer — fall back to what root.tsx's loader captured on
+  // first landing (see app/lib/attribution.ts).
+  const stored = await readAttribution(request);
+
   try {
     const response = await fetch(`${context.env.API_BASE_URL}/v1/leads`, {
       method: 'POST',
@@ -100,10 +107,10 @@ export async function action({request, context}: Route.ActionArgs) {
         activities,
         acquisition_channel: acquisitionChannel,
         subscription_interest: subscriptionInterest,
-        utm_source: url.searchParams.get('utm_source') ?? '',
-        utm_medium: url.searchParams.get('utm_medium') ?? '',
-        utm_campaign: url.searchParams.get('utm_campaign') ?? '',
-        referrer: request.headers.get('Referer') ?? '',
+        utm_source: url.searchParams.get('utm_source') || stored?.utmSource || '',
+        utm_medium: url.searchParams.get('utm_medium') || stored?.utmMedium || '',
+        utm_campaign: url.searchParams.get('utm_campaign') || stored?.utmCampaign || '',
+        referrer: stored?.referrer || request.headers.get('Referer') || '',
       }),
     });
 

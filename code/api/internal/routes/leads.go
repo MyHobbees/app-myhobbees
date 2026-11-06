@@ -2,6 +2,7 @@ package routes
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -58,7 +59,8 @@ func Leads() chi.Router {
 
 		pool, err := db.Pool(req.Context())
 		if err != nil {
-			httpjson.Error(w, http.StatusBadGateway, err.Error())
+			log.Printf("leads: db pool: %v", err)
+			httpjson.Error(w, http.StatusBadGateway, "Could not save submission")
 			return
 		}
 
@@ -76,7 +78,8 @@ func Leads() chi.Router {
 			nullIfEmpty(body.Referrer),
 		)
 		if err != nil {
-			httpjson.Error(w, http.StatusBadGateway, err.Error())
+			log.Printf("leads: insert: %v", err)
+			httpjson.Error(w, http.StatusBadGateway, "Could not save submission")
 			return
 		}
 

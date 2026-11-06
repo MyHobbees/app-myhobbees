@@ -2111,6 +2111,29 @@ aside main {
   display: inline-block;
 }
 
+/* Me prévenir form */
+.me-prevenir-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 32rem;
+}
+
+.me-prevenir-form label {
+  font-weight: 600;
+}
+
+.me-prevenir-form fieldset label {
+  align-items: center;
+  display: flex;
+  font-weight: normal;
+  gap: 0.5rem;
+}
+
+.me-prevenir-form-error {
+  color: var(--color-pink);
+}
+
 .order-search-form {
   margin-bottom: 1.5rem;
 }
