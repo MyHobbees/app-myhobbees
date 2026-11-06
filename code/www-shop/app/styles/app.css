@@ -2035,16 +2035,11 @@ aside main {
 }
 
 .future-boxes {
-  max-width: 760px;
   text-align: center;
 }
 
 .future-boxes p {
   color: var(--color-muted);
-}
-
-.future-boxes--stocked {
-  max-width: none;
 }
 
 .future-boxes--stocked > p {
