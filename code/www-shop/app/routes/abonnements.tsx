@@ -214,9 +214,7 @@ export default function SubscriptionsPage() {
               key={box.slug}
             >
               <div className="product-item-media">
-                <div className="product-media-fallback">
-                  <BoxIllustration craft={box.slug} />
-                </div>
+                <BoxIllustration craft={box.slug} />
               </div>
               <div className="product-item-content">
                 <h3 id={`future-box-${box.slug}-title`}>{box.title}</h3>

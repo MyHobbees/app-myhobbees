@@ -826,53 +826,34 @@ aside main {
   width: 100%;
 }
 
+.box-illustration--crochet {
+  background: var(--color-dream-circle-1);
+}
+
+.box-illustration--couture {
+  background: var(--color-dream-circle-2);
+}
+
+.box-illustration--peinture {
+  background: var(--color-dream-circle-3);
+}
+
 .box-illustration-svg {
-  height: 70%;
-  width: 70%;
+  height: 200px;
+  width: 200px;
 }
 
-.box-illustration--crochet .box-illustration-yarn {
-  animation: box-illustration-spin 10s linear infinite;
-  transform-origin: 60px 62px;
-}
-
-.box-illustration--couture .box-illustration-seam {
-  animation: box-illustration-dash 3s linear infinite;
-}
-
-.box-illustration--peinture .box-illustration-brush {
-  animation: box-illustration-float 3.4s ease-in-out infinite;
-  transform-origin: 57px 37px;
-}
-
-@keyframes box-illustration-spin {
-  to {
-    transform: rotate(360deg);
+@media (max-width: 64rem) {
+  .box-illustration-svg {
+    height: 160px;
+    width: 160px;
   }
 }
 
-@keyframes box-illustration-dash {
-  to {
-    stroke-dashoffset: -30;
-  }
-}
-
-@keyframes box-illustration-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-5px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .box-illustration--crochet .box-illustration-yarn,
-  .box-illustration--couture .box-illustration-seam,
-  .box-illustration--peinture .box-illustration-brush {
-    animation: none;
+@media (max-width: 48rem) {
+  .box-illustration-svg {
+    height: 140px;
+    width: 140px;
   }
 }
 

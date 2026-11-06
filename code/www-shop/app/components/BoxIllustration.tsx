@@ -1,3 +1,5 @@
+import {useId} from 'react';
+import {BeeMascot} from '~/components/BeeMascot';
 import type {BoxSlug} from '~/lib/boxes';
 
 interface BoxIllustrationProps {
@@ -17,95 +19,139 @@ export function BoxIllustration({craft}: BoxIllustrationProps) {
       className={`box-illustration box-illustration--${craft}`}
       role="img"
     >
-      <svg
-        aria-hidden="true"
-        className="box-illustration-svg"
-        focusable="false"
-        viewBox="0 0 120 120"
-      >
-        {craft === 'crochet' ? <CrochetMotif /> : null}
-        {craft === 'couture' ? <CoutureMotif /> : null}
-        {craft === 'peinture' ? <PeintureMotif /> : null}
-      </svg>
+      {craft === 'crochet' ? <CrochetIcon /> : null}
+      {craft === 'couture' ? <CoutureIcon /> : null}
+      {craft === 'peinture' ? <PeintureIcon /> : null}
     </span>
   );
 }
 
-function CrochetMotif() {
+function CrochetIcon() {
+  const yarnClipId = useId();
+  const yarnInnerClipId = useId();
+
   return (
-    <g>
-      <circle
-        cx="60"
-        cy="62"
-        fill="none"
-        opacity="0.35"
-        r="30"
-        stroke="var(--color-yellow)"
-        strokeWidth="2"
+    <svg
+      aria-hidden="true"
+      className="box-illustration-svg"
+      fill="none"
+      focusable="false"
+      stroke="var(--color-green)"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2.2"
+      viewBox="0 0 64 64"
+    >
+      <defs>
+        <clipPath id={yarnClipId}>
+          <circle cx="24" cy="40" r="14" />
+        </clipPath>
+        <clipPath id={yarnInnerClipId}>
+          <circle cx="36" cy="52" r="8.4" />
+        </clipPath>
+      </defs>
+      <path
+        d="M36 33 C44 29 47 22 41 19 C35 16 36 9 44 8.5 C50 8 54 10 55.5 13"
+        stroke="var(--color-dream-accent)"
+        strokeDasharray="1 4"
       />
-      <g
-        className="box-illustration-yarn"
-        fill="none"
-        stroke="var(--color-brown)"
-        strokeLinecap="round"
-        strokeWidth="3"
-      >
-        <path d="M38 62 Q46 40 60 44 Q76 48 72 66 Q68 82 50 76 Q36 71 42 58" />
-        <path d="M72 66 Q86 70 90 86" stroke="var(--color-pink)" strokeWidth="2.5" />
+      <circle cx="24" cy="40" fill="var(--color-dream-blush)" r="14" />
+      <g clipPath={`url(#${yarnClipId})`} stroke="var(--color-white)">
+        <g>
+          <circle cx="6" cy="60" r="24" />
+          <circle cx="6" cy="60" r="28" />
+          <circle cx="6" cy="60" r="32" />
+          <circle cx="6" cy="60" r="36" />
+        </g>
+        <circle cx="36" cy="52" fill="var(--color-dream-blush)" r="23.5" stroke="none" />
+        <g>
+          <circle cx="36" cy="52" r="12" />
+          <circle cx="36" cy="52" r="16" />
+          <circle cx="36" cy="52" r="20" />
+        </g>
+        <circle cx="36" cy="52" fill="var(--color-dream-blush)" r="9.5" stroke="none" />
+        <g clipPath={`url(#${yarnInnerClipId})`}>
+          <circle cx="54" cy="42" r="15" />
+          <circle cx="54" cy="42" r="19" />
+          <circle cx="54" cy="42" r="23" />
+        </g>
       </g>
-      <circle cx="90" cy="86" fill="var(--color-pink)" r="3" stroke="none" />
-    </g>
+      <circle cx="24" cy="40" r="14" />
+      <path d="M44 56 L56 14" />
+      <path d="M56 14 c1.5-3.5-3.5-4.5-4-1.5" />
+      <BeeMascot transform="translate(12 16) rotate(-10) scale(-1 1)" />
+    </svg>
   );
 }
 
-function CoutureMotif() {
+function CoutureIcon() {
   return (
-    <g fill="none" strokeLinecap="round">
+    <svg
+      aria-hidden="true"
+      className="box-illustration-svg"
+      fill="none"
+      focusable="false"
+      stroke="var(--color-green)"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2.2"
+      viewBox="0 0 64 64"
+    >
       <path
-        className="box-illustration-seam"
-        d="M24 86 Q48 50 72 58 T108 36"
-        stroke="var(--color-green)"
-        strokeDasharray="7 8"
-        strokeWidth="3"
+        d="M28 36 C40 28 34 52 46 44 S54 30 56 21"
+        stroke="var(--color-dream-accent)"
+        strokeDasharray="1 4"
       />
-      <path d="M94 28 L112 20" stroke="var(--color-brown)" strokeWidth="3" />
-      <circle cx="112" cy="20" r="3" stroke="var(--color-brown)" strokeWidth="2" />
-      <path
-        d="M40 78 L46 86 M46 78 L40 86"
-        stroke="var(--color-pink)"
-        strokeWidth="2"
-      />
-      <path
-        d="M64 58 L70 66 M70 58 L64 66"
-        stroke="var(--color-pink)"
-        strokeWidth="2"
-      />
-    </g>
+      <rect fill="var(--color-dream-blush)" height="26" rx="2" width="18" x="10" y="26" />
+      <path d="M10 33h18M10 39h18M10 45h18" stroke="var(--color-dream-accent)" />
+      <rect fill="var(--color-white)" height="5" rx="2" width="24" x="7" y="21" />
+      <rect fill="var(--color-white)" height="5" rx="2" width="24" x="7" y="52" />
+      <path d="M44 54 L57 18" />
+      <ellipse cx="56" cy="21" rx="1.4" ry="3" transform="rotate(20 56 21)" />
+      <BeeMascot transform="translate(40 14) rotate(-10) scale(-1 1)" />
+    </svg>
   );
 }
 
-function PeintureMotif() {
+function PeintureIcon() {
   return (
-    <g>
-      <g className="box-illustration-brush">
-        <rect
-          fill="var(--color-brown)"
-          height="38"
-          rx="3"
-          transform="rotate(18 57 37)"
-          width="10"
-          x="52"
-          y="18"
-        />
+    <svg
+      aria-hidden="true"
+      className="box-illustration-svg"
+      fill="none"
+      focusable="false"
+      stroke="var(--color-green)"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2.2"
+      viewBox="0 0 64 64"
+    >
+      <path
+        d="M23 34 C17 24 30 22 24 15 C20 9 28 6 31 13"
+        stroke="var(--color-dream-accent)"
+        strokeDasharray="1 4"
+      />
+      <path d="M36 36 L33.5 46M52 36 L54.5 46M44 36 V44" />
+      <rect fill="var(--color-white)" height="28" rx="2" width="28" x="30" y="8" />
+      <rect
+        height="20"
+        rx="1"
+        stroke="var(--color-dream-blush)"
+        strokeWidth="1.5"
+        width="20"
+        x="34"
+        y="12"
+      />
+      <BeeMascot transform="translate(44 25) rotate(-10) scale(-0.65 0.65)" />
+      <g strokeWidth="3.1" transform="translate(18 42) rotate(35) scale(0.7)">
         <path
-          d="M46 52 L68 52 L60 72 L54 72 Z"
-          fill="var(--color-blue)"
-          transform="rotate(18 57 37)"
+          d="M-2.5 0 C-3.5 -5 -1.5 -9 0 -12 C1.5 -9 3.5 -5 2.5 0z"
+          fill="var(--color-dream-accent)"
+          stroke="var(--color-dream-accent)"
         />
+        <rect fill="var(--color-dream-blush)" height="6" rx="1" width="6" x="-3" y="0" />
+        <path d="M-2 6 L-1.2 22 a1.2 1.2 0 0 0 2.4 0 L2 6z" fill="var(--color-white)" />
       </g>
-      <circle cx="42" cy="92" fill="var(--color-yellow)" opacity="0.85" r="6" />
-      <circle cx="62" cy="98" fill="var(--color-pink)" opacity="0.85" r="5" />
-      <circle cx="80" cy="90" fill="var(--color-green)" opacity="0.85" r="4.5" />
-    </g>
+    </svg>
   );
 }

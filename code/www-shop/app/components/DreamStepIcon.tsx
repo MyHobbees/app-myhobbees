@@ -1,3 +1,5 @@
+import {BeeMascot} from '~/components/BeeMascot';
+
 interface DreamStepIconProps {
   step: 1 | 2 | 3;
 }
@@ -6,33 +8,6 @@ export function DreamStepIcon({step}: DreamStepIconProps) {
   if (step === 1) return <BeeHeartIcon />;
   if (step === 2) return <BeeGiftIcon />;
   return <BeeClockIcon />;
-}
-
-function Bee({transform}: {transform: string}) {
-  return (
-    <g transform={transform}>
-      <ellipse
-        cx="-2"
-        cy="-7"
-        fill="var(--color-white)"
-        rx="3.6"
-        ry="5.2"
-        transform="rotate(-25 -2 -7)"
-      />
-      <ellipse
-        cx="3"
-        cy="-7"
-        fill="var(--color-white)"
-        rx="3.6"
-        ry="5.2"
-        transform="rotate(25 3 -7)"
-      />
-      <ellipse cx="0" cy="0" fill="var(--color-dream-blush)" rx="7" ry="5" />
-      <path d="M-2 -4.6v9.2M2 -4.6v9.2" />
-      <path d="M7 0h2.5" />
-      <circle cx="-4.5" cy="-1" fill="var(--color-green)" r=".6" />
-    </g>
-  );
 }
 
 function BeeHeartIcon() {
@@ -58,7 +33,7 @@ function BeeHeartIcon() {
         fill="var(--color-dream-accent)"
         stroke="var(--color-dream-accent)"
       />
-      <Bee transform="translate(10 48) rotate(-20) scale(-1 1)" />
+      <BeeMascot transform="translate(10 48) rotate(-20) scale(-1 1)" />
     </svg>
   );
 }
@@ -92,7 +67,7 @@ function BeeGiftIcon() {
           stroke="var(--color-dream-accent)"
         />
       </g>
-      <Bee transform="translate(49 29) rotate(-35) scale(-0.95 0.95)" />
+      <BeeMascot transform="translate(49 29) rotate(-35) scale(-0.95 0.95)" />
       <rect fill="var(--color-dream-blush)" height="21" rx="2" width="40" x="12" y="34" />
       <rect fill="var(--color-dream-accent)" height="21" stroke="none" width="6" x="29" y="34" />
       <path d="M12 34h40v21H12z" fill="none" />
@@ -126,7 +101,7 @@ function BeeClockIcon() {
       <path d="M32 21v2M32 45v2M19 34h2M43 34h2" />
       <path d="M32 34V26M32 34l6 4" />
       <circle cx="32" cy="34" fill="var(--color-green)" r="1.5" />
-      <Bee transform="translate(49 17) rotate(45) scale(1)" />
+      <BeeMascot transform="translate(49 17) rotate(45) scale(1)" />
     </svg>
   );
 }
