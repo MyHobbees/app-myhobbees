@@ -98,7 +98,7 @@ function HeaderCtas({cart}: Pick<HeaderProps, 'cart'>) {
         className="header-action button button-primary"
         prefetch="intent"
         to="/me-prevenir"
-        onClick={() => capture('fake_door_click', {placement: 'header'})}
+        onClick={() => capture('cta_click', {placement: 'header'})}
       >
         Me prévenir
       </Link>

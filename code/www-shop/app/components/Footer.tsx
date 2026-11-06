@@ -3,6 +3,7 @@ import {Await, NavLink} from 'react-router';
 import {Mail} from 'lucide-react';
 import type {FooterQuery, HeaderQuery} from 'storefrontapi.generated';
 import {getMenuItemUrl} from '~/lib/menu';
+import {capture} from '~/lib/posthog';
 import {shouldUseFallbackMenu} from '~/lib/storefront';
 
 interface FooterProps {
@@ -36,7 +37,11 @@ export function Footer({
                 Profite de tous les tutoriels associés à nos boxes en
                 téléchargeant l’application !
               </p>
-              <a className="button button-primary" href="#telecharger-app">
+              <a
+                className="button button-primary"
+                href="#telecharger-app"
+                onClick={() => capture('app_click', {placement: 'footer'})}
+              >
                 Télécharger l’app
               </a>
             </section>

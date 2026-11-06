@@ -10,6 +10,7 @@ export function initPostHog(key: string, host: string) {
     api_host: host,
     person_profiles: 'identified_only',
     capture_pageview: 'history_change',
+    cookieless_mode: 'always',
   });
 }
 

@@ -170,8 +170,7 @@ function OfferCta({
         className="button button-primary"
         to={`/me-prevenir?offer=${offer.slug}`}
         onClick={() =>
-          capture('fake_door_click', {
-            placement: 'offer',
+          capture('offer_click', {
             offer: offer.slug,
             price: offer.price?.amount ?? null,
           })

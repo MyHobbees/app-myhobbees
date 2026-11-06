@@ -142,7 +142,7 @@ export default function MePrevenir() {
 
   useEffect(() => {
     if (actionData?.ok) {
-      capture('lead_form_submitted', {
+      capture('waitlist_signup', {
         activities: actionData.activities,
         acquisition_channel: actionData.acquisitionChannel,
         subscription_interest: actionData.subscriptionInterest,

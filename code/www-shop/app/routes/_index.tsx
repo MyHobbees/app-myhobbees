@@ -4,6 +4,7 @@ import {DreamStepIcon} from '~/components/DreamStepIcon';
 import {MockShopNotice} from '~/components/MockShopNotice';
 import {Reassurance} from '~/components/Reassurance';
 import {FaqSection} from '~/components/FaqSection';
+import {capture} from '~/lib/posthog';
 import {isMockShop} from '~/lib/storefront';
 import boxMyHobbees from '~/assets/box-my-hobbees.png';
 
@@ -184,7 +185,11 @@ function AppPromoSection() {
             tutoriels vidéo, un suivi de ta progression et une communauté
             créative.
           </p>
-          <a className="button button-primary" href="#telecharger-app">
+          <a
+            className="button button-primary"
+            href="#telecharger-app"
+            onClick={() => capture('app_click', {placement: 'home'})}
+          >
             Télécharger l’app
           </a>
         </div>
