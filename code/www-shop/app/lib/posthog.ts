@@ -12,3 +12,8 @@ export function initPostHog(key: string, host: string) {
     capture_pageview: 'history_change',
   });
 }
+
+export function capture(event: string, properties?: Record<string, unknown>) {
+  if (!initialized || typeof window === 'undefined') return;
+  posthog.capture(event, properties);
+}
