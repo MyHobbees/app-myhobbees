@@ -1,0 +1,378 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  ##############################################
+  # TERRAFORM - STG (branch: dev)
+  ##############################################
+  terraform-fronts-stg:
+    name: Terraform Fronts (stg)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Install dependencies
+        run: pip install boto3
+      - name: Install tfenv
+        run: |
+          git clone https://github.com/tfutils/tfenv.git ~/.tfenv
+          echo "$HOME/.tfenv/bin" >> $GITHUB_PATH
+      - name: Run Terraform
+        run: python3.14 infrastructure/scripts/terraform.py fronts stg
+        env:
+          AWS__TFSTATE_BUCKET: ${{ secrets.AWS__TFSTATE_BUCKET }}
+          AWS__TFSTATE_REGION: ${{ secrets.AWS__TFSTATE_REGION }}
+          TF_STG__AWS_ACCESS_KEY: ${{ secrets.TF_STG__AWS_ACCESS_KEY }}
+          TF_STG__AWS_SECRET_KEY: ${{ secrets.TF_STG__AWS_SECRET_KEY }}
+
+  terraform-database-stg:
+    name: Terraform Database (stg)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Install dependencies
+        run: pip install boto3
+      - name: Install tfenv
+        run: |
+          git clone https://github.com/tfutils/tfenv.git ~/.tfenv
+          echo "$HOME/.tfenv/bin" >> $GITHUB_PATH
+      - name: Run Terraform
+        run: python3.14 infrastructure/scripts/terraform.py database stg
+        env:
+          AWS__TFSTATE_BUCKET: ${{ secrets.AWS__TFSTATE_BUCKET }}
+          AWS__TFSTATE_REGION: ${{ secrets.AWS__TFSTATE_REGION }}
+          TF_STG__AWS_ACCESS_KEY: ${{ secrets.TF_STG__AWS_ACCESS_KEY }}
+          TF_STG__AWS_SECRET_KEY: ${{ secrets.TF_STG__AWS_SECRET_KEY }}
+          TF_STG__DB_PASSWORD: ${{ secrets.TF_STG__DB_PASSWORD }}
+
+  terraform-api-stg:
+    name: Terraform API (stg)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Install dependencies
+        run: pip install boto3
+      - name: Install tfenv
+        run: |
+          git clone https://github.com/tfutils/tfenv.git ~/.tfenv
+          echo "$HOME/.tfenv/bin" >> $GITHUB_PATH
+      - name: Run Terraform
+        run: python3.14 infrastructure/scripts/terraform.py api stg
+        env:
+          AWS__TFSTATE_BUCKET: ${{ secrets.AWS__TFSTATE_BUCKET }}
+          AWS__TFSTATE_REGION: ${{ secrets.AWS__TFSTATE_REGION }}
+          TF_STG__AWS_ACCESS_KEY: ${{ secrets.TF_STG__AWS_ACCESS_KEY }}
+          TF_STG__AWS_SECRET_KEY: ${{ secrets.TF_STG__AWS_SECRET_KEY }}
+          TF_STG__JWT_SECRET: ${{ secrets.TF_STG__JWT_SECRET }}
+          TF_STG__DB_APP_PASSWORD: ${{ secrets.TF_STG__DB_APP_PASSWORD }}
+          TF_STG__SHOPIFY_STORE_DOMAIN: ${{ secrets.TF_STG__SHOPIFY_STORE_DOMAIN }}
+          TF_STG__SHOPIFY_CLIENT_ID: ${{ secrets.TF_STG__SHOPIFY_CLIENT_ID }}
+          TF_STG__SHOPIFY_CLIENT_SECRET: ${{ secrets.TF_STG__SHOPIFY_CLIENT_SECRET }}
+          TF_STG__ADMIN_EMAIL: ${{ secrets.TF_STG__ADMIN_EMAIL }}
+          TF_STG__ADMIN_PASSWORD_HASH: ${{ secrets.TF_STG__ADMIN_PASSWORD_HASH }}
+
+  ##############################################
+  # DEPLOY - STG (branch: dev)
+  ##############################################
+  deploy-assets-stg:
+    name: Deploy Assets (stg)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "26"
+      - name: Install dependencies
+        run: pip install boto3
+      - name: Deploy
+        run: python3.14 infrastructure/scripts/deploy.folder.py assets stg
+        env:
+          TF_STG__AWS_ACCESS_KEY: ${{ secrets.TF_STG__AWS_ACCESS_KEY }}
+          TF_STG__AWS_SECRET_KEY: ${{ secrets.TF_STG__AWS_SECRET_KEY }}
+
+  deploy-back-office-stg:
+    name: Deploy Back Office (stg)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "26"
+      - name: Install dependencies
+        run: pip install boto3
+      - name: Deploy
+        run: python3.14 infrastructure/scripts/deploy.react.py www-back-office stg
+        env:
+          TF_STG__AWS_ACCESS_KEY: ${{ secrets.TF_STG__AWS_ACCESS_KEY }}
+          TF_STG__AWS_SECRET_KEY: ${{ secrets.TF_STG__AWS_SECRET_KEY }}
+
+  deploy-app-stg:
+    name: Deploy App (stg)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "26"
+      - name: Install dependencies
+        run: pip install boto3
+      - name: Deploy
+        run: python3.14 infrastructure/scripts/deploy.react-native.py www-app stg
+        env:
+          TF_STG__AWS_ACCESS_KEY: ${{ secrets.TF_STG__AWS_ACCESS_KEY }}
+          TF_STG__AWS_SECRET_KEY: ${{ secrets.TF_STG__AWS_SECRET_KEY }}
+
+  deploy-api-stg:
+    name: Deploy API (stg)
+    runs-on: ubuntu-latest
+    needs: [terraform-api-stg]
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.24"
+      - name: Install dependencies
+        run: pip install boto3
+      - name: Deploy
+        run: python3.14 infrastructure/scripts/deploy.api.py stg
+        env:
+          TF_STG__AWS_ACCESS_KEY: ${{ secrets.TF_STG__AWS_ACCESS_KEY }}
+          TF_STG__AWS_SECRET_KEY: ${{ secrets.TF_STG__AWS_SECRET_KEY }}
+
+  migrate-database-stg:
+    name: Migrate Database (stg)
+    runs-on: ubuntu-latest
+    needs: [terraform-database-stg]
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Install dependencies
+        run: pip install psycopg2-binary
+      - name: Migrate
+        run: python3.14 infrastructure/scripts/migrate.py stg
+        env:
+          TF_STG__DB_USERNAME: ${{ secrets.TF_STG__DB_USERNAME }}
+          TF_STG__DB_PASSWORD: ${{ secrets.TF_STG__DB_PASSWORD }}
+          TF_STG__DB_APP_PASSWORD: ${{ secrets.TF_STG__DB_APP_PASSWORD }}
+
+  ##############################################
+  # TERRAFORM - PRD (branch: main)
+  ##############################################
+  terraform-fronts-prd:
+    name: Terraform Fronts (prd)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Install dependencies
+        run: pip install boto3
+      - name: Install tfenv
+        run: |
+          git clone https://github.com/tfutils/tfenv.git ~/.tfenv
+          echo "$HOME/.tfenv/bin" >> $GITHUB_PATH
+      - name: Run Terraform
+        run: python3.14 infrastructure/scripts/terraform.py fronts prd
+        env:
+          AWS__TFSTATE_BUCKET: ${{ secrets.AWS__TFSTATE_BUCKET }}
+          AWS__TFSTATE_REGION: ${{ secrets.AWS__TFSTATE_REGION }}
+          TF_PRD__AWS_ACCESS_KEY: ${{ secrets.TF_PRD__AWS_ACCESS_KEY }}
+          TF_PRD__AWS_SECRET_KEY: ${{ secrets.TF_PRD__AWS_SECRET_KEY }}
+
+  terraform-database-prd:
+    name: Terraform Database (prd)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Install dependencies
+        run: pip install boto3
+      - name: Install tfenv
+        run: |
+          git clone https://github.com/tfutils/tfenv.git ~/.tfenv
+          echo "$HOME/.tfenv/bin" >> $GITHUB_PATH
+      - name: Run Terraform
+        run: python3.14 infrastructure/scripts/terraform.py database prd
+        env:
+          AWS__TFSTATE_BUCKET: ${{ secrets.AWS__TFSTATE_BUCKET }}
+          AWS__TFSTATE_REGION: ${{ secrets.AWS__TFSTATE_REGION }}
+          TF_PRD__AWS_ACCESS_KEY: ${{ secrets.TF_PRD__AWS_ACCESS_KEY }}
+          TF_PRD__AWS_SECRET_KEY: ${{ secrets.TF_PRD__AWS_SECRET_KEY }}
+          TF_PRD__DB_PASSWORD: ${{ secrets.TF_PRD__DB_PASSWORD }}
+
+  terraform-api-prd:
+    name: Terraform API (prd)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Install dependencies
+        run: pip install boto3
+      - name: Install tfenv
+        run: |
+          git clone https://github.com/tfutils/tfenv.git ~/.tfenv
+          echo "$HOME/.tfenv/bin" >> $GITHUB_PATH
+      - name: Run Terraform
+        run: python3.14 infrastructure/scripts/terraform.py api prd
+        env:
+          AWS__TFSTATE_BUCKET: ${{ secrets.AWS__TFSTATE_BUCKET }}
+          AWS__TFSTATE_REGION: ${{ secrets.AWS__TFSTATE_REGION }}
+          TF_PRD__AWS_ACCESS_KEY: ${{ secrets.TF_PRD__AWS_ACCESS_KEY }}
+          TF_PRD__AWS_SECRET_KEY: ${{ secrets.TF_PRD__AWS_SECRET_KEY }}
+          TF_PRD__JWT_SECRET: ${{ secrets.TF_PRD__JWT_SECRET }}
+          TF_PRD__DB_APP_PASSWORD: ${{ secrets.TF_PRD__DB_APP_PASSWORD }}
+          TF_PRD__SHOPIFY_STORE_DOMAIN: ${{ secrets.TF_PRD__SHOPIFY_STORE_DOMAIN }}
+          TF_PRD__SHOPIFY_CLIENT_ID: ${{ secrets.TF_PRD__SHOPIFY_CLIENT_ID }}
+          TF_PRD__SHOPIFY_CLIENT_SECRET: ${{ secrets.TF_PRD__SHOPIFY_CLIENT_SECRET }}
+          TF_PRD__ADMIN_EMAIL: ${{ secrets.TF_PRD__ADMIN_EMAIL }}
+          TF_PRD__ADMIN_PASSWORD_HASH: ${{ secrets.TF_PRD__ADMIN_PASSWORD_HASH }}
+
+  ##############################################
+  # DEPLOY - PRD (branch: main)
+  ##############################################
+  deploy-assets-prd:
+    name: Deploy Assets (prd)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "26"
+      - name: Install dependencies
+        run: pip install boto3
+      - name: Deploy
+        run: python3.14 infrastructure/scripts/deploy.folder.py assets prd
+        env:
+          TF_PRD__AWS_ACCESS_KEY: ${{ secrets.TF_PRD__AWS_ACCESS_KEY }}
+          TF_PRD__AWS_SECRET_KEY: ${{ secrets.TF_PRD__AWS_SECRET_KEY }}
+
+  deploy-back-office-prd:
+    name: Deploy Back Office (prd)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "26"
+      - name: Install dependencies
+        run: pip install boto3
+      - name: Deploy
+        run: python3.14 infrastructure/scripts/deploy.react.py www-back-office prd
+        env:
+          TF_PRD__AWS_ACCESS_KEY: ${{ secrets.TF_PRD__AWS_ACCESS_KEY }}
+          TF_PRD__AWS_SECRET_KEY: ${{ secrets.TF_PRD__AWS_SECRET_KEY }}
+
+  deploy-app-prd:
+    name: Deploy App (prd)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "26"
+      - name: Install dependencies
+        run: pip install boto3
+      - name: Deploy
+        run: python3.14 infrastructure/scripts/deploy.react-native.py www-app prd
+        env:
+          TF_PRD__AWS_ACCESS_KEY: ${{ secrets.TF_PRD__AWS_ACCESS_KEY }}
+          TF_PRD__AWS_SECRET_KEY: ${{ secrets.TF_PRD__AWS_SECRET_KEY }}
+
+  deploy-api-prd:
+    name: Deploy API (prd)
+    runs-on: ubuntu-latest
+    needs: [terraform-api-prd]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.24"
+      - name: Install dependencies
+        run: pip install boto3
+      - name: Deploy
+        run: python3.14 infrastructure/scripts/deploy.api.py prd
+        env:
+          TF_PRD__AWS_ACCESS_KEY: ${{ secrets.TF_PRD__AWS_ACCESS_KEY }}
+          TF_PRD__AWS_SECRET_KEY: ${{ secrets.TF_PRD__AWS_SECRET_KEY }}
+
+  migrate-database-prd:
+    name: Migrate Database (prd)
+    runs-on: ubuntu-latest
+    needs: [terraform-database-prd]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Install dependencies
+        run: pip install psycopg2-binary
+      - name: Migrate
+        run: python3.14 infrastructure/scripts/migrate.py prd
+        env:
+          TF_PRD__DB_USERNAME: ${{ secrets.TF_PRD__DB_USERNAME }}
+          TF_PRD__DB_PASSWORD: ${{ secrets.TF_PRD__DB_PASSWORD }}
+          TF_PRD__DB_APP_PASSWORD: ${{ secrets.TF_PRD__DB_APP_PASSWORD }}

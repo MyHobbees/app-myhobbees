@@ -1,0 +1,8 @@
+# Build artefacts
+/bin/
+/dist/
+bootstrap
+*.zip
+
+# Local environment
+.env

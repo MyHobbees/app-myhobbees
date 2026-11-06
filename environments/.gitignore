@@ -1,0 +1,4 @@
+loc/lambdas.loc.json
+*/.env
+*/.env.*
+!*/*.example

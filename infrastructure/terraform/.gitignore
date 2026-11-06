@@ -1,0 +1,6 @@
+*/tmp/
+**/.terraform.*
+**/.terraform/
+
+*/variables.tf
+*/variables.*.tf
