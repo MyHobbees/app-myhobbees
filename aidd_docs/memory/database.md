@@ -7,7 +7,7 @@
 
 ## Main entities
 
-No schema exists yet: `code/database/migrations` only holds a `.gitkeep`.
+- `leads` (`001_create_leads.sql`): one row per `www-shop` "Me prévenir" pre-launch form submission — email, the three answers (`activities` as a text array, `acquisition_channel`, `subscription_interest`), optional `utm_source`/`utm_medium`/`utm_campaign`/`referrer`, `created_at`. Written only by the public `POST /v1/leads` API route.
 
 ## Conventions
 
