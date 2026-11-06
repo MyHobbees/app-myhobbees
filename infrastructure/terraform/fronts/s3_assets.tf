@@ -1,6 +1,5 @@
 # Bucket S3
 
-/*
 resource "aws_s3_bucket" "Assets" {
   bucket = "${var.app}-${var.env}-assets"
 }
@@ -128,4 +127,3 @@ resource "aws_s3_bucket_cors_configuration" "Assets" {
     max_age_seconds = 3000
   }
 }
-*/

@@ -10,6 +10,12 @@ SERVICE_SECRETS = {
     'api':      ['db_app_password', 'jwt_secret', 'shopify_store_domain', 'shopify_client_id', 'shopify_client_secret', 'admin_email', 'admin_password_hash']
 }
 
+# Secrets not required for this (service, env): admin login and Shopify sync stay
+# disabled in prd until these are provided; Terraform falls back to "" defaults.
+OPTIONAL_SECRETS = {
+    ('api', 'prd'): ['shopify_store_domain', 'shopify_client_id', 'shopify_client_secret', 'admin_email', 'admin_password_hash'],
+}
+
 if len(sys.argv) != 3:
   print('Usage: terraform.py <service> <environment>')
   exit(-1)
@@ -70,7 +76,11 @@ backend_config = f'-backend-config="bucket={backend_bucket}" -backend-config="ke
 
 execute(f"cd infrastructure/terraform/{service} && terraform init {backend_config}")
 
+optional_secrets = OPTIONAL_SECRETS.get((service, env), [])
+
 for secret in SERVICE_SECRETS.get(service, []):
+    if secret in optional_secrets:
+        continue
     if not os.getenv(f"TF_{env.upper()}__{secret.upper()}"):
         print(f"Missing environment variable: TF_{env.upper()}__{secret.upper()}")
         exit(-1)
@@ -81,6 +91,7 @@ apply_vars = [
 ] + [
     tf_var(secret, os.getenv(f"TF_{env.upper()}__{secret.upper()}"))
     for secret in SERVICE_SECRETS.get(service, [])
+    if os.getenv(f"TF_{env.upper()}__{secret.upper()}")
 ]
 
 execute(f"cd infrastructure/terraform/{service} && terraform apply --auto-approve {' '.join(apply_vars)}")
