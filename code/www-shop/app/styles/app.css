@@ -507,6 +507,7 @@ code {
 .header-ctas {
   align-items: center;
   display: flex;
+  flex-shrink: 0;
   gap: 0.8rem;
   justify-self: end;
 }
@@ -515,10 +516,12 @@ code {
   align-items: center;
   color: var(--color-green);
   display: inline-flex;
+  flex-shrink: 0;
   font-size: 0.82rem;
   font-weight: 700;
   gap: 0.35rem;
   position: relative;
+  white-space: nowrap;
 }
 
 .header-action:hover {
@@ -1116,6 +1119,14 @@ aside main {
   .dream-step-circle svg {
     height: 110px;
     width: 110px;
+  }
+
+  .dream-step--2 {
+    margin-top: 0;
+  }
+
+  .dream-steps-path {
+    display: none;
   }
 }
 
@@ -2793,7 +2804,7 @@ label.me-prevenir-field-body {
 
 @media (max-width: 38rem) {
   .brand strong {
-    font-size: 0.98rem;
+    display: none;
   }
 
   .header {
