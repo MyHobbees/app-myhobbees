@@ -17,9 +17,9 @@ flowchart LR
         Dashboard --> DevTools
     end
     subgraph Shop[www-shop]
-        Home --> Collections --> ProductPage
+        Home --> Collections["collections/all, Nos boxs — local data, not Shopify"]
         Home --> Abonnements["abonnements (box-creative, box-app)"]
-        Home --> Account["account (orders, addresses, profile)"]
+        Home --> MePrevenir["me-prevenir, fake-door lead capture"]
         Home --> Cart
         Home --> Blogs
     end

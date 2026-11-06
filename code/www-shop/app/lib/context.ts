@@ -11,6 +11,8 @@ interface Env {
   PUBLIC_CHECKOUT_DOMAIN: string;
   PUBLIC_POSTHOG_KEY: string;
   PUBLIC_POSTHOG_HOST: string;
+  // Server-only: the Go API base URL, never exposed to the client bundle.
+  API_BASE_URL: string;
   // Required by Hydrogen's `HydrogenEnv`, unused (no Customer Account API login configured yet).
   PRIVATE_STOREFRONT_API_TOKEN: string;
   PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID: string;
@@ -41,6 +43,7 @@ declare global {
   interface Env {
     PUBLIC_POSTHOG_KEY: string;
     PUBLIC_POSTHOG_HOST: string;
+    API_BASE_URL: string;
   }
 }
 
@@ -61,6 +64,7 @@ export async function createHydrogenRouterContext(request: Request) {
     PUBLIC_CHECKOUT_DOMAIN: process.env.PUBLIC_CHECKOUT_DOMAIN ?? '',
     PUBLIC_POSTHOG_KEY: process.env.PUBLIC_POSTHOG_KEY ?? '',
     PUBLIC_POSTHOG_HOST: process.env.PUBLIC_POSTHOG_HOST ?? '',
+    API_BASE_URL: process.env.API_BASE_URL ?? '',
     PRIVATE_STOREFRONT_API_TOKEN: process.env.PRIVATE_STOREFRONT_API_TOKEN ?? '',
     PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID:
       process.env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID ?? '',
