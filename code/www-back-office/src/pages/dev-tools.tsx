@@ -146,7 +146,6 @@ export function DevToolsPage() {
             <Button
               onClick={onSeed}
               disabled={running !== null}
-              className="bg-brand text-brand-foreground hover:bg-brand-deep"
             >
               {running === 'seed' && <Loader2 className="animate-spin" />}
               {running === 'seed'

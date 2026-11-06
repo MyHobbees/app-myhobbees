@@ -30,6 +30,10 @@ func (c *Client) PrepareOrder(ctx context.Context, id string) error {
 }
 
 func (c *Client) FulfillOrder(ctx context.Context, id string) error {
+	return c.fulfillOrderByGID(ctx, "gid://shopify/Order/"+id)
+}
+
+func (c *Client) fulfillOrderByGID(ctx context.Context, gid string) error {
 	listQuery := `query($id: ID!) {
 		order(id: $id) {
 			fulfillmentOrders(first: 10) {
@@ -37,7 +41,7 @@ func (c *Client) FulfillOrder(ctx context.Context, id string) error {
 			}
 		}
 	}`
-	variables := map[string]any{"id": "gid://shopify/Order/" + id}
+	variables := map[string]any{"id": gid}
 
 	var listData struct {
 		Order *struct {

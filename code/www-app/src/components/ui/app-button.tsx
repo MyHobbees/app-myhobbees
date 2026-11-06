@@ -1,8 +1,7 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { BrandGradient, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type AppButtonProps = {
@@ -18,20 +17,10 @@ export function AppButton({ label, onPress, variant = 'primary', disabled, small
   const theme = useTheme();
   const padding = small ? styles.small : styles.regular;
 
-  if (variant === 'primary') {
-    return (
-      <Pressable
-        onPress={onPress}
-        disabled={disabled}
-        style={({ pressed }) => [styles.shadow, pressed && styles.pressed, disabled && styles.disabled, style]}>
-        <LinearGradient colors={BrandGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.base, padding]}>
-          <ThemedText type="smallBold" style={styles.primaryLabel}>
-            {label}
-          </ThemedText>
-        </LinearGradient>
-      </Pressable>
-    );
-  }
+  const background =
+    variant === 'primary' ? theme.primary : variant === 'secondary' ? theme.secondary : 'transparent';
+  const labelColor =
+    variant === 'primary' ? theme.onPrimary : variant === 'secondary' ? theme.onSecondary : theme.textSecondary;
 
   return (
     <Pressable
@@ -40,15 +29,14 @@ export function AppButton({ label, onPress, variant = 'primary', disabled, small
       style={({ pressed }) => [
         styles.base,
         padding,
-        variant === 'secondary' && { backgroundColor: theme.brandSoft },
+        { backgroundColor: background },
+        variant === 'primary' && styles.primaryShadow,
         variant === 'ghost' && { borderWidth: 1.5, borderColor: theme.hairline },
         pressed && styles.pressed,
         disabled && styles.disabled,
         style,
       ]}>
-      <ThemedText
-        type="smallBold"
-        style={{ color: variant === 'secondary' ? theme.brandSoftText : theme.textSecondary }}>
+      <ThemedText type="smallBold" style={{ color: labelColor }}>
         {label}
       </ThemedText>
     </Pressable>
@@ -61,13 +49,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  shadow: {
-    borderRadius: Radius.full,
-    shadowColor: '#CD6581',
-    shadowOpacity: 0.4,
-    shadowRadius: 11,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 8,
+  primaryShadow: {
+    shadowColor: '#F9C74F',
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
   },
   regular: {
     paddingVertical: Spacing.three - 2,
@@ -76,9 +63,6 @@ const styles = StyleSheet.create({
   small: {
     paddingVertical: Spacing.two - 1,
     paddingHorizontal: Spacing.three,
-  },
-  primaryLabel: {
-    color: '#ffffff',
   },
   pressed: {
     opacity: 0.8,

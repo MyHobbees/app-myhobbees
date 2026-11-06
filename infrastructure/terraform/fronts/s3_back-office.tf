@@ -1,5 +1,6 @@
 # Bucket S3
 
+/*
 resource "aws_s3_bucket" "BackOffice" {
   bucket = "${var.app}-${var.env}-back-office"
 }
@@ -98,3 +99,4 @@ output "back_office_endpoint" {
 output "back_office_cdn_id" {
   value = aws_cloudfront_distribution.BackOffice.id
 }
+*/

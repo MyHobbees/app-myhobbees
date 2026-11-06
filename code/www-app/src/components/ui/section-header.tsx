@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { Fonts, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type SectionHeaderProps = {
@@ -15,7 +15,7 @@ export function SectionHeader({ title, actionLabel, onAction }: SectionHeaderPro
 
   return (
     <View style={styles.row}>
-      <ThemedText type="smallBold" style={styles.title}>
+      <ThemedText type="smallBold" themeColor="heading" style={styles.title}>
         {title}
       </ThemedText>
       {actionLabel && (
@@ -34,10 +34,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.two,
+    marginBottom: Spacing.three,
   },
   title: {
     fontSize: 18,
-    lineHeight: 24,
+    lineHeight: 26,
+    fontFamily: Fonts.headingMedium,
   },
 });

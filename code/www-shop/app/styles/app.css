@@ -10,7 +10,7 @@
   --color-blush: #fcbfb7;
   --color-green: #4e6e58;
   --color-brown: #6d4d2e;
-  --color-cream: #fffdf9;
+  --color-cream: #fff7e5;
   --color-white: #ffffff;
   --color-text: #294333;
   --color-muted: #65766a;
@@ -436,7 +436,8 @@ code {
   padding: 1rem 0;
 }
 
-.header-menu-item.is-active::after {
+.header-menu-item.is-active::after,
+.header-menu-item:hover::after {
   background: var(--color-pink);
   border-radius: 2px;
   bottom: -0.4rem;
@@ -445,6 +446,10 @@ code {
   left: 0;
   position: absolute;
   right: 0;
+}
+
+.header-menu-item:hover {
+  text-decoration: none;
 }
 
 .header-menu-item.is-pending {
@@ -972,7 +977,7 @@ aside main {
 }
 
 .footer p {
-  color: rgba(255, 253, 249, 0.78);
+  color: rgba(255, 247, 229, 0.78);
   font-size: 0.94rem;
   margin-bottom: 0;
   max-width: 420px;
@@ -1004,8 +1009,13 @@ aside main {
   gap: 2.4rem;
 }
 
-.footer-app-download button {
+.footer-app-download .button {
   margin-top: 1.3rem;
+}
+
+.footer-app-download p,
+.footer-newsletter p {
+  margin-top: 0.4rem;
 }
 
 .footer-newsletter {
@@ -1311,6 +1321,15 @@ aside main {
   padding: 0.9rem 1.5rem;
 }
 
+.faq-teaser-list details[open] {
+  border-radius: 1.6rem;
+  padding-bottom: 1.4rem;
+}
+
+.faq-teaser-list .accordion-content {
+  margin-right: 0.5rem;
+}
+
 .faq-teaser-list details:last-child {
   margin-bottom: 0;
 }
@@ -1540,7 +1559,13 @@ aside main {
 .subscription-plan--featured {
   background: color-mix(in srgb, var(--color-yellow) 18%, var(--color-white));
   border-color: var(--color-yellow);
-  box-shadow: var(--shadow-soft);
+  border-style: solid;
+  box-shadow: 0 18px 40px rgba(109, 77, 46, 0.18);
+}
+
+.subscription-plan--featured .product-badge {
+  background: var(--color-pink);
+  color: var(--color-white);
 }
 
 .subscription-plan-heading {
@@ -1643,6 +1668,28 @@ aside main {
   color: var(--color-muted);
 }
 
+.subscription-comparison td.comparison-featured-col {
+  background: color-mix(in srgb, var(--color-yellow) 16%, var(--color-white));
+}
+
+.subscription-comparison thead th.comparison-featured-col {
+  background: color-mix(in srgb, var(--color-yellow) 25%, var(--color-green));
+}
+
+.comparison-featured-badge {
+  background: var(--color-pink);
+  border-radius: 999px;
+  color: var(--color-white);
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  margin: 0 auto 0.45rem;
+  padding: 0.2rem 0.7rem;
+  text-transform: uppercase;
+  width: max-content;
+}
+
 .subscription-step {
   min-height: 150px;
   padding-top: 3.5rem;
@@ -1732,6 +1779,24 @@ aside main {
 
 .future-boxes p {
   color: var(--color-muted);
+}
+
+.future-boxes--stocked {
+  max-width: none;
+}
+
+.future-boxes--stocked > p {
+  margin: 0 auto;
+  max-width: 760px;
+}
+
+.future-boxes-grid {
+  margin: 2.4rem 0;
+  text-align: left;
+}
+
+.boxes-page-grid {
+  padding-block: 3rem 4.5rem;
 }
 
 .product-subscription-details {
@@ -2065,7 +2130,12 @@ aside main {
   }
 
   .subscriptions-plans {
+    align-items: stretch;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .subscription-plan--featured {
+    transform: translateY(-0.6rem) scale(1.02);
   }
 
   .product {

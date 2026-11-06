@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { Bell } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -32,7 +33,7 @@ export function ScreenHeader({ title, subtitle }: ScreenHeaderProps) {
       <Pressable
         onPress={() => router.push('/notifications')}
         style={({ pressed }) => [styles.bell, { backgroundColor: theme.backgroundElement }, pressed && styles.pressed]}>
-        <Text style={styles.bellIcon}>🔔</Text>
+        <Bell size={20} color={theme.text} />
         {unread > 0 && (
           <View style={[styles.badge, { backgroundColor: theme.brand }]}>
             <Text style={styles.badgeText}>{unread}</Text>
@@ -56,7 +57,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 26,
-    lineHeight: 32,
+    lineHeight: 34,
   },
   bell: {
     width: 44,
@@ -64,9 +65,6 @@ const styles = StyleSheet.create({
     borderRadius: Radius.full,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  bellIcon: {
-    fontSize: 20,
   },
   pressed: {
     opacity: 0.7,

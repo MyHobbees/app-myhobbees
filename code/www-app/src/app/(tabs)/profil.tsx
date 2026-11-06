@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 24,
-    lineHeight: 30,
+    lineHeight: 32,
   },
   levelChip: {
     paddingVertical: 4,
@@ -125,7 +125,6 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 17,
     fontFamily: Fonts.rounded,
-    fontWeight: '800',
   },
   badgeGrid: {
     flexDirection: 'row',

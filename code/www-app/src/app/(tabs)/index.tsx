@@ -47,26 +47,30 @@ export default function HomeScreen() {
         <GradientCard>
           <View style={styles.gamificationRow}>
             <View style={styles.gamificationLeft}>
-              <ThemedText type="smallBold" style={styles.onGradientMuted}>
+              <ThemedText type="smallBold" style={styles.onPrimaryMuted}>
                 Niveau {levelForXp(xp)}
               </ThemedText>
-              <ThemedText type="subtitle" style={[styles.onGradient, styles.rounded]}>
+              <ThemedText type="subtitle" style={[styles.onPrimary, styles.rounded]}>
                 {xp} XP
               </ThemedText>
               <ProgressBar
                 progress={xpIntoLevel(xp) / LEVEL_STEP}
-                color="#ffffff"
-                trackColor="rgba(255,255,255,0.25)"
+                color="#6D4D2E"
+                trackColor="rgba(109,77,46,0.18)"
               />
-              <ThemedText type="small" style={styles.onGradientMuted}>
+              <ThemedText type="small" style={styles.onPrimaryMuted}>
                 🔥 {streakDays} jours d’affilée
               </ThemedText>
             </View>
-            <ProgressRing progress={completion} size={84}>
-              <ThemedText type="smallBold" style={[styles.onGradient, styles.rounded]}>
+            <ProgressRing
+              progress={completion}
+              size={84}
+              color="#6D4D2E"
+              trackColor="rgba(109,77,46,0.18)">
+              <ThemedText type="smallBold" style={[styles.onPrimary, styles.rounded]}>
                 {Math.round(completion * 100)}%
               </ThemedText>
-              <ThemedText type="small" style={[styles.onGradientMuted, styles.ringLabel]}>
+              <ThemedText type="small" style={[styles.onPrimaryMuted, styles.ringLabel]}>
                 box
               </ThemedText>
             </ProgressRing>
@@ -192,9 +196,14 @@ const styles = StyleSheet.create({
   onGradientMuted: {
     color: 'rgba(255,255,255,0.85)',
   },
+  onPrimary: {
+    color: '#6D4D2E',
+  },
+  onPrimaryMuted: {
+    color: 'rgba(109,77,46,0.8)',
+  },
   rounded: {
     fontFamily: Fonts.rounded,
-    fontWeight: '800',
   },
   ringLabel: {
     fontSize: 11,

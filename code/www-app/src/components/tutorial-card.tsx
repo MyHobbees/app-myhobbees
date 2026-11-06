@@ -1,5 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { Download, Play } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -37,11 +38,11 @@ export function TutorialCard({ tutorial, wide }: TutorialCardProps) {
       <LinearGradient colors={boxTheme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.thumb}>
         <Text style={styles.thumbEmoji}>{boxTheme.emoji}</Text>
         <View style={styles.playBubble}>
-          <Text style={styles.playIcon}>▶</Text>
+          <Play size={13} color="#ffffff" fill="#ffffff" />
         </View>
         {download?.status === 'done' && (
           <View style={styles.downloadedBubble}>
-            <Text style={styles.downloadedIcon}>📥</Text>
+            <Download size={14} color="#ffffff" />
           </View>
         )}
       </LinearGradient>
@@ -91,11 +92,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  playIcon: {
-    color: '#ffffff',
-    fontSize: 12,
-    marginLeft: 2,
-  },
   downloadedBubble: {
     position: 'absolute',
     left: Spacing.two,
@@ -106,9 +102,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.35)',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  downloadedIcon: {
-    fontSize: 13,
   },
   body: {
     padding: Spacing.three,

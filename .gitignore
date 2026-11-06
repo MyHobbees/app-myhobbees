@@ -2,6 +2,7 @@
 
 !.gitignore
 !README.md
+!CLAUDE.md
 !docker-compose.yml
 !Dockerfile
 !Dockerfile.*
@@ -11,6 +12,7 @@
 !environments/
 !infrastructure/
 !.github/
+!aidd_docs/
 
 .DS_Store
 **/.DS_Store

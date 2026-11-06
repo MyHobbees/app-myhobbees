@@ -45,9 +45,16 @@ export async function createHydrogenRouterContext(
     AppSession.init(request, [env.SESSION_SECRET]),
   ]);
 
+  const storefrontConfigured = Boolean(
+    env.PUBLIC_STORE_DOMAIN && env.PUBLIC_STOREFRONT_API_TOKEN,
+  );
+  const resolvedEnv = storefrontConfigured
+    ? env
+    : {...env, PUBLIC_STORE_DOMAIN: '', PUBLIC_STOREFRONT_API_TOKEN: ''};
+
   const hydrogenContext = createHydrogenContext(
     {
-      env,
+      env: resolvedEnv,
       request,
       cache,
       waitUntil,

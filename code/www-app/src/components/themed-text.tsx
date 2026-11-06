@@ -10,11 +10,13 @@ export type ThemedTextProps = TextProps & {
 
 export function ThemedText({ style, type = 'default', themeColor, ...rest }: ThemedTextProps) {
   const theme = useTheme();
+  const defaultColor = type === 'title' || type === 'subtitle' ? 'heading' : 'text';
 
   return (
     <Text
       style={[
-        { color: theme[themeColor ?? 'text'] },
+        styles.base,
+        { color: theme[themeColor ?? defaultColor] },
         type === 'default' && styles.default,
         type === 'title' && styles.title,
         type === 'small' && styles.small,
@@ -31,39 +33,44 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
 }
 
 const styles = StyleSheet.create({
+  base: {
+    includeFontPadding: false,
+  },
   small: {
     fontSize: 14,
     lineHeight: 20,
-    fontWeight: 500,
+    fontFamily: Fonts.sansMedium,
   },
   smallBold: {
     fontSize: 14,
     lineHeight: 20,
-    fontWeight: 700,
+    fontFamily: Fonts.sansBold,
   },
   default: {
     fontSize: 16,
     lineHeight: 24,
-    fontWeight: 500,
+    fontFamily: Fonts.sansMedium,
   },
   title: {
     fontSize: 48,
-    fontWeight: 600,
     lineHeight: 52,
+    fontFamily: Fonts.heading,
   },
   subtitle: {
     fontSize: 32,
     lineHeight: 44,
-    fontWeight: 600,
+    fontFamily: Fonts.heading,
   },
   link: {
     lineHeight: 30,
     fontSize: 14,
+    fontFamily: Fonts.sansMedium,
   },
   linkPrimary: {
     lineHeight: 30,
     fontSize: 14,
-    color: '#3c87f7',
+    fontFamily: Fonts.sansMedium,
+    color: '#EF476F',
   },
   code: {
     fontFamily: Fonts.mono,

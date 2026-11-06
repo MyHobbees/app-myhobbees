@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Heart, MessageCircle } from 'lucide-react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Avatar } from '@/components/ui/avatar';
@@ -48,13 +49,17 @@ export function TopicCard({ topic }: { topic: Topic }) {
 
       <View style={styles.footer}>
         <Pressable onPress={() => toggleTopicLike(topic.id)} hitSlop={8} style={styles.action}>
-          <Text style={styles.actionIcon}>{topic.likedByMe ? '❤️' : '🤍'}</Text>
+          <Heart
+            size={16}
+            color={topic.likedByMe ? theme.brand : theme.textSecondary}
+            fill={topic.likedByMe ? theme.brand : 'none'}
+          />
           <ThemedText type="small" themeColor={topic.likedByMe ? 'brand' : 'textSecondary'}>
             {topic.likes}
           </ThemedText>
         </Pressable>
         <View style={styles.action}>
-          <Text style={styles.actionIcon}>💬</Text>
+          <MessageCircle size={16} color={theme.textSecondary} />
           <ThemedText type="small" themeColor="textSecondary">
             {commentCount}
           </ThemedText>
@@ -103,8 +108,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.one,
-  },
-  actionIcon: {
-    fontSize: 14,
   },
 });

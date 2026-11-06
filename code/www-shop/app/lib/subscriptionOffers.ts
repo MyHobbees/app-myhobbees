@@ -78,7 +78,7 @@ export const SUBSCRIPTION_OFFERS: Record<SubscriptionOfferSlug, SubscriptionOffe
     },
     finalCtaLabel: 'Être informé du lancement',
     future: {
-      productHandle: null,
+      productHandle: 'box-passion-abonnement-mensuel',
       sellingPlanId: null,
       subscriptionKind: 'box',
     },

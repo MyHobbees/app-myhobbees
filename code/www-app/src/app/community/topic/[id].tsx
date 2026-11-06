@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
+import { Heart, Send, X } from 'lucide-react-native';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -7,7 +8,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -91,7 +91,11 @@ export default function TopicScreen() {
           {topic.imageUri && <Image source={{ uri: topic.imageUri }} style={styles.image} contentFit="cover" />}
 
           <Pressable onPress={() => toggleTopicLike(topic.id)} style={styles.likeRow} hitSlop={8}>
-            <Text style={styles.likeIcon}>{topic.likedByMe ? '❤️' : '🤍'}</Text>
+            <Heart
+              size={17}
+              color={topic.likedByMe ? theme.brand : theme.textSecondary}
+              fill={topic.likedByMe ? theme.brand : 'none'}
+            />
             <ThemedText type="small" themeColor={topic.likedByMe ? 'brand' : 'textSecondary'}>
               {topic.likes} j’aime
             </ThemedText>
@@ -141,9 +145,7 @@ export default function TopicScreen() {
               En réponse à {replyTo.author}
             </ThemedText>
             <Pressable onPress={() => setReplyTo(null)} hitSlop={8}>
-              <ThemedText type="smallBold" style={{ color: theme.brand }}>
-                ✕
-              </ThemedText>
+              <X size={14} color={theme.brand} />
             </Pressable>
           </View>
         )}
@@ -159,10 +161,10 @@ export default function TopicScreen() {
             disabled={!text.trim()}
             style={({ pressed }) => [
               styles.send,
-              { backgroundColor: theme.brand },
+              { backgroundColor: theme.primary },
               (!text.trim() || pressed) && styles.sendDisabled,
             ]}>
-            <Text style={styles.sendIcon}>➤</Text>
+            <Send size={17} color={theme.onPrimary} />
           </Pressable>
         </View>
       </View>
@@ -198,7 +200,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    lineHeight: 28,
+    lineHeight: 30,
   },
   image: {
     height: 200,
@@ -210,9 +212,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.one,
     marginTop: Spacing.one,
-  },
-  likeIcon: {
-    fontSize: 16,
   },
   separator: {
     height: 1,
@@ -261,9 +260,5 @@ const styles = StyleSheet.create({
   },
   sendDisabled: {
     opacity: 0.5,
-  },
-  sendIcon: {
-    color: '#ffffff',
-    fontSize: 16,
   },
 });

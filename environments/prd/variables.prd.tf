@@ -78,7 +78,7 @@ variable "db_backup_retention" {
 }
 
 variable "db_deletion_protection" {
-  default = true
+  default = false
 }
 
 variable "db_app_username" {

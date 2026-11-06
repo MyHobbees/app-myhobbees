@@ -138,7 +138,7 @@ export function ProductsPage() {
             className={cn(
               'rounded-full border px-3 py-1.5 text-sm transition-colors',
               chip === c.key
-                ? 'border-transparent bg-brand text-brand-foreground'
+                ? 'border-transparent bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:bg-muted',
             )}
           >

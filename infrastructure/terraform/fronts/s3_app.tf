@@ -1,5 +1,6 @@
 # Bucket S3
 
+/*
 resource "aws_s3_bucket" "App" {
   bucket = "${var.app}-${var.env}-app"
 }
@@ -98,3 +99,4 @@ output "app_endpoint" {
 output "app_cdn_id" {
   value = aws_cloudfront_distribution.App.id
 }
+*/

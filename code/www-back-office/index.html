@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr" class="dark">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -9,9 +9,10 @@
       try {
         const stored = JSON.parse(localStorage.getItem('back-office-theme'))
         const theme = stored?.state?.theme
-        if (theme === 'light') document.documentElement.classList.remove('dark')
-        if (theme === 'system' && !matchMedia('(prefers-color-scheme: dark)').matches)
-          document.documentElement.classList.remove('dark')
+        const dark =
+          theme === 'dark' ||
+          (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
+        if (dark) document.documentElement.classList.add('dark')
       } catch {}
     </script>
   </head>

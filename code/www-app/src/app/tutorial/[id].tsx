@@ -1,7 +1,9 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
+import { ArrowLeft, Check, Download } from 'lucide-react-native';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { WebView } from 'react-native-webview';
 
 import { RatingModal } from '@/components/rating-modal';
 import { Screen } from '@/components/screen';
@@ -60,17 +62,31 @@ export default function TutorialScreen() {
   return (
     <Screen withTabInset={false}>
       <View style={styles.videoWrap}>
-        <VideoView
-          player={player}
-          style={styles.video}
-          nativeControls
-          contentFit="cover"
-          fullscreenOptions={{ enable: true }}
-        />
+        {tutorial.youtubeId && Platform.OS !== 'web' ? (
+          <WebView
+            style={styles.video}
+            originWhitelist={['*']}
+            source={{
+              baseUrl: 'https://www.myhobbees.com',
+              html: `<!DOCTYPE html><html><head><meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0"/><style>html,body{margin:0;padding:0;height:100%;background:#000;overflow:hidden}iframe{position:absolute;inset:0;width:100%;height:100%;border:0}</style></head><body><iframe src="https://www.youtube.com/embed/${tutorial.youtubeId}?playsinline=1&rel=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></body></html>`,
+            }}
+            allowsFullscreenVideo
+            allowsInlineMediaPlayback
+            mediaPlaybackRequiresUserAction={false}
+          />
+        ) : (
+          <VideoView
+            player={player}
+            style={styles.video}
+            nativeControls
+            contentFit="cover"
+            fullscreenOptions={{ enable: true }}
+          />
+        )}
         <Pressable
           onPress={() => router.back()}
           style={({ pressed }) => [styles.back, pressed && styles.pressed]}>
-          <Text style={styles.backIcon}>←</Text>
+          <ArrowLeft size={19} color="#ffffff" />
         </Pressable>
       </View>
 
@@ -98,14 +114,14 @@ export default function TutorialScreen() {
       <View style={[styles.downloadRow, { backgroundColor: theme.backgroundElement }]}>
         {download?.status === 'done' ? (
           <>
-            <Text style={styles.downloadIcon}>📥</Text>
+            <Download size={18} color={theme.success} />
             <ThemedText type="small" style={{ color: theme.success, flex: 1 }}>
               Disponible hors ligne
             </ThemedText>
           </>
         ) : download?.status === 'downloading' ? (
           <>
-            <Text style={styles.downloadIcon}>📥</Text>
+            <Download size={18} color={theme.textSecondary} />
             <View style={styles.downloadProgress}>
               <ThemedText type="small" themeColor="textSecondary">
                 Téléchargement… {Math.round(download.progress * 100)}%
@@ -115,7 +131,7 @@ export default function TutorialScreen() {
           </>
         ) : (
           <>
-            <Text style={styles.downloadIcon}>📥</Text>
+            <Download size={18} color={theme.textSecondary} />
             <ThemedText type="small" themeColor="textSecondary" style={styles.downloadLabel}>
               Regarder sans connexion
             </ThemedText>
@@ -152,7 +168,7 @@ export default function TutorialScreen() {
                   { borderColor: done ? theme.brand : theme.textSecondary },
                   done && { backgroundColor: theme.brand },
                 ]}>
-                {done && <Text style={styles.checkmark}>✓</Text>}
+                {done && <Check size={14} color="#ffffff" strokeWidth={3} />}
               </View>
               <View style={styles.stepTexts}>
                 <ThemedText type="smallBold" style={done ? { color: theme.brand } : undefined}>
@@ -198,10 +214,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  backIcon: {
-    color: '#ffffff',
-    fontSize: 18,
-  },
   pressed: {
     opacity: 0.75,
   },
@@ -210,7 +222,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    lineHeight: 30,
+    lineHeight: 32,
   },
   metaRow: {
     flexDirection: 'row',
@@ -231,9 +243,6 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     borderRadius: Radius.lg,
     padding: Spacing.three,
-  },
-  downloadIcon: {
-    fontSize: 18,
   },
   downloadLabel: {
     flex: 1,
@@ -269,11 +278,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,
-  },
-  checkmark: {
-    color: '#ffffff',
-    fontSize: 13,
-    fontWeight: '700',
   },
   stepTexts: {
     flex: 1,

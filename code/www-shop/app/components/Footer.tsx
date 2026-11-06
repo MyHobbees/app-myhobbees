@@ -185,19 +185,12 @@ export function Footer({
   );
 }
 
-function FooterSiteMenu({menu, primaryDomainUrl, publicStoreDomain}: FooterMenuProps) {
-  const useFallbackMenu = shouldUseFallbackMenu(
-    publicStoreDomain,
-    menu?.items.length ?? 0,
-  );
-  const items = useFallbackMenu
-    ? FALLBACK_SITE_MENU.items
-    : (menu?.items.filter((item) => item.type !== 'SHOP_POLICY') ??
-      FALLBACK_SITE_MENU.items);
-
+function FooterSiteMenu({primaryDomainUrl, publicStoreDomain}: FooterMenuProps) {
+  // The sitemap mirrors the site-owned navigation (see SITE_MENU_ITEMS in
+  // Header.tsx), not the Shopify admin menu.
   return (
     <nav className="footer-menu" aria-label="Plan du site">
-      {items.map((item) => (
+      {FALLBACK_SITE_MENU.items.map((item) => (
         <FooterLink
           key={item.id}
           item={item}

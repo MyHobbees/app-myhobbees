@@ -138,5 +138,6 @@ const styles = StyleSheet.create({
   },
   thanksTitle: {
     fontSize: 24,
+    lineHeight: 32,
   },
 });

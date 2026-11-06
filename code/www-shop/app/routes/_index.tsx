@@ -58,14 +58,9 @@ function Hero() {
             <Link className="button button-primary" to="/abonnements">
               Découvrir nos abonnements
             </Link>
-            <button
-              aria-label="Découvrir nos boxes (bientôt disponible)"
-              className="button button-outline"
-              disabled
-              type="button"
-            >
+            <Link className="button button-outline" to="/collections/all">
               Découvrir nos boxes
-            </button>
+            </Link>
           </div>
         </div>
         <div className="hero-visual">

@@ -8,8 +8,6 @@ import {
 } from '@shopify/hydrogen';
 import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
 import {useAside} from '~/components/Aside';
-import {getMenuItemUrl} from '~/lib/menu';
-import {shouldUseFallbackMenu} from '~/lib/storefront';
 
 interface HeaderProps {
   header: HeaderQuery;
@@ -19,6 +17,18 @@ interface HeaderProps {
 }
 
 type Viewport = 'desktop' | 'mobile';
+
+/**
+ * The main navigation is owned by the site (not the Shopify admin menu): the
+ * shop products surface inside the site's own pages, so the header always
+ * links to those pages regardless of what the Shopify "main-menu" contains.
+ */
+const SITE_MENU_ITEMS = [
+  {title: 'Accueil', to: '/', end: true},
+  {title: 'Nos boxes', to: '/collections/all', end: false},
+  {title: 'Nos abonnements', to: '/abonnements', end: false},
+  {title: 'Qui sommes-nous', to: '/qui-sommes-nous', end: false},
+] as const;
 
 export function Header({
   header,
@@ -41,77 +51,46 @@ export function Header({
           </span>
           <strong>My Hobbees</strong>
         </NavLink>
-        <HeaderMenu
-          menu={header.menu}
-          viewport="desktop"
-          primaryDomainUrl={header.shop.primaryDomain.url}
-          publicStoreDomain={publicStoreDomain}
-        />
+        <HeaderMenu viewport="desktop" />
         <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
       </header>
     </>
   );
 }
 
-export function HeaderMenu({
-  menu,
-  primaryDomainUrl,
-  viewport,
-  publicStoreDomain,
-}: {
-  menu: HeaderProps['header']['menu'];
-  primaryDomainUrl: HeaderProps['header']['shop']['primaryDomain']['url'];
-  viewport: Viewport;
-  publicStoreDomain: HeaderProps['publicStoreDomain'];
-}) {
+export function HeaderMenu({viewport}: {viewport: Viewport}) {
   const className = `header-menu header-menu-${viewport}`;
   const {close} = useAside();
-  const useFallbackMenu = shouldUseFallbackMenu(
-    publicStoreDomain,
-    menu?.items.length ?? 0,
-  );
-  const items = useFallbackMenu
-    ? FALLBACK_HEADER_MENU.items
-    : (menu?.items ?? FALLBACK_HEADER_MENU.items);
 
-  const renderItem = (item: (typeof items)[number]) => {
-    if (!item.url) return null;
-
-    const to = getMenuItemUrl(item.url, primaryDomainUrl, publicStoreDomain);
-
-    return (
-      <NavLink
-        className={({isActive, isPending}) =>
-          [
-            'header-menu-item',
-            isActive ? 'is-active' : '',
-            isPending ? 'is-pending' : '',
-          ]
-            .filter(Boolean)
-            .join(' ')
-        }
-        end={to === '/'}
-        key={item.id}
-        onClick={close}
-        prefetch="intent"
-        to={to}
-      >
-        {item.title}
-      </NavLink>
-    );
-  };
+  const itemClassName = ({
+    isActive,
+    isPending,
+  }: {
+    isActive: boolean;
+    isPending: boolean;
+  }) =>
+    [
+      'header-menu-item',
+      isActive ? 'is-active' : '',
+      isPending ? 'is-pending' : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
 
   return (
     <nav className={className} aria-label="Navigation principale">
-      {items[0] ? renderItem(items[0]) : null}
-      <span
-        aria-disabled="true"
-        className="header-menu-item header-menu-item--soon"
-      >
-        <span className="header-menu-item-badge">Prochainement</span>
-        Nos boxes
-      </span>
-      {items.slice(1).map(renderItem)}
+      {SITE_MENU_ITEMS.map((item) => (
+        <NavLink
+          className={itemClassName}
+          end={item.end}
+          key={item.to}
+          onClick={close}
+          prefetch="intent"
+          to={item.to}
+        >
+          {item.title}
+        </NavLink>
+      ))}
     </nav>
   );
 }
@@ -199,27 +178,3 @@ function CartBanner() {
   const cart = useOptimisticCart(originalCart);
   return <CartBadge count={cart?.totalQuantity ?? 0} />;
 }
-
-const FALLBACK_HEADER_MENU = {
-  id: 'my-hobbees-fallback-menu',
-  items: [
-    {
-      id: 'fallback-subscriptions',
-      resourceId: null,
-      tags: [],
-      title: 'Nos abonnements',
-      type: 'HTTP',
-      url: '/abonnements',
-      items: [],
-    },
-    {
-      id: 'fallback-about',
-      resourceId: null,
-      tags: [],
-      title: 'Qui sommes-nous',
-      type: 'HTTP',
-      url: '/qui-sommes-nous',
-      items: [],
-    },
-  ],
-};

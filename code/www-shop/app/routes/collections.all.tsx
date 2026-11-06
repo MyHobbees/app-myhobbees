@@ -1,12 +1,21 @@
 import type {Route} from './+types/collections.all';
 import {useLoaderData} from 'react-router';
-import {getPaginationVariables, Image, Money} from '@shopify/hydrogen';
+import {getPaginationVariables} from '@shopify/hydrogen';
+import {EditorialHero} from '~/components/EditorialHero';
+import {FaqSection} from '~/components/FaqSection';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {ProductItem} from '~/components/ProductItem';
 import type {CollectionItemFragment} from 'storefrontapi.generated';
 
 export const meta: Route.MetaFunction = () => {
-  return [{title: 'Toutes les box | My Hobbees'}];
+  return [
+    {title: 'Nos boxes | My Hobbees'},
+    {
+      name: 'description',
+      content:
+        'Découvre les box créatives My Hobbees à l’unité : le matériel, les outils et le guide pas à pas pour explorer une nouvelle passion.',
+    },
+  ];
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -26,7 +35,7 @@ export async function loader(args: Route.LoaderArgs) {
 async function loadCriticalData({context, request}: Route.LoaderArgs) {
   const {storefront} = context;
   const paginationVariables = getPaginationVariables(request, {
-    pageBy: 8,
+    pageBy: 12,
   });
 
   const [{products}] = await Promise.all([
@@ -51,21 +60,30 @@ export default function Collection() {
   const {products} = useLoaderData<typeof loader>();
 
   return (
-    <div className="collection">
-      <h1>Products</h1>
-      <PaginatedResourceSection<CollectionItemFragment>
-        connection={products}
-        resourcesClassName="products-grid"
-      >
-        {({node: product, index}) => (
-          <ProductItem
-            key={product.id}
-            product={product}
-            loading={index < 8 ? 'eager' : undefined}
-          />
-        )}
-      </PaginatedResourceSection>
-    </div>
+    <article className="editorial-page boxes-page" aria-labelledby="boxes-title">
+      <EditorialHero
+        description="Chaque box contient le matériel, les outils et le guide pas à pas pour découvrir une nouvelle activité créative, à ton rythme."
+        headingId="boxes-title"
+        note="Envie d’une surprise chaque mois ? Découvre aussi nos abonnements."
+        title="Nos boxes"
+        tone="blush"
+      />
+      <section className="page-width collection boxes-page-grid">
+        <PaginatedResourceSection<CollectionItemFragment>
+          connection={products}
+          resourcesClassName="products-grid"
+        >
+          {({node: product, index}) => (
+            <ProductItem
+              key={product.id}
+              product={product}
+              loading={index < 8 ? 'eager' : undefined}
+            />
+          )}
+        </PaginatedResourceSection>
+      </section>
+      <FaqSection />
+    </article>
   );
 }
 
@@ -96,6 +114,8 @@ const COLLECTION_ITEM_FRAGMENT = `#graphql
   }
 ` as const;
 
+// The subscription product is sold through /abonnements, so the boxes
+// listing only shows the one-off boxes.
 // NOTE: https://shopify.dev/docs/api/storefront/latest/objects/product
 const CATALOG_QUERY = `#graphql
   query Catalog(
@@ -106,7 +126,7 @@ const CATALOG_QUERY = `#graphql
     $startCursor: String
     $endCursor: String
   ) @inContext(country: $country, language: $language) {
-    products(first: $first, last: $last, before: $startCursor, after: $endCursor) {
+    products(first: $first, last: $last, before: $startCursor, after: $endCursor, query: "-tag:abonnement") {
       nodes {
         ...CollectionItem
       }

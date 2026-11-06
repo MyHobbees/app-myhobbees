@@ -1,8 +1,11 @@
-import {Link} from 'react-router';
+import {Link, useLoaderData} from 'react-router';
 import {Check, Minus} from 'lucide-react';
 import type {Route} from './+types/abonnements';
+import type {CollectionItemFragment} from 'storefrontapi.generated';
 import {EditorialHero} from '~/components/EditorialHero';
 import {FaqSection} from '~/components/FaqSection';
+import {ProductItem} from '~/components/ProductItem';
+import {isMockShop} from '~/lib/storefront';
 
 export const meta: Route.MetaFunction = () => [
   {
@@ -34,23 +37,6 @@ const PLANS = [
     featured: false,
   },
   {
-    badge: 'Recommandé',
-    title: 'Formule complète',
-    description:
-      'Reçois ta box créative surprise et profite de l’expérience My Hobbees complète dans l’application.',
-    features: [
-      'Tout ce qui est inclus dans la box créative',
-      'Tutoriels vidéo pas à pas',
-      'Suivi de ta progression',
-      'Accès à la communauté',
-      'Défis et inspirations créatives',
-      'Contenus exclusifs liés à ton activité',
-    ],
-    cta: 'Profiter de l’expérience complète',
-    to: '/abonnements/box-app',
-    featured: true,
-  },
-  {
     title: 'Box créative surprise',
     description:
       'Reçois chaque mois une box surprise avec le matériel, les outils et le guide nécessaires pour découvrir une nouvelle activité créative.',
@@ -65,17 +51,34 @@ const PLANS = [
     to: '/abonnements/box-creative',
     featured: false,
   },
+  {
+    badge: 'Best-seller',
+    title: 'Offre complète',
+    description:
+      'Reçois ta box créative surprise et profite de l’expérience My Hobbees complète dans l’application.',
+    features: [
+      'Tout ce qui est inclus dans la box créative',
+      'Tutoriels vidéo pas à pas',
+      'Suivi de ta progression',
+      'Accès à la communauté',
+      'Défis et inspirations créatives',
+      'Contenus exclusifs liés à ton activité',
+    ],
+    cta: 'Profiter de l’expérience complète',
+    to: '/abonnements/box-app',
+    featured: true,
+  },
 ] as const;
 
 const COMPARISON_ROWS = [
   ['Box créative chaque mois', false, true, true],
   ['Matériel inclus', false, true, true],
   ['Guide pas à pas', false, true, true],
-  ['Tutoriels vidéo', true, true, false],
-  ['Suivi de progression', true, true, false],
-  ['Communauté My Hobbees', true, true, false],
-  ['Défis créatifs', true, true, false],
-  ['Contenus exclusifs', true, true, false],
+  ['Tutoriels vidéo', true, false, true],
+  ['Suivi de progression', true, false, true],
+  ['Communauté My Hobbees', true, false, true],
+  ['Défis créatifs', true, false, true],
+  ['Contenus exclusifs', true, false, true],
 ] as const;
 
 const STEPS = [
@@ -84,7 +87,23 @@ const STEPS = [
   'Tu crées à ton rythme, seul·e ou avec la communauté.',
 ] as const;
 
+export async function loader({context}: Route.LoaderArgs) {
+  if (isMockShop(context.env.PUBLIC_STORE_DOMAIN)) {
+    return {boxes: []};
+  }
+
+  try {
+    const {products} = await context.storefront.query<{
+      products: {nodes: CollectionItemFragment[]};
+    }>(SUBSCRIPTIONS_BOXES_QUERY);
+    return {boxes: products.nodes};
+  } catch {
+    return {boxes: []};
+  }
+}
+
 export default function SubscriptionsPage() {
+  const {boxes} = useLoaderData<typeof loader>();
   return (
     <article
       className="editorial-page subscriptions-page"
@@ -156,17 +175,20 @@ export default function SubscriptionsPage() {
               <tr>
                 <th scope="col">Fonctionnalité</th>
                 <th scope="col">Parcours d’apprentissage</th>
-                <th scope="col">Formule complète</th>
                 <th scope="col">Box créative surprise</th>
+                <th className="comparison-featured-col" scope="col">
+                  <span className="comparison-featured-badge">Best-seller</span>
+                  Formule complète
+                </th>
               </tr>
             </thead>
             <tbody>
-              {COMPARISON_ROWS.map(([feature, appOnly, complete, box]) => (
+              {COMPARISON_ROWS.map(([feature, appOnly, box, complete]) => (
                 <tr key={feature}>
                   <th scope="row">{feature}</th>
                   <Availability included={appOnly} />
-                  <Availability included={complete} />
                   <Availability included={box} />
+                  <Availability featured included={complete} />
                 </tr>
               ))}
             </tbody>
@@ -190,15 +212,39 @@ export default function SubscriptionsPage() {
         </div>
       </section>
 
-      <section className="page-width future-boxes" aria-labelledby="future-boxes-title">
+      <section
+        className={`page-width future-boxes${
+          boxes.length ? ' future-boxes--stocked' : ''
+        }`}
+        aria-labelledby="future-boxes-title"
+      >
         <h2 id="future-boxes-title">Envie d’une box précise ?</h2>
-        <p>
-          Certaines créations pourront bientôt être disponibles à l’unité dans
-          notre sélection de box populaires.
-        </p>
-        <button disabled type="button">
-          Bientôt disponible
-        </button>
+        {boxes.length ? (
+          <>
+            <p>
+              Nos box créatives sont aussi disponibles à l’unité : choisis ton
+              univers et reçois tout le nécessaire pour créer.
+            </p>
+            <div className="products-grid future-boxes-grid">
+              {boxes.map((box) => (
+                <ProductItem key={box.id} product={box} />
+              ))}
+            </div>
+            <Link className="button button-primary" to="/collections/all">
+              Voir toutes nos boxes
+            </Link>
+          </>
+        ) : (
+          <>
+            <p>
+              Certaines créations pourront bientôt être disponibles à l’unité
+              dans notre sélection de box populaires.
+            </p>
+            <button disabled type="button">
+              Bientôt disponible
+            </button>
+          </>
+        )}
       </section>
 
       <FaqSection />
@@ -206,11 +252,47 @@ export default function SubscriptionsPage() {
   );
 }
 
-function Availability({included}: {included: boolean}) {
+const SUBSCRIPTIONS_BOXES_QUERY = `#graphql
+  query SubscriptionsBoxes($country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
+    products(first: 4, query: "-tag:abonnement") {
+      nodes {
+        id
+        handle
+        title
+        featuredImage {
+          id
+          altText
+          url
+          width
+          height
+        }
+        priceRange {
+          minVariantPrice {
+            amount
+            currencyCode
+          }
+          maxVariantPrice {
+            amount
+            currencyCode
+          }
+        }
+      }
+    }
+  }
+` as const;
+
+function Availability({
+  featured = false,
+  included,
+}: {
+  featured?: boolean;
+  included: boolean;
+}) {
   const Icon = included ? Check : Minus;
 
   return (
-    <td>
+    <td className={featured ? 'comparison-featured-col' : undefined}>
       <span className={included ? 'is-included' : 'is-not-included'}>
         <Icon aria-hidden="true" />
         <span className="sr-only">{included ? 'Inclus' : 'Non inclus'}</span>

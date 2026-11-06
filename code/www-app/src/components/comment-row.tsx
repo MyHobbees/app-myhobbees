@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Heart } from 'lucide-react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Avatar } from '@/components/ui/avatar';
@@ -32,7 +33,11 @@ export function CommentRow({ comment, nested, onLike, onReply }: CommentRowProps
         <ThemedText type="small">{comment.body}</ThemedText>
         <View style={styles.actions}>
           <Pressable onPress={onLike} hitSlop={8} style={styles.action}>
-            <Text style={styles.icon}>{comment.likedByMe ? '❤️' : '🤍'}</Text>
+            <Heart
+              size={13}
+              color={comment.likedByMe ? theme.brand : theme.textSecondary}
+              fill={comment.likedByMe ? theme.brand : 'none'}
+            />
             <ThemedText type="small" themeColor={comment.likedByMe ? 'brand' : 'textSecondary'}>
               {comment.likes}
             </ThemedText>
@@ -79,8 +84,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-  },
-  icon: {
-    fontSize: 12,
   },
 });

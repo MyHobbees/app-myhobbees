@@ -30,7 +30,7 @@ export function Screen({ children, withTabInset = true }: ScreenProps) {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: Spacing.three,
+    paddingHorizontal: 20,
     alignItems: 'center',
   },
   inner: {

@@ -28,7 +28,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#CD6581",
+          "backgroundColor": "#F9C74F",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
@@ -39,7 +39,8 @@
         {
           "photosPermission": "MyHobbees accède à vos photos pour illustrer vos publications et votre avatar."
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,

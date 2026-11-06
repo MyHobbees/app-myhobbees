@@ -1,4 +1,5 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Flame, Heart, MessageCircle, Package } from 'lucide-react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
@@ -7,11 +8,11 @@ import { type NotificationType } from '@/lib/mock/notifications';
 import { timeAgo } from '@/lib/utils';
 import { useNotificationsStore } from '@/stores/use-notifications-store';
 
-const typeIcons: Record<NotificationType, string> = {
-  expedition: '📦',
-  like: '❤️',
-  reponse: '💬',
-  rappel: '🔥',
+const typeIcons: Record<NotificationType, typeof Package> = {
+  expedition: Package,
+  like: Heart,
+  reponse: MessageCircle,
+  rappel: Flame,
 };
 
 export default function NotificationsScreen() {
@@ -29,7 +30,9 @@ export default function NotificationsScreen() {
           </ThemedText>
         </Pressable>
 
-        {items.map((notification) => (
+        {items.map((notification) => {
+          const Icon = typeIcons[notification.type];
+          return (
           <Pressable
             key={notification.id}
             onPress={() => markRead(notification.id)}
@@ -38,7 +41,11 @@ export default function NotificationsScreen() {
               { backgroundColor: notification.read ? theme.backgroundElement : theme.brandSoft },
               pressed && styles.pressed,
             ]}>
-            <Text style={styles.icon}>{typeIcons[notification.type]}</Text>
+            <Icon
+              size={20}
+              color={notification.read ? theme.textSecondary : theme.brand}
+              style={styles.rowIcon}
+            />
             <View style={styles.texts}>
               <ThemedText type="smallBold">{notification.title}</ThemedText>
               <ThemedText type="small" themeColor="textSecondary" numberOfLines={2}>
@@ -50,7 +57,8 @@ export default function NotificationsScreen() {
             </View>
             {!notification.read && <View style={[styles.dot, { backgroundColor: theme.brand }]} />}
           </Pressable>
-        ))}
+          );
+        })}
       </View>
     </ScrollView>
   );
@@ -80,8 +88,8 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.8,
   },
-  icon: {
-    fontSize: 22,
+  rowIcon: {
+    marginTop: 2,
   },
   texts: {
     flex: 1,

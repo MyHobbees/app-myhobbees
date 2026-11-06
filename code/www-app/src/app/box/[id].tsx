@@ -1,5 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { ArrowLeft } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Screen } from '@/components/screen';
@@ -44,7 +45,7 @@ export default function BoxScreen() {
     <Screen withTabInset={false}>
       <LinearGradient colors={boxTheme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
         <Pressable onPress={() => router.back()} style={({ pressed }) => [styles.back, pressed && styles.pressed]}>
-          <Text style={styles.backIcon}>←</Text>
+          <ArrowLeft size={19} color="#ffffff" />
         </Pressable>
         <Text style={styles.heroEmoji}>{boxTheme.emoji}</Text>
         <ThemedText type="small" style={styles.onGradientMuted}>
@@ -103,10 +104,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  backIcon: {
-    color: '#ffffff',
-    fontSize: 18,
-  },
   pressed: {
     opacity: 0.75,
   },
@@ -120,7 +117,7 @@ const styles = StyleSheet.create({
   heroTitle: {
     color: '#ffffff',
     fontSize: 26,
-    lineHeight: 32,
+    lineHeight: 34,
     textAlign: 'center',
   },
   heroProgress: {
