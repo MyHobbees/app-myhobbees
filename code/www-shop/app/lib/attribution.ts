@@ -27,6 +27,15 @@ export async function readAttribution(
   return (value as Attribution | null) ?? null;
 }
 
+function isExternalReferrer(referrer: string, siteOrigin: string): boolean {
+  if (!referrer) return false;
+  try {
+    return new URL(referrer).origin !== siteOrigin;
+  } catch {
+    return false;
+  }
+}
+
 export function captureAttribution(
   url: URL,
   referrer: string,
@@ -34,6 +43,11 @@ export function captureAttribution(
   const utmSource = url.searchParams.get('utm_source') ?? '';
   const utmMedium = url.searchParams.get('utm_medium') ?? '';
   const utmCampaign = url.searchParams.get('utm_campaign') ?? '';
-  if (!utmSource && !utmMedium && !utmCampaign && !referrer) return null;
-  return {utmSource, utmMedium, utmCampaign, referrer};
+  const externalReferrer = isExternalReferrer(referrer, url.origin)
+    ? referrer
+    : '';
+  if (!utmSource && !utmMedium && !utmCampaign && !externalReferrer) {
+    return null;
+  }
+  return {utmSource, utmMedium, utmCampaign, referrer: externalReferrer};
 }

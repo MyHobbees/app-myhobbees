@@ -110,20 +110,17 @@ export async function action({request, context}: Route.ActionArgs) {
         utm_source: url.searchParams.get('utm_source') || stored?.utmSource || '',
         utm_medium: url.searchParams.get('utm_medium') || stored?.utmMedium || '',
         utm_campaign: url.searchParams.get('utm_campaign') || stored?.utmCampaign || '',
-        referrer: stored?.referrer || request.headers.get('Referer') || '',
+        referrer: stored?.referrer ?? '',
       }),
     });
 
     if (!response.ok) {
-      throw new Error('La sauvegarde a échoué. Réessaie dans quelques instants.');
+      throw new Error(`leads endpoint responded with ${response.status}`);
     }
   } catch (error) {
+    console.error('me-prevenir: lead submission failed', error);
     return data(
-      {
-        ok: false,
-        error:
-          error instanceof Error ? error.message : 'Une erreur est survenue.',
-      },
+      {ok: false, error: 'La sauvegarde a échoué. Réessaie dans quelques instants.'},
       {status: 502},
     );
   }
