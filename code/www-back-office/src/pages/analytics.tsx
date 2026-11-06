@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis } from 'recharts'
+import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, XAxis } from 'recharts'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -81,7 +81,8 @@ export function AnalyticsPage() {
     if (!overview) return []
     return overview.eventCounts.map((e) => ({
       event: eventLabels[e.event] ?? e.event,
-      [e.event]: e.count,
+      eventKey: e.event,
+      count: e.count,
     }))
   }, [overview])
 
@@ -169,7 +170,7 @@ export function AnalyticsPage() {
                   dataKey="count"
                   stroke="var(--color-count)"
                   strokeWidth={2}
-                  dot={false}
+                  dot={{ r: 3, fill: 'var(--color-count)', strokeWidth: 0 }}
                 />
               </LineChart>
             </ChartContainer>
@@ -195,15 +196,17 @@ export function AnalyticsPage() {
                     axisLine={false}
                     tickMargin={8}
                   />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  {Object.keys(eventsConfig).map((key) => (
-                    <Bar
-                      key={key}
-                      dataKey={key}
-                      fill={`var(--color-${key})`}
-                      radius={4}
-                    />
-                  ))}
+                  <ChartTooltip
+                    content={<ChartTooltipContent nameKey="eventKey" />}
+                  />
+                  <Bar dataKey="count" radius={4}>
+                    {eventsData.map((entry) => (
+                      <Cell
+                        key={entry.eventKey}
+                        fill={`var(--color-${entry.eventKey})`}
+                      />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ChartContainer>
             )}
