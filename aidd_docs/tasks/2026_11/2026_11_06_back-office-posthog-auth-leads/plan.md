@@ -1,6 +1,6 @@
 ---
 objective: "Le back-office n'est accessible qu'avec un JWT valide vérifié côté serveur, affiche un dashboard d'events PostHog avec de vrais graphiques recharts, et liste les inscriptions waitlist (leads) pour suivre le lancement."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Auth serveur, dashboard PostHog et liste des leads au back-office
