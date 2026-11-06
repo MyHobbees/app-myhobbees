@@ -5,6 +5,7 @@ import { CustomerDetailPage } from '@/pages/customer-detail'
 import { DashboardPage } from '@/pages/dashboard'
 import { CustomersPage } from '@/pages/customers'
 import { DevToolsPage } from '@/pages/dev-tools'
+import { LeadsPage } from '@/pages/leads'
 import { LoginPage } from '@/pages/login'
 import { OrderDetailPage } from '@/pages/order-detail'
 import { OrdersPage } from '@/pages/orders'
@@ -26,6 +27,7 @@ export const router = createBrowserRouter([
       { path: 'customers', element: <CustomersPage /> },
       { path: 'customers/:id', element: <CustomerDetailPage /> },
       { path: 'shopify', element: <ShopifyStatusPage /> },
+      { path: 'leads', element: <LeadsPage /> },
       { path: 'dev-tools', element: <DevToolsPage /> },
     ],
   },

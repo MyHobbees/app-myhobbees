@@ -6,9 +6,11 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/myhobbees/api/internal/auth"
 	"github.com/myhobbees/api/internal/db"
 	"github.com/myhobbees/api/internal/httpjson"
 )
@@ -47,8 +49,70 @@ func (b leadBody) valid() bool {
 	return true
 }
 
+type lead struct {
+	ID                   int64    `json:"id"`
+	Email                string   `json:"email"`
+	Activities           []string `json:"activities"`
+	AcquisitionChannel   string   `json:"acquisitionChannel"`
+	SubscriptionInterest string   `json:"subscriptionInterest"`
+	UTMSource            *string  `json:"utmSource,omitempty"`
+	UTMMedium            *string  `json:"utmMedium,omitempty"`
+	UTMCampaign          *string  `json:"utmCampaign,omitempty"`
+	Referrer             *string  `json:"referrer,omitempty"`
+	CreatedAt            string   `json:"createdAt"`
+}
+
 func Leads() chi.Router {
 	r := chi.NewRouter()
+
+	r.Group(func(r chi.Router) {
+		r.Use(auth.Middleware)
+
+		r.Get("/", func(w http.ResponseWriter, req *http.Request) {
+			pool, err := db.Pool(req.Context())
+			if err != nil {
+				log.Printf("leads: db pool: %v", err)
+				httpjson.Error(w, http.StatusBadGateway, "Could not load leads")
+				return
+			}
+
+			rows, err := pool.Query(req.Context(), `
+				SELECT id, email, activities, acquisition_channel, subscription_interest,
+					utm_source, utm_medium, utm_campaign, referrer, created_at
+				FROM leads
+				ORDER BY created_at DESC
+			`)
+			if err != nil {
+				log.Printf("leads: query: %v", err)
+				httpjson.Error(w, http.StatusBadGateway, "Could not load leads")
+				return
+			}
+			defer rows.Close()
+
+			leads := make([]lead, 0)
+			for rows.Next() {
+				var l lead
+				var createdAt time.Time
+				if err := rows.Scan(
+					&l.ID, &l.Email, &l.Activities, &l.AcquisitionChannel, &l.SubscriptionInterest,
+					&l.UTMSource, &l.UTMMedium, &l.UTMCampaign, &l.Referrer, &createdAt,
+				); err != nil {
+					log.Printf("leads: scan: %v", err)
+					httpjson.Error(w, http.StatusBadGateway, "Could not load leads")
+					return
+				}
+				l.CreatedAt = createdAt.UTC().Format(time.RFC3339)
+				leads = append(leads, l)
+			}
+			if err := rows.Err(); err != nil {
+				log.Printf("leads: rows: %v", err)
+				httpjson.Error(w, http.StatusBadGateway, "Could not load leads")
+				return
+			}
+
+			httpjson.OK(w, http.StatusOK, leads)
+		})
+	})
 
 	r.Post("/", func(w http.ResponseWriter, req *http.Request) {
 		var body leadBody

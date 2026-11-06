@@ -3,6 +3,7 @@ import {
   Boxes,
   LayoutDashboard,
   LogOut,
+  Mail,
   Monitor,
   Moon,
   Package,
@@ -54,6 +55,10 @@ const navGroups: { label: string; items: NavItem[] }[] = [
       { title: 'Produits', url: '/products', icon: Boxes },
       { title: 'Clients', url: '/customers', icon: Users },
     ],
+  },
+  {
+    label: 'Lancement',
+    items: [{ title: 'Inscriptions', url: '/leads', icon: Mail }],
   },
   {
     label: 'Système',

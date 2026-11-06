@@ -251,6 +251,23 @@ export function getCustomer(id: string) {
   return apiFetch<CustomerDetail>(`/v1/shopify/customers/${id}`)
 }
 
+export type Lead = {
+  id: number
+  email: string
+  activities: string[]
+  acquisitionChannel: string
+  subscriptionInterest: string
+  utmSource?: string
+  utmMedium?: string
+  utmCampaign?: string
+  referrer?: string
+  createdAt: string
+}
+
+export function getLeads() {
+  return apiFetch<Lead[]>('/v1/leads')
+}
+
 export async function getShopifyStatus(): Promise<ShopifyStatus> {
   try {
     return await apiFetch<ShopifyStatus>('/v1/shopify/status')
