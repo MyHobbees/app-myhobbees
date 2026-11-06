@@ -14,6 +14,14 @@
   --color-white: #ffffff;
   --color-text: #294333;
   --color-muted: #65766a;
+  --color-dream-eyebrow: #7a4e2d;
+  --color-dream-text: #2f4a38;
+  --color-dream-circle-1: #fbe3da;
+  --color-dream-circle-2: #f7e7c6;
+  --color-dream-circle-3: #e3ebdf;
+  --color-dream-accent: #d9547a;
+  --color-dream-blush: #f4b9aa;
+  --color-dream-path: #e08c9f;
   --color-border: rgba(78, 110, 88, 0.18);
   --shadow-soft: 0 18px 45px rgba(78, 110, 88, 0.1);
   --radius-small: 12px;
@@ -909,28 +917,236 @@ aside main {
 
 /* Dream section (homepage) */
 .dream-section {
-  background-image: var(--pattern-waves-cool);
-  padding: 5rem 0;
+  background-color: var(--color-cream);
+  padding-block: 6rem 6.5rem;
 }
 
-.dream-card {
+.dream-section-inner {
+  margin-inline: auto;
+  max-width: 69rem;
+  padding-inline: 1.1rem;
+  width: 100%;
+}
+
+.dream-eyebrow {
+  color: var(--color-dream-eyebrow);
+  font-size: 0.875rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.dream-title {
+  color: var(--color-green);
+  font-size: clamp(2.75rem, 6vw, 5rem);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-top: 1.125rem;
+}
+
+.dream-intro {
+  color: var(--color-dream-text);
+  font-size: 1.25rem;
+  line-height: 1.6;
+  margin-inline: auto;
+  margin-top: 1.5rem;
+  max-width: 38.75rem;
+}
+
+.dream-steps {
+  display: grid;
+  gap: 3rem;
+  grid-template-columns: repeat(3, 1fr);
+  list-style: none;
+  margin-top: 4.5rem;
   position: relative;
+  text-align: center;
 }
 
-.dream-card:hover {
-  box-shadow: none;
-  transform: none;
+.dream-steps-path {
+  height: 200px;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 30px;
+  width: 100%;
+  z-index: 0;
 }
 
-.dream-card .step-number {
-  position: static;
-  display: block;
-  margin-bottom: 0.4rem;
+.dream-step {
+  position: relative;
+  z-index: 1;
+}
+
+.dream-step--2 {
+  margin-top: 4rem;
+}
+
+.dream-step-circle {
+  align-items: center;
+  border-radius: 999px;
+  display: flex;
+  height: 260px;
+  justify-content: center;
+  margin-inline: auto;
+  position: relative;
+  width: 260px;
+}
+
+.dream-step--1 .dream-step-circle {
+  background: var(--color-dream-circle-1);
+}
+
+.dream-step--2 .dream-step-circle {
+  background: var(--color-dream-circle-2);
+}
+
+.dream-step--3 .dream-step-circle {
+  background: var(--color-dream-circle-3);
+}
+
+.dream-step-badge {
+  align-items: center;
+  background: var(--color-cream);
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  display: flex;
+  height: 70px;
+  justify-content: center;
+  left: 1px;
+  position: absolute;
+  top: 1px;
+  width: 70px;
+}
+
+.dream-step-badge-inner {
+  align-items: center;
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  display: flex;
+  font-family: var(--font-heading);
+  font-size: 1.375rem;
+  font-weight: 700;
+  height: 60px;
+  justify-content: center;
+  width: 60px;
+}
+
+.dream-step--1 .dream-step-badge-inner {
+  background: var(--color-green);
+  color: var(--color-cream);
+}
+
+.dream-step--2 .dream-step-badge-inner {
+  background: var(--color-dream-accent);
+  color: var(--color-white);
+}
+
+.dream-step--3 .dream-step-badge-inner {
+  background: var(--color-dream-blush);
+  color: var(--color-green);
+}
+
+.dream-step-title {
+  color: var(--color-green);
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-top: 1.75rem;
+}
+
+.dream-step-text {
+  color: var(--color-dream-text);
+  font-size: 1.125rem;
+  line-height: 1.55;
+  margin-inline: auto;
+  margin-top: 0.5rem;
+  max-width: 17.5rem;
 }
 
 .dream-cta {
   margin-top: 2.6rem;
   text-align: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .dream-steps-path path {
+    animation: dream-path-draw 1.2s ease-out;
+    stroke-dashoffset: 120;
+  }
+
+  .dream-step {
+    animation: dream-step-fade 0.6s ease-out backwards;
+  }
+
+  .dream-step--1 {
+    animation-delay: 0.1s;
+  }
+
+  .dream-step--2 {
+    animation-delay: 0.2s;
+  }
+
+  .dream-step--3 {
+    animation-delay: 0.3s;
+  }
+}
+
+@keyframes dream-path-draw {
+  from {
+    stroke-dashoffset: 120;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes dream-step-fade {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 64rem) {
+  .dream-title {
+    font-size: 3.75rem;
+  }
+
+  .dream-step-circle {
+    height: 200px;
+    width: 200px;
+  }
+
+  .dream-step-circle svg {
+    height: 110px;
+    width: 110px;
+  }
+}
+
+@media (max-width: 48rem) {
+  .dream-title {
+    font-size: 2.75rem;
+  }
+
+  .dream-intro {
+    font-size: 1.0625rem;
+  }
+
+  .dream-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .dream-step--2 {
+    margin-top: 0;
+  }
+
+  .dream-steps-path {
+    display: none;
+  }
 }
 
 /* Mission section (homepage) */

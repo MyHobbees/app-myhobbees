@@ -1,5 +1,6 @@
 import {Link, useLoaderData} from 'react-router';
 import type {Route} from './+types/_index';
+import {DreamStepIcon} from '~/components/DreamStepIcon';
 import {MockShopNotice} from '~/components/MockShopNotice';
 import {Reassurance} from '~/components/Reassurance';
 import {FaqSection} from '~/components/FaqSection';
@@ -78,45 +79,67 @@ function Hero() {
   );
 }
 
-function DreamSection() {
-  const steps = [
-    {
-      title: 'Choisis tes envies',
-      description: 'Indique les univers créatifs que tu aimerais découvrir.',
-    },
-    {
-      title: 'Reçois ta surprise',
-      description: 'Nous préparons une box pensée pour te faire créer.',
-    },
-    {
-      title: 'Crée à ton rythme',
-      description:
-        'Suis le guide, découvre et profite de ton moment créatif.',
-    },
-  ];
+const DREAM_STEPS = [
+  {
+    number: 1,
+    title: 'Choisis tes envies',
+    description: 'Indique les univers créatifs que tu aimerais découvrir.',
+  },
+  {
+    number: 2,
+    title: 'Reçois ta surprise',
+    description: 'Nous préparons une box pensée pour te faire créer.',
+  },
+  {
+    number: 3,
+    title: 'Crée à ton rythme',
+    description: 'Suis le guide, découvre et profite de ton moment créatif.',
+  },
+] as const;
 
+function DreamSection() {
   return (
     <section className="dream-section" aria-labelledby="dream-title">
-      <div className="page-width">
+      <div className="dream-section-inner">
         <div className="section-heading centered">
-          <p className="eyebrow">Simple, doux et surprenant</p>
-          <h2 id="dream-title">Le tout en un rêve !</h2>
-          <p>
+          <p className="dream-eyebrow">Simple, doux et surprenant</p>
+          <h2 className="dream-title" id="dream-title">
+            Le tout en un rêve !
+          </h2>
+          <p className="dream-intro">
             Chaque box est pensée comme un petit moment à toi : tu choisis
             tes envies, on prépare la surprise, tu crées à ton rythme.
           </p>
         </div>
-        <ol className="steps-grid">
-          {steps.map((step, index) => (
-            <li className="product-item dream-card" key={step.title}>
-              <div className="product-item-media">
-                <img alt="" decoding="async" loading="lazy" src={boxMyHobbees} />
-              </div>
-              <div className="product-item-content">
-                <span className="step-number">0{index + 1}</span>
-                <h3>{step.title}</h3>
-                <p>{step.description}</p>
-              </div>
+        <ol className="dream-steps">
+          <svg
+            aria-hidden="true"
+            className="dream-steps-path"
+            fill="none"
+            preserveAspectRatio="none"
+            viewBox="0 0 1104 200"
+          >
+            <path
+              d="M184 140 C 340 -20, 420 -20, 552 110 S 780 240, 920 80"
+              stroke="var(--color-dream-path)"
+              strokeDasharray="2 10"
+              strokeLinecap="round"
+              strokeWidth="2.5"
+            />
+          </svg>
+          {DREAM_STEPS.map((step) => (
+            <li
+              className={`dream-step dream-step--${step.number}`}
+              key={step.number}
+            >
+              <span className="dream-step-circle">
+                <span className="dream-step-badge">
+                  <span className="dream-step-badge-inner">{step.number}</span>
+                </span>
+                <DreamStepIcon step={step.number} />
+              </span>
+              <h3 className="dream-step-title">{step.title}</h3>
+              <p className="dream-step-text">{step.description}</p>
             </li>
           ))}
         </ol>
