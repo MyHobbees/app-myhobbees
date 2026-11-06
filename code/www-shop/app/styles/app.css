@@ -2112,11 +2112,17 @@ aside main {
 }
 
 /* Me prévenir form */
+.me-prevenir-form-section {
+  text-align: center;
+}
+
 .me-prevenir-form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  margin-inline: auto;
   max-width: 32rem;
+  text-align: left;
 }
 
 .me-prevenir-form label {
@@ -2132,6 +2138,12 @@ aside main {
 
 .me-prevenir-form-error {
   color: var(--color-pink);
+}
+
+.me-prevenir-confirmation {
+  margin-inline: auto;
+  max-width: 32rem;
+  text-align: left;
 }
 
 .order-search-form {
