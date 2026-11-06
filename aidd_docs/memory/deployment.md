@@ -4,7 +4,7 @@
 
 - GitHub Actions (`.github/workflows/ci-cd.yml`), push-triggered only (the matching `pull_request` triggers exist but every job is gated `if: ... && github.event_name == 'push'`, so PR runs do nothing)
 - Push to `dev` runs the `stg` jobs, push to `main` runs the `prd` jobs; no other branch deploys
-- `www-shop` is not in this pipeline — it ships separately through Shopify's own Hydrogen/Oxygen tooling (`npm run deploy` via the Shopify CLI)
+- `www-shop` is not in this pipeline — it deploys to Vercel (its own Git integration or `vercel deploy`), not through Shopify Oxygen; see [architecture.md](architecture.md)
 
 ```mermaid
 flowchart LR

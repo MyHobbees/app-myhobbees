@@ -7,16 +7,18 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
 
 ## What's included
 
-- Remix
-- Hydrogen
-- Oxygen
+- React Router 7
+- Hydrogen (as a library, not deployed to Oxygen — this app targets Vercel)
 - Vite
-- Shopify CLI
 - ESLint
 - Prettier
 - GraphQL generator
 - TypeScript and JavaScript flavors
 - Minimal setup of components and routes
+
+## Deployment
+
+This app deploys to Vercel, not Shopify Oxygen. `react-router.config.ts` uses `@vercel/react-router`'s `vercelPreset()`, and `server.ts` wires the Hydrogen context into a plain `(request) => Response` handler (the custom server entry Vercel's React Router integration expects — see its Vite `rollupOptions.input` in `vite.config.ts`). There is no sub-request cache (`caches.open('hydrogen')` requires the Workers Cache API, unavailable on Node) — acceptable since it's optional in `createHydrogenContext`.
 
 ## Getting started
 

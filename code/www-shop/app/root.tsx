@@ -1,4 +1,5 @@
 import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
+import {useEffect} from 'react';
 import {
   Outlet,
   useRouteError,
@@ -13,6 +14,7 @@ import {
 import type {Route} from './+types/root';
 import favicon from '~/assets/favicon.svg';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
+import {initPostHog} from '~/lib/posthog';
 import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import {PageLayout} from './components/PageLayout';
@@ -100,6 +102,10 @@ export async function loader(args: Route.LoaderArgs) {
     ...deferredData,
     ...criticalData,
     publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
+    posthog: {
+      key: env.PUBLIC_POSTHOG_KEY,
+      host: env.PUBLIC_POSTHOG_HOST,
+    },
     shop: getShopAnalytics({
       storefront,
       publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
@@ -187,6 +193,12 @@ export function Layout({children}: {children?: React.ReactNode}) {
 
 export default function App() {
   const data = useRouteLoaderData<RootLoader>('root');
+
+  useEffect(() => {
+    if (data?.posthog?.key) {
+      initPostHog(data.posthog.key, data.posthog.host);
+    }
+  }, [data?.posthog?.key, data?.posthog?.host]);
 
   if (!data) {
     return <Outlet />;

@@ -21,6 +21,12 @@ export default async function handleRequest(
     },
     styleSrc: ['https://fonts.googleapis.com'],
     fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+    scriptSrc: ["'self'", 'https://eu-assets.i.posthog.com'],
+    connectSrc: [
+      "'self'",
+      'https://eu.i.posthog.com',
+      'https://eu-assets.i.posthog.com',
+    ],
   });
 
   const body = await renderToReadableStream(
