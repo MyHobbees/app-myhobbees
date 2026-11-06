@@ -31,6 +31,8 @@
   --color-me-prevenir-link: #e8436b;
   --color-me-prevenir-link-hover: #c22f55;
   --color-me-prevenir-button-stitch: #c9962a;
+  --color-me-prevenir-button-hover: #f5bb2c;
+  --color-me-prevenir-cream: #fff6e3;
   --color-border: rgba(78, 110, 88, 0.18);
   --shadow-soft: 0 18px 45px rgba(78, 110, 88, 0.1);
   --radius-small: 12px;
@@ -2315,7 +2317,7 @@ aside main {
 /* Me prévenir page */
 .me-prevenir-hero {
   align-items: center;
-  background-color: var(--color-cream);
+  background-color: var(--color-me-prevenir-cream);
   display: flex;
   flex-direction: column;
   padding: 6rem 5.5rem 6.5rem;
@@ -2356,6 +2358,7 @@ aside main {
   display: flex;
   flex-direction: column;
   gap: 2.25rem;
+  max-width: none;
 }
 
 .me-prevenir-field {
@@ -2400,7 +2403,7 @@ label.me-prevenir-field-body {
 
 .me-prevenir-field-badge--1 {
   background: var(--color-green);
-  color: var(--color-cream);
+  color: var(--color-me-prevenir-cream);
 }
 
 .me-prevenir-field-badge--2 {
@@ -2488,16 +2491,21 @@ label.me-prevenir-field-body {
     background-color 150ms ease,
     border-color 150ms ease,
     color 150ms ease;
+  user-select: none;
 }
 
 .me-prevenir-chip::before {
   content: "+";
+  display: inline-block;
+  font-size: 0.875rem;
+  text-align: center;
+  width: 0.75rem;
 }
 
 .me-prevenir-chip:has(input:checked) {
   background: var(--color-green);
   border-color: var(--color-green);
-  color: var(--color-cream);
+  color: var(--color-me-prevenir-cream);
 }
 
 .me-prevenir-chip:has(input:checked)::before {
@@ -2602,6 +2610,10 @@ label.me-prevenir-field-body {
   height: 3.75rem;
   margin-left: 4.25rem;
   width: calc(100% - 4.25rem);
+}
+
+.me-prevenir-submit:hover {
+  background: var(--color-me-prevenir-button-hover);
 }
 
 @media (max-width: 64rem) {
