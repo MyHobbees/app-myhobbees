@@ -1,6 +1,6 @@
 ---
 objective: "\"Nos boxs\" shows exactly crochet, couture, and peinture from local data with original SVG illustrations, with no call to Shopify's catalog."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Nos boxs catalog refresh
