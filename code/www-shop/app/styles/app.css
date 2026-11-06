@@ -2401,8 +2401,8 @@ aside main {
   padding: 0;
 }
 
-.me-prevenir-field-body label,
-.me-prevenir-field-body legend {
+.me-prevenir-field-body > label,
+.me-prevenir-field-body > legend {
   color: var(--color-green);
   display: block;
   font-family: var(--font-heading);
