@@ -20,6 +20,18 @@ import { formatDateTime } from '@/lib/format'
 
 const ALL_TAB = 'all'
 
+// The 3 real offers (code/www-shop/app/lib/subscriptionOffers.ts), in the
+// order they should appear as tabs, plus a catch-all for anything the API's
+// subscriptionOfferSlug normalization couldn't map (free text, stale test
+// data, or a future offer this page doesn't know about yet).
+const OFFER_TAB_ORDER = ['box-creative', 'box-app', 'app-only', 'other'] as const
+const OFFER_LABELS: Record<string, string> = {
+  'box-creative': 'Box créative',
+  'box-app': 'Box + app',
+  'app-only': 'Parcours app',
+  other: 'Autre',
+}
+
 export function LeadsPage() {
   const [leads, setLeads] = useState<Lead[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -34,9 +46,15 @@ export function LeadsPage() {
       )
   }, [])
 
+  // Tabs are driven by subscriptionOfferSlug, not the raw subscriptionInterest
+  // label: www-shop currently posts a display label that drifts with every
+  // copy change (and can't be joined against /v1/analytics's offer_click
+  // slugs), so grouping on it fragments the 3 real offers into one tab per
+  // distinct wording. See aidd_docs/tasks/.../review.md finding 4.
   const offers = useMemo(() => {
     if (!leads) return []
-    return Array.from(new Set(leads.map((l) => l.subscriptionInterest)))
+    const present = new Set(leads.map((l) => l.subscriptionOfferSlug))
+    return OFFER_TAB_ORDER.filter((slug) => present.has(slug))
   }, [leads])
 
   const kpis = useMemo(() => {
@@ -70,7 +88,7 @@ export function LeadsPage() {
     if (!leads) return []
     const query = search.trim().toLowerCase()
     return leads.filter((l) => {
-      if (tab !== ALL_TAB && l.subscriptionInterest !== tab) return false
+      if (tab !== ALL_TAB && l.subscriptionOfferSlug !== tab) return false
       if (query && !l.email.toLowerCase().includes(query)) return false
       return true
     })
@@ -118,7 +136,7 @@ export function LeadsPage() {
             <TabsTrigger value={ALL_TAB}>Toutes</TabsTrigger>
             {offers.map((offer) => (
               <TabsTrigger key={offer} value={offer}>
-                {offer}
+                {OFFER_LABELS[offer] ?? offer}
               </TabsTrigger>
             ))}
           </TabsList>

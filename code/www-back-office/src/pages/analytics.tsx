@@ -65,11 +65,16 @@ export function AnalyticsPage() {
 
   const kpis = useMemo(() => {
     if (!overview) return null
+    // "Inscriptions" must be sourced from the same number as the rate next
+    // to it (overview.emailSignups, the leads table count), not from
+    // PostHog's waitlist_signup event — otherwise the two cards contradict
+    // each other on screen (0 inscriptions next to a 46% conversion rate).
+    // See aidd_docs/tasks/.../review.md finding 3.
     return [
       { label: 'Visiteurs', value: String(overview.visitors) },
       { label: 'Clics CTA', value: String(overview.ctaClicks) },
       { label: 'Clics offre', value: String(overview.offerClicks) },
-      { label: 'Inscriptions', value: String(overview.waitlistSignups) },
+      { label: 'Inscriptions', value: String(overview.emailSignups) },
       {
         label: 'Taux visiteur → email',
         value: formatPercent(overview.visitorToEmailRate),

@@ -257,6 +257,15 @@ export type Lead = {
   activities: string[]
   acquisitionChannel: string
   subscriptionInterest: string
+  /**
+   * Read-side normalization of subscriptionInterest onto the 3 real offer
+   * slugs ('box-creative' | 'box-app' | 'app-only'), or 'other'. The API
+   * computes this because www-shop's "Me prévenir" form currently posts the
+   * offer's display label instead of its stable slug — see
+   * aidd_docs/tasks/.../review.md finding 4. subscriptionInterest itself is
+   * left untouched (raw, as submitted).
+   */
+  subscriptionOfferSlug: string
   utmSource?: string
   utmMedium?: string
   utmCampaign?: string
@@ -278,6 +287,13 @@ export type PostHogOverview = {
   ctaClicks: number
   offerClicks: number
   waitlistSignups: number
+  /**
+   * Same leads-table count used as visitorToEmailRate's numerator. Use this
+   * (not waitlistSignups) for any "Inscriptions" figure shown next to the
+   * rate, so the two never contradict each other on screen — see
+   * aidd_docs/tasks/.../review.md finding 3.
+   */
+  emailSignups: number
   appClicks: number
   visitorToEmailRate: number
   ctaToEmailRate: number
