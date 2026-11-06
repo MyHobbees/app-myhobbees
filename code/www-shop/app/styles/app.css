@@ -2392,12 +2392,9 @@ aside main {
 }
 
 .me-prevenir-field-body {
-  min-width: 0;
-}
-
-.me-prevenir-field-body fieldset {
   border: 0;
   margin: 0;
+  min-width: 0;
   padding: 0;
 }
 
