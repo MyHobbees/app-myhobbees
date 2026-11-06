@@ -1,6 +1,7 @@
 import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
 import {useEffect} from 'react';
 import {
+  data,
   Outlet,
   useRouteError,
   isRouteErrorResponse,
@@ -13,6 +14,7 @@ import {
 } from 'react-router';
 import type {Route} from './+types/root';
 import favicon from '~/assets/favicon.svg';
+import {attributionCookie, captureAttribution, readAttribution} from '~/lib/attribution';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
 import {initPostHog} from '~/lib/posthog';
 import resetStyles from '~/styles/reset.css?url';
@@ -96,9 +98,18 @@ export async function loader(args: Route.LoaderArgs) {
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
 
+  const {request} = args;
   const {storefront, env} = args.context;
 
-  return {
+  // First-touch attribution: capture utm_* and the external referrer once,
+  // before an in-site navigation (or a same-origin form POST) loses them —
+  // see app/lib/attribution.ts.
+  const existingAttribution = await readAttribution(request);
+  const captured = existingAttribution
+    ? null
+    : captureAttribution(new URL(request.url), request.headers.get('Referer') ?? '');
+
+  const payload = {
     ...deferredData,
     ...criticalData,
     publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
@@ -119,6 +130,12 @@ export async function loader(args: Route.LoaderArgs) {
       language: args.context.storefront.i18n.language,
     },
   };
+
+  if (!captured) return payload;
+
+  return data(payload, {
+    headers: {'Set-Cookie': await attributionCookie.serialize(captured)},
+  });
 }
 
 /**
@@ -147,7 +164,7 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
 function loadDeferredData({context}: Route.LoaderArgs) {
-  const {storefront, customerAccount, cart} = context;
+  const {storefront, cart} = context;
 
   // defer the footer query (below the fold)
   const footer = storefront
@@ -164,7 +181,6 @@ function loadDeferredData({context}: Route.LoaderArgs) {
     });
   return {
     cart: cart.get(),
-    isLoggedIn: customerAccount.isLoggedIn(),
     footer,
   };
 }

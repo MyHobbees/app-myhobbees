@@ -4,6 +4,15 @@ import {getPaginationVariables, Image} from '@shopify/hydrogen';
 import type {CollectionFragment} from 'storefrontapi.generated';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 
+export const meta: Route.MetaFunction = () => [
+  {title: 'Nos collections | My Hobbees'},
+  {
+    name: 'description',
+    content:
+      'Découvre toutes les collections My Hobbees : box créatives surprise et activités pour apprendre à ton rythme.',
+  },
+];
+
 export async function loader(args: Route.LoaderArgs) {
   // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);

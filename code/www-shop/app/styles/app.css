@@ -14,6 +14,25 @@
   --color-white: #ffffff;
   --color-text: #294333;
   --color-muted: #65766a;
+  --color-dream-eyebrow: #7a4e2d;
+  --color-dream-text: #2f4a38;
+  --color-dream-circle-1: #fbe3da;
+  --color-dream-circle-2: #f7e7c6;
+  --color-dream-circle-3: #e3ebdf;
+  --color-dream-accent: #d9547a;
+  --color-dream-blush: #f4b9aa;
+  --color-dream-path: #e08c9f;
+  --color-me-prevenir-intro: #6e4f32;
+  --color-me-prevenir-border: #e6dcc6;
+  --color-me-prevenir-surface: #fffcf5;
+  --color-me-prevenir-placeholder: #9a8f7c;
+  --color-me-prevenir-card-border: #f0e4c8;
+  --color-me-prevenir-card-selected: #f3f7f1;
+  --color-me-prevenir-link: #e8436b;
+  --color-me-prevenir-link-hover: #c22f55;
+  --color-me-prevenir-button-stitch: #c9962a;
+  --color-me-prevenir-button-hover: #f5bb2c;
+  --color-me-prevenir-cream: #fff6e3;
   --color-border: rgba(78, 110, 88, 0.18);
   --shadow-soft: 0 18px 45px rgba(78, 110, 88, 0.1);
   --radius-small: 12px;
@@ -803,6 +822,45 @@ aside main {
   font-size: 1.8rem;
 }
 
+.box-illustration {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  width: 100%;
+}
+
+.box-illustration--crochet {
+  background: var(--color-dream-circle-1);
+}
+
+.box-illustration--couture {
+  background: var(--color-dream-circle-2);
+}
+
+.box-illustration--peinture {
+  background: var(--color-dream-circle-3);
+}
+
+.box-illustration-svg {
+  height: 200px;
+  width: 200px;
+}
+
+@media (max-width: 64rem) {
+  .box-illustration-svg {
+    height: 160px;
+    width: 160px;
+  }
+}
+
+@media (max-width: 48rem) {
+  .box-illustration-svg {
+    height: 140px;
+    width: 140px;
+  }
+}
+
 /* How it works */
 .how-it-works,
 .about-ambition {
@@ -851,28 +909,236 @@ aside main {
 
 /* Dream section (homepage) */
 .dream-section {
-  background-image: var(--pattern-waves-cool);
-  padding: 5rem 0;
+  background-color: var(--color-cream);
+  padding-block: 6rem 6.5rem;
 }
 
-.dream-card {
+.dream-section-inner {
+  margin-inline: auto;
+  max-width: 69rem;
+  padding-inline: 1.1rem;
+  width: 100%;
+}
+
+.dream-eyebrow {
+  color: var(--color-dream-eyebrow);
+  font-size: 0.875rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.dream-title {
+  color: var(--color-green);
+  font-size: clamp(2.75rem, 6vw, 5rem);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-top: 1.125rem;
+}
+
+.dream-intro {
+  color: var(--color-dream-text);
+  font-size: 1.25rem;
+  line-height: 1.6;
+  margin-inline: auto;
+  margin-top: 1.5rem;
+  max-width: 38.75rem;
+}
+
+.dream-steps {
+  display: grid;
+  gap: 3rem;
+  grid-template-columns: repeat(3, 1fr);
+  list-style: none;
+  margin-top: 4.5rem;
   position: relative;
+  text-align: center;
 }
 
-.dream-card:hover {
-  box-shadow: none;
-  transform: none;
+.dream-steps-path {
+  height: 200px;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 30px;
+  width: 100%;
+  z-index: 0;
 }
 
-.dream-card .step-number {
-  position: static;
-  display: block;
-  margin-bottom: 0.4rem;
+.dream-step {
+  position: relative;
+  z-index: 1;
+}
+
+.dream-step--2 {
+  margin-top: 4rem;
+}
+
+.dream-step-circle {
+  align-items: center;
+  border-radius: 999px;
+  display: flex;
+  height: 260px;
+  justify-content: center;
+  margin-inline: auto;
+  position: relative;
+  width: 260px;
+}
+
+.dream-step--1 .dream-step-circle {
+  background: var(--color-dream-circle-1);
+}
+
+.dream-step--2 .dream-step-circle {
+  background: var(--color-dream-circle-2);
+}
+
+.dream-step--3 .dream-step-circle {
+  background: var(--color-dream-circle-3);
+}
+
+.dream-step-badge {
+  align-items: center;
+  background: var(--color-cream);
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  display: flex;
+  height: 70px;
+  justify-content: center;
+  left: 1px;
+  position: absolute;
+  top: 1px;
+  width: 70px;
+}
+
+.dream-step-badge-inner {
+  align-items: center;
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  display: flex;
+  font-family: var(--font-heading);
+  font-size: 1.375rem;
+  font-weight: 700;
+  height: 60px;
+  justify-content: center;
+  width: 60px;
+}
+
+.dream-step--1 .dream-step-badge-inner {
+  background: var(--color-green);
+  color: var(--color-cream);
+}
+
+.dream-step--2 .dream-step-badge-inner {
+  background: var(--color-dream-accent);
+  color: var(--color-white);
+}
+
+.dream-step--3 .dream-step-badge-inner {
+  background: var(--color-dream-blush);
+  color: var(--color-green);
+}
+
+.dream-step-title {
+  color: var(--color-green);
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-top: 1.75rem;
+}
+
+.dream-step-text {
+  color: var(--color-dream-text);
+  font-size: 1.125rem;
+  line-height: 1.55;
+  margin-inline: auto;
+  margin-top: 0.5rem;
+  max-width: 17.5rem;
 }
 
 .dream-cta {
   margin-top: 2.6rem;
   text-align: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .dream-steps-path path {
+    animation: dream-path-draw 1.2s ease-out;
+    stroke-dashoffset: 120;
+  }
+
+  .dream-step {
+    animation: dream-step-fade 0.6s ease-out backwards;
+  }
+
+  .dream-step--1 {
+    animation-delay: 0.1s;
+  }
+
+  .dream-step--2 {
+    animation-delay: 0.2s;
+  }
+
+  .dream-step--3 {
+    animation-delay: 0.3s;
+  }
+}
+
+@keyframes dream-path-draw {
+  from {
+    stroke-dashoffset: 120;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes dream-step-fade {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 64rem) {
+  .dream-title {
+    font-size: 3.75rem;
+  }
+
+  .dream-step-circle {
+    height: 200px;
+    width: 200px;
+  }
+
+  .dream-step-circle svg {
+    height: 110px;
+    width: 110px;
+  }
+}
+
+@media (max-width: 48rem) {
+  .dream-title {
+    font-size: 2.75rem;
+  }
+
+  .dream-intro {
+    font-size: 1.0625rem;
+  }
+
+  .dream-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .dream-step--2 {
+    margin-top: 0;
+  }
+
+  .dream-steps-path {
+    display: none;
+  }
 }
 
 /* Mission section (homepage) */
@@ -1773,16 +2039,11 @@ aside main {
 }
 
 .future-boxes {
-  max-width: 760px;
   text-align: center;
 }
 
 .future-boxes p {
   color: var(--color-muted);
-}
-
-.future-boxes--stocked {
-  max-width: none;
 }
 
 .future-boxes--stocked > p {
@@ -2051,6 +2312,376 @@ aside main {
 /* Account forms */
 .account-logout {
   display: inline-block;
+}
+
+/* Me prévenir page */
+.me-prevenir-hero {
+  align-items: center;
+  background-color: var(--color-me-prevenir-cream);
+  display: flex;
+  flex-direction: column;
+  padding: 6rem 5.5rem 6.5rem;
+}
+
+.me-prevenir-title {
+  color: var(--color-green);
+  font-size: 5rem;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  max-width: 51.25rem;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.me-prevenir-intro {
+  color: var(--color-me-prevenir-intro);
+  font-size: 1.3125rem;
+  line-height: 1.6;
+  margin-top: 1.5rem;
+  max-width: 40rem;
+  text-align: center;
+}
+
+.me-prevenir-card {
+  background: var(--color-white);
+  border-radius: 2.25rem;
+  box-shadow: 0 20px 50px rgba(110, 79, 50, 0.1);
+  box-sizing: border-box;
+  margin-top: 3.5rem;
+  max-width: 53.75rem;
+  padding: 3.5rem;
+  text-align: left;
+  width: 100%;
+}
+
+.me-prevenir-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2.25rem;
+  max-width: none;
+}
+
+.me-prevenir-field {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: 48px 1fr;
+}
+
+.me-prevenir-field-body {
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+  min-width: 0;
+  padding: 0;
+}
+
+.me-prevenir-field-body > span:first-child,
+.me-prevenir-field-body > legend {
+  color: var(--color-green);
+  font-family: var(--font-heading);
+  font-size: 1.375rem;
+  font-weight: 700;
+}
+
+label.me-prevenir-field-body {
+  gap: 0.625rem;
+}
+
+.me-prevenir-field-badge {
+  align-items: center;
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  display: flex;
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  font-weight: 700;
+  height: 44px;
+  justify-content: center;
+  width: 48px;
+}
+
+.me-prevenir-field-badge--1 {
+  background: var(--color-green);
+  color: var(--color-me-prevenir-cream);
+}
+
+.me-prevenir-field-badge--2 {
+  background: var(--color-dream-accent);
+  color: var(--color-white);
+}
+
+.me-prevenir-field-badge--3 {
+  background: var(--color-dream-blush);
+  color: var(--color-green);
+}
+
+.me-prevenir-field-badge--4 {
+  background: var(--color-dream-circle-2);
+  color: var(--color-green);
+}
+
+.me-prevenir-input,
+.me-prevenir-select {
+  background: var(--color-me-prevenir-surface);
+  border: 1.5px solid var(--color-me-prevenir-border);
+  border-radius: 999px;
+  box-sizing: border-box;
+  color: var(--color-dream-text);
+  font-size: 1.0625rem;
+  height: 3.5rem;
+  padding-inline: 1.5rem;
+  width: 100%;
+}
+
+.me-prevenir-input::placeholder {
+  color: var(--color-me-prevenir-placeholder);
+}
+
+.me-prevenir-input:focus,
+.me-prevenir-select:focus {
+  border-color: var(--color-green);
+  outline: none;
+}
+
+.me-prevenir-input:focus-visible,
+.me-prevenir-select:focus-visible {
+  outline: 2px solid var(--color-green);
+  outline-offset: 2px;
+}
+
+.me-prevenir-select-wrap {
+  position: relative;
+}
+
+.me-prevenir-select {
+  appearance: none;
+}
+
+.me-prevenir-select-chevron {
+  color: var(--color-green);
+  pointer-events: none;
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.me-prevenir-chips {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.625rem;
+}
+
+.me-prevenir-chip {
+  align-items: center;
+  background: var(--color-white);
+  border: 1.5px solid var(--color-me-prevenir-border);
+  border-radius: 999px;
+  color: var(--color-green);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 1rem;
+  font-weight: 600;
+  gap: 0.5rem;
+  height: 48px;
+  padding-inline: 1.375rem;
+  position: relative;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+  user-select: none;
+}
+
+.me-prevenir-chip::before {
+  content: "+";
+  display: inline-block;
+  font-size: 0.875rem;
+  text-align: center;
+  width: 0.75rem;
+}
+
+.me-prevenir-chip:has(input:checked) {
+  background: var(--color-green);
+  border-color: var(--color-green);
+  color: var(--color-me-prevenir-cream);
+}
+
+.me-prevenir-chip:has(input:checked)::before {
+  content: "✓";
+}
+
+.me-prevenir-chip:has(input:focus-visible) {
+  outline: 2px solid var(--color-green);
+  outline-offset: 2px;
+}
+
+.me-prevenir-offers-note {
+  color: var(--color-dream-text);
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  margin-top: -0.375rem;
+}
+
+.me-prevenir-offers-link {
+  color: var(--color-me-prevenir-link);
+  font-weight: 600;
+}
+
+.me-prevenir-offers-link:hover {
+  color: var(--color-me-prevenir-link-hover);
+  text-decoration: underline;
+}
+
+.me-prevenir-offer-cards {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.me-prevenir-offer-card {
+  background: var(--color-me-prevenir-surface);
+  border: 2px solid var(--color-me-prevenir-card-border);
+  border-radius: 1.375rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  position: relative;
+}
+
+.me-prevenir-offer-card:has(input:checked) {
+  background: var(--color-me-prevenir-card-selected);
+  border-color: var(--color-green);
+}
+
+.me-prevenir-offer-card:has(input:focus-visible) {
+  outline: 2px solid var(--color-green);
+  outline-offset: 2px;
+}
+
+.me-prevenir-offer-radio {
+  align-items: center;
+  border: 2px solid var(--color-green);
+  border-radius: 999px;
+  box-sizing: border-box;
+  display: flex;
+  flex-shrink: 0;
+  height: 20px;
+  justify-content: center;
+  width: 20px;
+}
+
+.me-prevenir-offer-card:has(input:checked) .me-prevenir-offer-radio::after {
+  background: var(--color-green);
+  border-radius: 999px;
+  content: "";
+  height: 10px;
+  width: 10px;
+}
+
+.me-prevenir-offer-title {
+  color: var(--color-green);
+  font-family: var(--font-heading);
+  font-size: 1.1875rem;
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.me-prevenir-offer-text {
+  color: var(--color-dream-text);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.me-prevenir-form-error {
+  color: var(--color-dream-accent);
+  font-size: 0.875rem;
+}
+
+.me-prevenir-submit {
+  --button-stitch: var(--color-me-prevenir-button-stitch);
+  color: var(--color-dream-text);
+  font-family: var(--font-heading);
+  font-size: 1.1875rem;
+  height: 3.75rem;
+  margin-left: 4.25rem;
+  width: calc(100% - 4.25rem);
+}
+
+.me-prevenir-submit:hover {
+  background: var(--color-me-prevenir-button-hover);
+}
+
+@media (max-width: 64rem) {
+  .me-prevenir-title {
+    font-size: 3.75rem;
+  }
+
+  .me-prevenir-card {
+    padding: 2.5rem;
+  }
+
+  .me-prevenir-offer-cards {
+    gap: 0.625rem;
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 48rem) {
+  .me-prevenir-hero {
+    padding: 3.5rem 1.25rem 4rem;
+  }
+
+  .me-prevenir-title {
+    font-size: 2.625rem;
+  }
+
+  .me-prevenir-intro {
+    font-size: 1.0625rem;
+  }
+
+  .me-prevenir-card {
+    border-radius: 1.75rem;
+    padding: 1.5rem;
+  }
+
+  .me-prevenir-field {
+    gap: 0.875rem;
+    grid-template-columns: 36px 1fr;
+  }
+
+  .me-prevenir-field-badge {
+    font-size: 0.9375rem;
+    height: 32px;
+    width: 36px;
+  }
+
+  .me-prevenir-field-body > span:first-child,
+  .me-prevenir-field-body > legend {
+    font-size: 1.1875rem;
+  }
+
+  .me-prevenir-input,
+  .me-prevenir-select {
+    height: 3.25rem;
+  }
+
+  .me-prevenir-chips {
+    flex-wrap: wrap;
+  }
+
+  .me-prevenir-chip {
+    height: 44px;
+  }
+
+  .me-prevenir-submit {
+    margin-left: 0;
+    width: 100%;
+  }
 }
 
 .order-search-form {

@@ -4,6 +4,15 @@ import type {Route} from './+types/policies._index';
 import type {PoliciesQuery, PolicyItemFragment} from 'storefrontapi.generated';
 import {EditorialHero} from '~/components/EditorialHero';
 
+export const meta: Route.MetaFunction = () => [
+  {title: 'Informations légales | My Hobbees'},
+  {
+    name: 'description',
+    content:
+      'Retrouve les conditions générales, la politique de remboursement, de livraison et de confidentialité de la boutique My Hobbees.',
+  },
+];
+
 export async function loader({context}: Route.LoaderArgs) {
   const data: PoliciesQuery = await context.storefront.query(POLICIES_QUERY);
 

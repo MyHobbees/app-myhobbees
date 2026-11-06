@@ -6,6 +6,7 @@ import {AddToCartButton} from '~/components/AddToCartButton';
 import {useAside} from '~/components/Aside';
 import {FaqSection} from '~/components/FaqSection';
 import {Reassurance} from '~/components/Reassurance';
+import {capture} from '~/lib/posthog';
 import type {SubscriptionOffer} from '~/lib/subscriptionOffers';
 import {getSubscriptionCtaLabel} from '~/lib/subscriptions';
 
@@ -165,7 +166,16 @@ function OfferCta({
 
   if (!purchase) {
     return (
-      <Link className="button button-primary" to="/pages/contact">
+      <Link
+        className="button button-primary"
+        to={`/me-prevenir?offer=${offer.slug}`}
+        onClick={() =>
+          capture('offer_click', {
+            offer: offer.slug,
+            price: offer.price?.amount ?? null,
+          })
+        }
+      >
         {offer.finalCtaLabel}
       </Link>
     );

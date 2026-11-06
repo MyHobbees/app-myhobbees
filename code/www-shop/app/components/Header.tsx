@@ -1,6 +1,6 @@
 import {Suspense} from 'react';
-import {Await, NavLink, useAsyncValue} from 'react-router';
-import {Menu, ShoppingCart, UserRound} from 'lucide-react';
+import {Await, Link, NavLink, useAsyncValue} from 'react-router';
+import {Menu, ShoppingCart} from 'lucide-react';
 import {
   type CartViewPayload,
   useAnalytics,
@@ -8,11 +8,11 @@ import {
 } from '@shopify/hydrogen';
 import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
 import {useAside} from '~/components/Aside';
+import {capture} from '~/lib/posthog';
 
 interface HeaderProps {
   header: HeaderQuery;
   cart: Promise<CartApiQueryFragment | null>;
-  isLoggedIn: Promise<boolean>;
   publicStoreDomain: string;
 }
 
@@ -30,12 +30,7 @@ const SITE_MENU_ITEMS = [
   {title: 'Qui sommes-nous', to: '/qui-sommes-nous', end: false},
 ] as const;
 
-export function Header({
-  header,
-  isLoggedIn,
-  cart,
-  publicStoreDomain,
-}: HeaderProps) {
+export function Header({header, cart, publicStoreDomain}: HeaderProps) {
   return (
     <>
       <header className="header">
@@ -52,7 +47,7 @@ export function Header({
           <strong>My Hobbees</strong>
         </NavLink>
         <HeaderMenu viewport="desktop" />
-        <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
+        <HeaderCtas cart={cart} />
       </header>
     </>
   );
@@ -95,27 +90,18 @@ export function HeaderMenu({viewport}: {viewport: Viewport}) {
   );
 }
 
-function HeaderCtas({
-  isLoggedIn,
-  cart,
-}: Pick<HeaderProps, 'isLoggedIn' | 'cart'>) {
+function HeaderCtas({cart}: Pick<HeaderProps, 'cart'>) {
   return (
     <nav className="header-ctas" aria-label="Actions rapides">
       <HeaderMenuMobileToggle />
-      <NavLink
-        className="header-action button button-primary button-icon"
+      <Link
+        className="header-action button button-primary"
         prefetch="intent"
-        to="/account"
+        to="/me-prevenir"
+        onClick={() => capture('cta_click', {placement: 'header'})}
       >
-        <UserRound aria-hidden="true" />
-        <span className="sr-only">
-          <Suspense fallback="Compte">
-            <Await resolve={isLoggedIn} errorElement="Compte">
-              {(isLoggedIn) => (isLoggedIn ? 'Mon compte' : 'Connexion')}
-            </Await>
-          </Suspense>
-        </span>
-      </NavLink>
+        Me prévenir
+      </Link>
       <CartToggle cart={cart} />
     </nav>
   );

@@ -1,11 +1,10 @@
-import {Link, useLoaderData} from 'react-router';
+import {Link} from 'react-router';
 import {Check, Minus} from 'lucide-react';
 import type {Route} from './+types/abonnements';
-import type {CollectionItemFragment} from 'storefrontapi.generated';
+import {BoxIllustration} from '~/components/BoxIllustration';
 import {EditorialHero} from '~/components/EditorialHero';
 import {FaqSection} from '~/components/FaqSection';
-import {ProductItem} from '~/components/ProductItem';
-import {isMockShop} from '~/lib/storefront';
+import {BOXES} from '~/lib/boxes';
 
 export const meta: Route.MetaFunction = () => [
   {
@@ -87,23 +86,9 @@ const STEPS = [
   'Tu crées à ton rythme, seul·e ou avec la communauté.',
 ] as const;
 
-export async function loader({context}: Route.LoaderArgs) {
-  if (isMockShop(context.env.PUBLIC_STORE_DOMAIN)) {
-    return {boxes: []};
-  }
-
-  try {
-    const {products} = await context.storefront.query<{
-      products: {nodes: CollectionItemFragment[]};
-    }>(SUBSCRIPTIONS_BOXES_QUERY);
-    return {boxes: products.nodes};
-  } catch {
-    return {boxes: []};
-  }
-}
+const BOXES_ORDER = [BOXES.crochet, BOXES.couture, BOXES.peinture];
 
 export default function SubscriptionsPage() {
-  const {boxes} = useLoaderData<typeof loader>();
   return (
     <article
       className="editorial-page subscriptions-page"
@@ -213,74 +198,40 @@ export default function SubscriptionsPage() {
       </section>
 
       <section
-        className={`page-width future-boxes${
-          boxes.length ? ' future-boxes--stocked' : ''
-        }`}
+        className="page-width future-boxes future-boxes--stocked"
         aria-labelledby="future-boxes-title"
       >
         <h2 id="future-boxes-title">Envie d’une box précise ?</h2>
-        {boxes.length ? (
-          <>
-            <p>
-              Nos box créatives sont aussi disponibles à l’unité : choisis ton
-              univers et reçois tout le nécessaire pour créer.
-            </p>
-            <div className="products-grid future-boxes-grid">
-              {boxes.map((box) => (
-                <ProductItem key={box.id} product={box} />
-              ))}
-            </div>
-            <Link className="button button-primary" to="/collections/all">
-              Voir toutes nos boxes
-            </Link>
-          </>
-        ) : (
-          <>
-            <p>
-              Certaines créations pourront bientôt être disponibles à l’unité
-              dans notre sélection de box populaires.
-            </p>
-            <button disabled type="button">
-              Bientôt disponible
-            </button>
-          </>
-        )}
+        <p>
+          Nos box créatives sont aussi disponibles à l’unité : choisis ton
+          univers et reçois tout le nécessaire pour créer.
+        </p>
+        <div className="products-grid future-boxes-grid">
+          {BOXES_ORDER.map((box) => (
+            <article
+              aria-labelledby={`future-box-${box.slug}-title`}
+              className="product-item"
+              key={box.slug}
+            >
+              <div className="product-item-media">
+                <BoxIllustration craft={box.slug} />
+              </div>
+              <div className="product-item-content">
+                <h3 id={`future-box-${box.slug}-title`}>{box.title}</h3>
+                <p>{box.tagline}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+        <Link className="button button-primary" to="/collections/all">
+          Voir toutes nos boxes
+        </Link>
       </section>
 
       <FaqSection />
     </article>
   );
 }
-
-const SUBSCRIPTIONS_BOXES_QUERY = `#graphql
-  query SubscriptionsBoxes($country: CountryCode, $language: LanguageCode)
-  @inContext(country: $country, language: $language) {
-    products(first: 4, query: "-tag:abonnement") {
-      nodes {
-        id
-        handle
-        title
-        featuredImage {
-          id
-          altText
-          url
-          width
-          height
-        }
-        priceRange {
-          minVariantPrice {
-            amount
-            currencyCode
-          }
-          maxVariantPrice {
-            amount
-            currencyCode
-          }
-        }
-      }
-    }
-  }
-` as const;
 
 function Availability({
   featured = false,

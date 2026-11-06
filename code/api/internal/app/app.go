@@ -22,6 +22,7 @@ func New() *chi.Mux {
 		r.Mount("/auth", routes.Auth())
 		r.Mount("/example", routes.Example())
 		r.Mount("/shopify", routes.Shopify())
+		r.Mount("/leads", routes.Leads())
 	})
 
 	r.NotFound(func(w http.ResponseWriter, _ *http.Request) {
