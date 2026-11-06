@@ -29,6 +29,8 @@
   --color-me-prevenir-card-border: #f0e4c8;
   --color-me-prevenir-card-selected: #f3f7f1;
   --color-me-prevenir-link: #e8436b;
+  --color-me-prevenir-link-hover: #c22f55;
+  --color-me-prevenir-button-stitch: #c9962a;
   --color-border: rgba(78, 110, 88, 0.18);
   --shadow-soft: 0 18px 45px rgba(78, 110, 88, 0.1);
   --radius-small: 12px;
@@ -2312,22 +2314,20 @@ aside main {
 
 /* Me prévenir page */
 .me-prevenir-hero {
+  align-items: center;
   background-color: var(--color-cream);
-  padding-block: 6rem 6.5rem;
-}
-
-.me-prevenir-hero-content {
-  margin-inline: auto;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  padding: 6rem 5.5rem 6.5rem;
 }
 
 .me-prevenir-title {
   color: var(--color-green);
-  font-size: clamp(2.75rem, 6vw, 5rem);
+  font-size: 5rem;
   letter-spacing: -0.02em;
   line-height: 1;
-  margin-inline: auto;
   max-width: 51.25rem;
+  text-align: center;
   text-wrap: balance;
 }
 
@@ -2335,24 +2335,21 @@ aside main {
   color: var(--color-me-prevenir-intro);
   font-size: 1.3125rem;
   line-height: 1.6;
-  margin-inline: auto;
   margin-top: 1.5rem;
   max-width: 40rem;
+  text-align: center;
 }
 
 .me-prevenir-card {
   background: var(--color-white);
   border-radius: 2.25rem;
   box-shadow: 0 20px 50px rgba(110, 79, 50, 0.1);
-  margin-inline: auto;
+  box-sizing: border-box;
   margin-top: 3.5rem;
   max-width: 53.75rem;
   padding: 3.5rem;
   text-align: left;
-}
-
-.me-prevenir-confirmation {
-  margin-inline: auto;
+  width: 100%;
 }
 
 .me-prevenir-form {
@@ -2369,19 +2366,24 @@ aside main {
 
 .me-prevenir-field-body {
   border: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
   margin: 0;
   min-width: 0;
   padding: 0;
 }
 
-.me-prevenir-field-body > label,
+.me-prevenir-field-body > span:first-child,
 .me-prevenir-field-body > legend {
   color: var(--color-green);
-  display: block;
   font-family: var(--font-heading);
   font-size: 1.375rem;
   font-weight: 700;
-  margin-bottom: 0.75rem;
+}
+
+label.me-prevenir-field-body {
+  gap: 0.625rem;
 }
 
 .me-prevenir-field-badge {
@@ -2421,6 +2423,7 @@ aside main {
   background: var(--color-me-prevenir-surface);
   border: 1.5px solid var(--color-me-prevenir-border);
   border-radius: 999px;
+  box-sizing: border-box;
   color: var(--color-dream-text);
   font-size: 1.0625rem;
   height: 3.5rem;
@@ -2438,12 +2441,27 @@ aside main {
   outline: none;
 }
 
+.me-prevenir-input:focus-visible,
+.me-prevenir-select:focus-visible {
+  outline: 2px solid var(--color-green);
+  outline-offset: 2px;
+}
+
+.me-prevenir-select-wrap {
+  position: relative;
+}
+
 .me-prevenir-select {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%234d6e57' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-position: right 1.25rem center;
-  background-repeat: no-repeat;
-  padding-right: 3rem;
+}
+
+.me-prevenir-select-chevron {
+  color: var(--color-green);
+  pointer-events: none;
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .me-prevenir-chips {
@@ -2462,17 +2480,14 @@ aside main {
   display: inline-flex;
   font-size: 1rem;
   font-weight: 600;
-  gap: 0.3rem;
+  gap: 0.5rem;
   height: 48px;
   padding-inline: 1.375rem;
   position: relative;
-}
-
-.me-prevenir-chip input {
-  height: 1px;
-  opacity: 0;
-  position: absolute;
-  width: 1px;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
 }
 
 .me-prevenir-chip::before {
@@ -2498,8 +2513,8 @@ aside main {
   color: var(--color-dream-text);
   font-size: 1rem;
   font-weight: 400;
-  margin-bottom: 0.75rem;
-  margin-top: -0.25rem;
+  line-height: 1.5;
+  margin-top: -0.375rem;
 }
 
 .me-prevenir-offers-link {
@@ -2507,30 +2522,27 @@ aside main {
   font-weight: 600;
 }
 
+.me-prevenir-offers-link:hover {
+  color: var(--color-me-prevenir-link-hover);
+  text-decoration: underline;
+}
+
 .me-prevenir-offer-cards {
   display: grid;
-  gap: 1.25rem;
-  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .me-prevenir-offer-card {
   background: var(--color-me-prevenir-surface);
   border: 2px solid var(--color-me-prevenir-card-border);
-  border-radius: 1.5rem;
+  border-radius: 1.375rem;
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  min-height: 11rem;
-  padding: 1.75rem;
+  gap: 0.5rem;
+  padding: 1.25rem;
   position: relative;
-}
-
-.me-prevenir-offer-card input {
-  height: 1px;
-  opacity: 0;
-  position: absolute;
-  width: 1px;
 }
 
 .me-prevenir-offer-card:has(input:checked) {
@@ -2544,44 +2556,49 @@ aside main {
 }
 
 .me-prevenir-offer-radio {
+  align-items: center;
   border: 2px solid var(--color-green);
   border-radius: 999px;
+  box-sizing: border-box;
+  display: flex;
   flex-shrink: 0;
-  height: 24px;
-  position: relative;
-  width: 24px;
+  height: 20px;
+  justify-content: center;
+  width: 20px;
 }
 
 .me-prevenir-offer-card:has(input:checked) .me-prevenir-offer-radio::after {
   background: var(--color-green);
   border-radius: 999px;
   content: "";
-  height: 12px;
-  left: 50%;
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 12px;
+  height: 10px;
+  width: 10px;
 }
 
 .me-prevenir-offer-title {
   color: var(--color-green);
   font-family: var(--font-heading);
-  font-size: 1.375rem;
+  font-size: 1.1875rem;
+  line-height: 1.15;
   font-weight: 700;
 }
 
 .me-prevenir-offer-text {
   color: var(--color-dream-text);
-  font-size: 1rem;
-  line-height: 1.55;
+  font-size: 0.9375rem;
+  line-height: 1.5;
 }
 
 .me-prevenir-form-error {
-  color: var(--color-pink);
+  color: var(--color-dream-accent);
+  font-size: 0.875rem;
 }
 
 .me-prevenir-submit {
+  --button-stitch: var(--color-me-prevenir-button-stitch);
+  color: var(--color-dream-text);
+  font-family: var(--font-heading);
+  font-size: 1.1875rem;
   height: 3.75rem;
   margin-left: 4.25rem;
   width: calc(100% - 4.25rem);
@@ -2597,11 +2614,16 @@ aside main {
   }
 
   .me-prevenir-offer-cards {
+    gap: 0.625rem;
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 48rem) {
+  .me-prevenir-hero {
+    padding: 3.5rem 1.25rem 4rem;
+  }
+
   .me-prevenir-title {
     font-size: 2.625rem;
   }
@@ -2621,13 +2643,27 @@ aside main {
   }
 
   .me-prevenir-field-badge {
-    font-size: 1rem;
+    font-size: 0.9375rem;
     height: 32px;
     width: 36px;
   }
 
+  .me-prevenir-field-body > span:first-child,
+  .me-prevenir-field-body > legend {
+    font-size: 1.1875rem;
+  }
+
+  .me-prevenir-input,
+  .me-prevenir-select {
+    height: 3.25rem;
+  }
+
   .me-prevenir-chips {
     flex-wrap: wrap;
+  }
+
+  .me-prevenir-chip {
+    height: 44px;
   }
 
   .me-prevenir-submit {

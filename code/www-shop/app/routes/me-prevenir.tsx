@@ -157,108 +157,105 @@ export default function MePrevenir() {
       aria-labelledby="me-prevenir-title"
     >
       <section className="me-prevenir-hero">
-        <div className="page-width me-prevenir-hero-content">
-          <h1 className="me-prevenir-title" id="me-prevenir-title">
-            Sois prévenu·e dès le lancement
-          </h1>
-          <p className="me-prevenir-intro">
-            Nos box créatives arrivent bientôt. Laisse-nous ton email pour
-            être prévenu·e dès l’ouverture et nous aider à préparer le
-            lancement.
-          </p>
+        <h1 className="me-prevenir-title" id="me-prevenir-title">
+          Sois prévenu·e dès le lancement
+        </h1>
+        <p className="me-prevenir-intro">
+          Nos box créatives arrivent bientôt. Laisse-nous ton email pour être
+          prévenu·e dès l’ouverture et nous aider à préparer le lancement.
+        </p>
 
-          <div className="me-prevenir-card">
-            {actionData?.ok ? (
-              <div className="notice-callout me-prevenir-confirmation">
-                <div className="inner">
-                  <h2>Merci, c’est noté !</h2>
-                  <p>
-                    Nous te préviendrons par email dès l’ouverture des box et
-                    des abonnements.
-                  </p>
-                </div>
+        <div className="me-prevenir-card">
+          {actionData?.ok ? (
+            <div className="notice-callout me-prevenir-confirmation">
+              <div className="inner">
+                <h2>Merci, c’est noté !</h2>
+                <p>
+                  Nous te préviendrons par email dès l’ouverture des box et
+                  des abonnements.
+                </p>
               </div>
-            ) : (
-              <Form
-                action={`${location.pathname}${location.search}`}
-                className="me-prevenir-form"
-                method="post"
-              >
-                <div className="me-prevenir-field">
-                  <FieldBadge number={1} />
-                  <div className="me-prevenir-field-body">
-                    <label htmlFor="email">Email</label>
-                    <input
-                      autoComplete="email"
-                      className="me-prevenir-input"
-                      id="email"
-                      name="email"
-                      placeholder="ton@email.fr"
-                      required
-                      type="email"
-                    />
+            </div>
+          ) : (
+            <Form
+              action={`${location.pathname}${location.search}`}
+              className="me-prevenir-form"
+              method="post"
+            >
+              <div className="me-prevenir-field">
+                <FieldBadge number={1} />
+                <label className="me-prevenir-field-body">
+                  <span>Email</span>
+                  <input
+                    autoComplete="email"
+                    className="me-prevenir-input"
+                    name="email"
+                    placeholder="ton@email.fr"
+                    required
+                    type="email"
+                  />
+                </label>
+              </div>
+
+              <div className="me-prevenir-field">
+                <FieldBadge number={2} />
+                <fieldset className="me-prevenir-field-body">
+                  <legend>Quelles activités t’intéressent ?</legend>
+                  <div className="me-prevenir-chips">
+                    {ACTIVITIES.map((activity) => (
+                      <label className="me-prevenir-chip" key={activity}>
+                        <input
+                          className="sr-only"
+                          name="activities"
+                          type="checkbox"
+                          value={activity}
+                        />
+                        {activity}
+                      </label>
+                    ))}
                   </div>
-                </div>
+                </fieldset>
+              </div>
 
-                <div className="me-prevenir-field">
-                  <FieldBadge number={2} />
-                  <fieldset className="me-prevenir-field-body">
-                    <legend>Quelles activités t’intéressent ?</legend>
-                    <div className="me-prevenir-chips">
-                      {ACTIVITIES.map((activity) => (
-                        <label className="me-prevenir-chip" key={activity}>
-                          <input
-                            name="activities"
-                            type="checkbox"
-                            value={activity}
-                          />
-                          {activity}
-                        </label>
-                      ))}
-                    </div>
-                  </fieldset>
-                </div>
+              <div className="me-prevenir-field">
+                <FieldBadge number={3} />
+                <fieldset className="me-prevenir-field-body">
+                  <legend>Quel abonnement t’intéresse le plus ?</legend>
+                  <p className="me-prevenir-offers-note">
+                    Découvre le détail des formules en préparation sur la
+                    page{' '}
+                    <Link className="me-prevenir-offers-link" to="/abonnements">
+                      Nos abonnements
+                    </Link>
+                    .
+                  </p>
+                  <div className="me-prevenir-offer-cards">
+                    {offers.map((item) => (
+                      <label className="me-prevenir-offer-card" key={item.slug}>
+                        <input
+                          className="sr-only"
+                          defaultChecked={offer?.slug === item.slug}
+                          name="subscription_interest"
+                          type="radio"
+                          value={item.title}
+                        />
+                        <span aria-hidden="true" className="me-prevenir-offer-radio" />
+                        <span className="me-prevenir-offer-title">{item.title}</span>
+                        <span className="me-prevenir-offer-text">{item.tagline}</span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              </div>
 
-                <div className="me-prevenir-field">
-                  <FieldBadge number={3} />
-                  <fieldset className="me-prevenir-field-body">
-                    <legend>Quel abonnement t’intéresse le plus ?</legend>
-                    <p className="me-prevenir-offers-note">
-                      Découvre le détail des formules en préparation sur la
-                      page{' '}
-                      <Link className="me-prevenir-offers-link" to="/abonnements">
-                        Nos abonnements
-                      </Link>
-                      .
-                    </p>
-                    <div className="me-prevenir-offer-cards">
-                      {offers.map((item) => (
-                        <label className="me-prevenir-offer-card" key={item.slug}>
-                          <input
-                            defaultChecked={offer?.slug === item.slug}
-                            name="subscription_interest"
-                            type="radio"
-                            value={item.title}
-                          />
-                          <span aria-hidden="true" className="me-prevenir-offer-radio" />
-                          <span className="me-prevenir-offer-title">{item.title}</span>
-                          <span className="me-prevenir-offer-text">{item.tagline}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </fieldset>
-                </div>
-
-                <div className="me-prevenir-field">
-                  <FieldBadge number={4} />
-                  <div className="me-prevenir-field-body">
-                    <label htmlFor="acquisition_channel">
-                      Comment nous as-tu connu ?
-                    </label>
+              <div className="me-prevenir-field">
+                <FieldBadge number={4} />
+                <label className="me-prevenir-field-body">
+                  <span>Comment nous as-tu connu ?</span>
+                  <span className="me-prevenir-select-wrap">
                     <select
                       className="me-prevenir-select"
                       defaultValue=""
-                      id="acquisition_channel"
                       name="acquisition_channel"
                       required
                     >
@@ -271,27 +268,28 @@ export default function MePrevenir() {
                         </option>
                       ))}
                     </select>
-                  </div>
-                </div>
+                    <span aria-hidden="true" className="me-prevenir-select-chevron">
+                      ▾
+                    </span>
+                  </span>
+                </label>
+              </div>
 
-                {actionData && !actionData.ok ? (
-                  <p className="me-prevenir-form-error" role="alert">
-                    <mark>
-                      <small>{actionData.error}</small>
-                    </mark>
-                  </p>
-                ) : null}
+              {actionData && !actionData.ok ? (
+                <p className="me-prevenir-form-error" role="alert">
+                  {actionData.error}
+                </p>
+              ) : null}
 
-                <button
-                  className="button button-primary me-prevenir-submit"
-                  disabled={submitting}
-                  type="submit"
-                >
-                  {submitting ? 'Envoi…' : 'Être informé·e'}
-                </button>
-              </Form>
-            )}
-          </div>
+              <button
+                className="button button-primary me-prevenir-submit"
+                disabled={submitting}
+                type="submit"
+              >
+                {submitting ? 'Envoi…' : 'Être informé·e'}
+              </button>
+            </Form>
+          )}
         </div>
       </section>
     </article>
