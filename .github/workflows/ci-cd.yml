@@ -97,6 +97,7 @@ jobs:
   deploy-assets-stg:
     name: Deploy Assets (stg)
     runs-on: ubuntu-latest
+    needs: [terraform-fronts-stg]
     if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v6
@@ -117,6 +118,7 @@ jobs:
   deploy-back-office-stg:
     name: Deploy Back Office (stg)
     runs-on: ubuntu-latest
+    needs: [terraform-fronts-stg]
     if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v6
@@ -137,6 +139,7 @@ jobs:
   deploy-app-stg:
     name: Deploy App (stg)
     runs-on: ubuntu-latest
+    needs: [terraform-fronts-stg]
     if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v6
@@ -280,6 +283,7 @@ jobs:
   deploy-assets-prd:
     name: Deploy Assets (prd)
     runs-on: ubuntu-latest
+    needs: [terraform-fronts-prd]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v6
@@ -300,6 +304,7 @@ jobs:
   deploy-back-office-prd:
     name: Deploy Back Office (prd)
     runs-on: ubuntu-latest
+    needs: [terraform-fronts-prd]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v6
@@ -320,6 +325,7 @@ jobs:
   deploy-app-prd:
     name: Deploy App (prd)
     runs-on: ubuntu-latest
+    needs: [terraform-fronts-prd]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v6

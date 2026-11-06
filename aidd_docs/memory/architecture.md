@@ -21,7 +21,7 @@ flowchart LR
 
 - The Go API builds once per target: `cmd/server` runs it over plain HTTP for local dev, `cmd/api` wraps the same router for Lambda via `aws-lambda-go-api-proxy` (see `code/api/internal/app`).
 - Auth is a single admin identity (`ADMIN_EMAIL`/`ADMIN_PASSWORD_HASH` env vars) issuing a JWT, not a user table — see [auth.md](auth.md).
-- `www-shop` ships outside this repo's GitHub Actions pipeline (via Shopify's own Hydrogen/Oxygen tooling); the other two frontends and the API deploy through `.github/workflows/ci-cd.yml` — see [deployment.md](deployment.md).
+- `www-shop` ships outside this repo's GitHub Actions pipeline, to Vercel (Node runtime via `@vercel/react-router`, not Shopify Oxygen — Hydrogen is used as a library only); the other two frontends and the API deploy through `.github/workflows/ci-cd.yml` — see [deployment.md](deployment.md).
 
 ## Gotchas
 
