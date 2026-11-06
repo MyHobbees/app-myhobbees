@@ -48,12 +48,17 @@ type offerCount struct {
 	Count int    `json:"count"`
 }
 
+// EmailSignups is the same leads-table count used as the numerator of
+// VisitorToEmailRate. It is a distinct field from WaitlistSignups (the raw
+// PostHog event counter) on purpose: the back-office KPI row must never show
+// an "Inscriptions" card sourced differently than the rate derived from it.
 type posthogOverview struct {
 	Days               int          `json:"days"`
 	Visitors           int          `json:"visitors"`
 	CtaClicks          int          `json:"ctaClicks"`
 	OfferClicks        int          `json:"offerClicks"`
 	WaitlistSignups    int          `json:"waitlistSignups"`
+	EmailSignups       int          `json:"emailSignups"`
 	AppClicks          int          `json:"appClicks"`
 	VisitorToEmailRate float64      `json:"visitorToEmailRate"`
 	CtaToEmailRate     float64      `json:"ctaToEmailRate"`
@@ -62,9 +67,12 @@ type posthogOverview struct {
 	OfferClicksByOffer []offerCount `json:"offerClicksByOffer"`
 }
 
+// overviewCacheEntry caches the exact public-facing message on failure, not
+// the internal Go error: both the "fresh" and "cached" response paths must
+// return the same generic body, never pgx/DB/PostHog internals to the client.
 type overviewCacheEntry struct {
 	data      posthogOverview
-	err       error
+	message   string
 	expiresAt time.Time
 }
 
@@ -86,9 +94,9 @@ func Analytics() chi.Router {
 			days = 90
 		}
 
-		if cachedData, cachedErr, ok := overviewFromCache(days); ok {
-			if cachedErr != nil {
-				httpjson.Error(w, http.StatusBadGateway, cachedErr.Error())
+		if cachedData, cachedMessage, ok := overviewFromCache(days); ok {
+			if cachedMessage != "" {
+				httpjson.Error(w, http.StatusBadGateway, cachedMessage)
 				return
 			}
 			httpjson.OK(w, http.StatusOK, cachedData)
@@ -103,7 +111,8 @@ func Analytics() chi.Router {
 				httpjson.Error(w, http.StatusBadGateway, "PostHog not configured")
 				return
 			}
-			overviewToCache(days, posthogOverview{}, err, overviewErrorCacheTTL)
+			log.Printf("analytics: posthog client: %v", err)
+			overviewToCache(days, posthogOverview{}, "Could not reach PostHog", overviewErrorCacheTTL)
 			httpjson.Error(w, http.StatusBadGateway, "Could not reach PostHog")
 			return
 		}
@@ -111,36 +120,38 @@ func Analytics() chi.Router {
 		overview, err := fetchOverview(req.Context(), client, days)
 		if err != nil {
 			log.Printf("analytics: posthog overview: %v", err)
-			overviewToCache(days, posthogOverview{}, err, overviewErrorCacheTTL)
+			overviewToCache(days, posthogOverview{}, "Could not load analytics", overviewErrorCacheTTL)
 			httpjson.Error(w, http.StatusBadGateway, "Could not load analytics")
 			return
 		}
 
-		overviewToCache(days, *overview, nil, overviewCacheTTL)
+		overviewToCache(days, *overview, "", overviewCacheTTL)
 		httpjson.OK(w, http.StatusOK, overview)
 	})
 
 	return r
 }
 
-func overviewFromCache(days int) (posthogOverview, error, bool) {
+// overviewFromCache reports a cached entry's data and, on a cached failure,
+// the public message to send verbatim (never an internal error string).
+func overviewFromCache(days int) (data posthogOverview, cachedMessage string, ok bool) {
 	overviewCacheMu.Lock()
 	defer overviewCacheMu.Unlock()
 
-	entry, ok := overviewCache[days]
-	if !ok || time.Now().After(entry.expiresAt) {
-		return posthogOverview{}, nil, false
+	entry, found := overviewCache[days]
+	if !found || time.Now().After(entry.expiresAt) {
+		return posthogOverview{}, "", false
 	}
-	return entry.data, entry.err, true
+	return entry.data, entry.message, true
 }
 
-func overviewToCache(days int, data posthogOverview, err error, ttl time.Duration) {
+func overviewToCache(days int, data posthogOverview, message string, ttl time.Duration) {
 	overviewCacheMu.Lock()
 	defer overviewCacheMu.Unlock()
 
 	overviewCache[days] = overviewCacheEntry{
 		data:      data,
-		err:       err,
+		message:   message,
 		expiresAt: time.Now().Add(ttl),
 	}
 }
@@ -192,6 +203,7 @@ func fetchOverview(ctx context.Context, client *posthog.Client, days int) (*post
 		CtaClicks:          ctaClicks,
 		OfferClicks:        offerClicks,
 		WaitlistSignups:    waitlistSignups,
+		EmailSignups:       leadsSignups,
 		AppClicks:          appClicks,
 		VisitorToEmailRate: visitorToEmailRate,
 		CtaToEmailRate:     ctaToEmailRate,
@@ -205,6 +217,11 @@ func fetchOverview(ctx context.Context, client *posthog.Client, days int) (*post
 // `days` days. It is the source of truth for the "visitor -> email" KPI:
 // unlike the PostHog waitlist_signup event, it reflects every real form
 // submission immediately.
+//
+// days is cast explicitly: left as a bare parameter, Postgres infers $1 as
+// text (to match the removed `|| ' days'` concatenation) and pgx cannot
+// encode a Go int into that shape, failing on every call. make_interval
+// takes a typed integer, so the cast is unambiguous.
 func countLeadsSince(ctx context.Context, days int) (int, error) {
 	pool, err := db.Pool(ctx)
 	if err != nil {
@@ -214,7 +231,7 @@ func countLeadsSince(ctx context.Context, days int) (int, error) {
 	var count int
 	err = pool.QueryRow(ctx, `
 		SELECT count(*) FROM leads
-		WHERE created_at >= now() - ($1 || ' days')::interval
+		WHERE created_at >= now() - make_interval(days => $1::int)
 	`, days).Scan(&count)
 	if err != nil {
 		return 0, err
