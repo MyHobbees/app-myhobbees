@@ -1,6 +1,6 @@
 ---
 objective: "www-shop's header sends every visitor through an instrumented 'Me prévenir' lead-capture form instead of Shopify login, and every submission is durably stored via the Go API."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Fake-door lead capture for www-shop
