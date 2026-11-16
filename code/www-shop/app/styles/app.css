@@ -455,6 +455,21 @@ code {
   padding: 1rem 0;
 }
 
+.mobile-menu-actions {
+  align-items: stretch;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+}
+
+.mobile-menu-actions .button-primary {
+  justify-content: center;
+  width: 100%;
+}
+
 .header-menu-item.is-active::after,
 .header-menu-item:hover::after {
   background: var(--color-pink);
@@ -509,6 +524,10 @@ code {
   display: flex;
   gap: 0.8rem;
   justify-self: end;
+}
+
+.header-cta-desktop {
+  display: none;
 }
 
 .header-action {
@@ -2737,6 +2756,10 @@ label.me-prevenir-field-body {
 
   .header-menu-mobile-toggle {
     display: none;
+  }
+
+  .header-cta-desktop {
+    display: inline-flex;
   }
 
   .hero-grid {

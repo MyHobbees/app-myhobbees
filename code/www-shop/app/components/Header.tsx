@@ -93,17 +93,27 @@ export function HeaderMenu({viewport}: {viewport: Viewport}) {
 function HeaderCtas({cart}: Pick<HeaderProps, 'cart'>) {
   return (
     <nav className="header-ctas" aria-label="Actions rapides">
+      <span className="header-cta-desktop">
+        <HeaderCtaLink placement="header" />
+      </span>
+      <span className="header-cta-desktop">
+        <CartToggle cart={cart} />
+      </span>
       <HeaderMenuMobileToggle />
-      <Link
-        className="header-action button button-primary"
-        prefetch="intent"
-        to="/me-prevenir"
-        onClick={() => capture('cta_click', {placement: 'header'})}
-      >
-        Me prévenir
-      </Link>
-      <CartToggle cart={cart} />
     </nav>
+  );
+}
+
+export function HeaderCtaLink({placement}: {placement: string}) {
+  return (
+    <Link
+      className="header-action button button-primary"
+      prefetch="intent"
+      to="/me-prevenir"
+      onClick={() => capture('cta_click', {placement})}
+    >
+      Me prévenir
+    </Link>
   );
 }
 
@@ -149,7 +159,7 @@ function CartBadge({count}: {count: number}) {
   );
 }
 
-function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
+export function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
   return (
     <Suspense fallback={<CartBadge count={0} />}>
       <Await resolve={cart}>
