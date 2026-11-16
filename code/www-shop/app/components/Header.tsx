@@ -1,6 +1,6 @@
 import {Suspense} from 'react';
 import {Await, Link, NavLink, useAsyncValue} from 'react-router';
-import {Menu, ShoppingCart} from 'lucide-react';
+import {Menu} from 'lucide-react';
 import {
   type CartViewPayload,
   useAnalytics,
@@ -138,7 +138,7 @@ function CartBadge({count}: {count: number}) {
   return (
     <a
       aria-label={`Panier, ${count} article${count > 1 ? 's' : ''}`}
-      className="header-action button button-secondary button-icon"
+      className="header-action button button-secondary"
       href="/cart"
       onClick={(event) => {
         event.preventDefault();
@@ -151,10 +151,7 @@ function CartBadge({count}: {count: number}) {
         } as CartViewPayload);
       }}
     >
-      <ShoppingCart aria-hidden="true" />
-      <span aria-hidden="true" className="cart-count">
-        {count}
-      </span>
+      Panier{count > 0 ? ` (${count})` : ''}
     </a>
   );
 }
