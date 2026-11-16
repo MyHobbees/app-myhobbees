@@ -251,6 +251,61 @@ export function getCustomer(id: string) {
   return apiFetch<CustomerDetail>(`/v1/shopify/customers/${id}`)
 }
 
+export type Lead = {
+  id: number
+  email: string
+  activities: string[]
+  acquisitionChannel: string
+  subscriptionInterest: string
+  /**
+   * Read-side normalization of subscriptionInterest onto the 3 real offer
+   * slugs ('box-creative' | 'box-app' | 'app-only'), or 'other'. The API
+   * computes this because www-shop's "Me prévenir" form currently posts the
+   * offer's display label instead of its stable slug — see
+   * aidd_docs/tasks/.../review.md finding 4. subscriptionInterest itself is
+   * left untouched (raw, as submitted).
+   */
+  subscriptionOfferSlug: string
+  utmSource?: string
+  utmMedium?: string
+  utmCampaign?: string
+  referrer?: string
+  createdAt: string
+}
+
+export function getLeads() {
+  return apiFetch<Lead[]>('/v1/leads')
+}
+
+export type PostHogDayCount = { date: string; count: number }
+export type PostHogEventCount = { event: string; count: number }
+export type PostHogOfferCount = { offer: string; count: number }
+
+export type PostHogOverview = {
+  days: number
+  visitors: number
+  ctaClicks: number
+  offerClicks: number
+  waitlistSignups: number
+  /**
+   * Same leads-table count used as visitorToEmailRate's numerator. Use this
+   * (not waitlistSignups) for any "Inscriptions" figure shown next to the
+   * rate, so the two never contradict each other on screen — see
+   * aidd_docs/tasks/.../review.md finding 3.
+   */
+  emailSignups: number
+  appClicks: number
+  visitorToEmailRate: number
+  ctaToEmailRate: number
+  pageviewsByDay: PostHogDayCount[]
+  eventCounts: PostHogEventCount[]
+  offerClicksByOffer: PostHogOfferCount[]
+}
+
+export function getPostHogOverview(days: number) {
+  return apiFetch<PostHogOverview>(`/v1/analytics/posthog/overview?days=${days}`)
+}
+
 export async function getShopifyStatus(): Promise<ShopifyStatus> {
   try {
     return await apiFetch<ShopifyStatus>('/v1/shopify/status')

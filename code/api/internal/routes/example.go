@@ -10,9 +10,11 @@ import (
 	"github.com/myhobbees/api/internal/httpjson"
 )
 
+// Example is only ever mounted inside app.go's protected /v1 group, which
+// already applies auth.Middleware; it must not re-apply it here (see
+// aidd_docs/tasks/.../review.md finding: double auth check per request).
 func Example() chi.Router {
 	r := chi.NewRouter()
-	r.Use(auth.Middleware)
 
 	r.Get("/me", func(w http.ResponseWriter, req *http.Request) {
 		principal, ok := auth.PrincipalFrom(req.Context())

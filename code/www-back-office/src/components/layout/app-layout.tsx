@@ -3,11 +3,13 @@ import {
   Boxes,
   LayoutDashboard,
   LogOut,
+  Mail,
   Monitor,
   Moon,
   Package,
   Store,
   Sun,
+  TrendingUp,
   Users,
   Wrench,
 } from 'lucide-react'
@@ -53,6 +55,13 @@ const navGroups: { label: string; items: NavItem[] }[] = [
       { title: 'Commandes', url: '/orders', icon: Package },
       { title: 'Produits', url: '/products', icon: Boxes },
       { title: 'Clients', url: '/customers', icon: Users },
+    ],
+  },
+  {
+    label: 'Lancement',
+    items: [
+      { title: 'Inscriptions', url: '/leads', icon: Mail },
+      { title: 'Analytics', url: '/analytics', icon: TrendingUp },
     ],
   },
   {

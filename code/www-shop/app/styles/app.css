@@ -455,6 +455,21 @@ code {
   padding: 1rem 0;
 }
 
+.mobile-menu-actions {
+  align-items: stretch;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+}
+
+.mobile-menu-actions .button-primary {
+  justify-content: center;
+  width: 100%;
+}
+
 .header-menu-item.is-active::after,
 .header-menu-item:hover::after {
   background: var(--color-pink);
@@ -507,18 +522,25 @@ code {
 .header-ctas {
   align-items: center;
   display: flex;
+  flex-shrink: 0;
   gap: 0.8rem;
   justify-self: end;
+}
+
+.header-cta-desktop {
+  display: none;
 }
 
 .header-action {
   align-items: center;
   color: var(--color-green);
   display: inline-flex;
+  flex-shrink: 0;
   font-size: 0.82rem;
   font-weight: 700;
   gap: 0.35rem;
   position: relative;
+  white-space: nowrap;
 }
 
 .header-action:hover {
@@ -1116,6 +1138,14 @@ aside main {
   .dream-step-circle svg {
     height: 110px;
     width: 110px;
+  }
+
+  .dream-step--2 {
+    margin-top: 0;
+  }
+
+  .dream-steps-path {
+    display: none;
   }
 }
 
@@ -2739,6 +2769,10 @@ label.me-prevenir-field-body {
     display: none;
   }
 
+  .header-cta-desktop {
+    display: inline-flex;
+  }
+
   .hero-grid {
     grid-template-columns: minmax(0, 1.08fr) minmax(330px, 0.92fr);
   }
@@ -2793,7 +2827,7 @@ label.me-prevenir-field-body {
 
 @media (max-width: 38rem) {
   .brand strong {
-    font-size: 0.98rem;
+    display: none;
   }
 
   .header {
