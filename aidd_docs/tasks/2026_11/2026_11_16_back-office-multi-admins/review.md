@@ -1,0 +1,63 @@
+# Review: Gestion multi-admins du back-office
+
+- **Verdict**: changes-requested
+- **Diff**: `6a1dc50c...6a44db0e`
+- **Axes run**: code, functional, relevancy
+- **Date**: 2026_11_17
+- **Findings**: 2 critical, 6 warning, 4 minor
+
+## Phases
+
+### Phase 1 — Table admins, login migré, bootstrap du super-admin
+
+- [x] `002_create_admins.sql` applies on a clean base — `code/database/migrations/002_create_admins.sql:1-7`; `psql \d admins` on the local base returns exactly the planned shape (`admins_pkey`, `admins_email_key` unique on email, `is_super_admin` default false); filename matches `MIGRATION_PATTERN` in `infrastructure/scripts/migrate.py:11`
+- [x] `go test ./internal/jwt/...` passes, round-trip asserts `IsSuperAdmin` — `code/api/internal/jwt/jwt.go:14`, `code/api/internal/jwt/jwt_test.go`; `go test ./... -count=1` green, 0 skipped
+- [x] Bootstrap covers the 3 scoped cases against a real base — `code/api/internal/routes/admins_test.go:64,89,106`; all 3 ran against Postgres 5433 (`--- PASS`, no `SKIP` in the verbose run)
+- [x] Login on a freshly migrated base issues a JWT with the real id and `isSuperAdmin` — `code/api/internal/routes/auth.go:56`. Verified live on an empty `admins` table with the real `code/api/.env`: the request bootstrapped exactly 1 row, `is_super_admin=t`, and the stored `password_hash` is byte-identical to the env value (60 chars, `$2y$`, cost 10 after `godotenv` strips the single quotes), email identical; a deliberately wrong password returned `401 Invalid credentials`, never a 502. The real plaintext was not available to this review, but it already matched that same hash through the same `bcrypt.CompareHashAndPassword` before the change
+- [x] `go vet ./...` and `go test ./...` pass on `code/api` — both re-run here, vet exit 0, all packages `ok` with `-count=1`
+
+### Phase 2 — API de gestion des admins (super-admin only)
+
+- [x] `RequireSuperAdmin` passes a super-admin, 403 otherwise — `code/api/internal/auth/auth.go:75-84`, `code/api/internal/auth/auth_test.go:208,228,248`
+- [x] The 7 Test Scope scenarios are covered — `code/api/internal/routes/admins_test.go:192,218,246,268,296,329,351`; all `--- PASS` against the real base
+- [x] A non-super-admin gets 403 on `/v1/admins` and keeps `/v1/leads` + `/v1/analytics/*` — `code/api/internal/app/app.go:67-70` nests `RequireSuperAdmin` in its own inner `r.Group`, siblings registered at `:58-61` are untouched; asserted by `code/api/internal/app/app_test.go:98-119`
+- [x] `go vet ./...` and `go test ./...` pass — re-run here, green
+
+### Phase 3 — Page back-office « Administrateurs »
+
+- [x] `localStorage['back-office-auth']` carries `isSuperAdmin` after login — `code/www-back-office/src/stores/auth.ts:7,17-19`, `src/pages/login.tsx:37`
+- [x] No type error on the new types — no `typecheck` script exists in `package.json`; `npm run build` (`tsc -b && vite build`) ran clean, `✓ built in 340ms`
+- [x] `alert-dialog.tsx` exists and exports the primitives used — `code/www-back-office/src/components/ui/alert-dialog.tsx:1-197`, imports at `src/pages/admins.tsx:4-13`
+- [ ] Manual scenario: create an admin through the form, see it appear; delete it through the dialog, see it disappear — no browser automation is available in this environment either (no Playwright, Puppeteer, or browser tool), so the click path through the form and the `AlertDialog` is unverified by both the executor and this review. The API side was exercised live (201 on create, 400 on duplicate, 400 on self-delete, 204 + row gone on delete) and the two classic wiring breaks were ruled out by reading: `apiFetch` tolerates the `204` empty body at `src/lib/api.ts:23` (`res.json().catch(() => null)`), and a 403 on direct navigation renders the `Alert` at `src/pages/admins.tsx:101-106` rather than crashing. Residual risk is React render/wiring only
+- [x] No « Administrateurs » entry for a non-super-admin; lint and build pass — `src/components/layout/app-layout.tsx:143-145` filters on `superAdminOnly`; `npm run lint` emits only 4 pre-existing `only-export-components` warnings on untouched `ui/` files, `npm run build` green
+
+### Phase 4 — Nettoyage des variables d'env et de la mémoire projet
+
+- [x] `.env.example` no longer implies a direct login check — `code/api/.env.example:20-23`
+- [x] `auth.md` describes the implemented behavior with no stale single-admin mention — `aidd_docs/memory/auth.md:5-6,16-19`; the revocation lag is documented at `:19`
+
+## Findings
+
+| Sev | Kind | Phase | Location | Issue | Fix |
+| --- | ---- | ----- | -------- | ----- | --- |
+| 🔴 | fit | 2 | `code/api/internal/auth/auth.go:75-84`, `code/api/internal/routes/admins.go:224` | Deleting an admin does not revoke it. `RequireSuperAdmin` trusts the JWT claim alone and no handler re-checks that the actor's row still exists. Reproduced live against the running API: super-admin #1 deleted super-admin #4 (`204`), then #4's still-valid token listed `/v1/admins` (`200`), created a brand-new super-admin for itself (`201`), and read `/v1/leads` (`200`). A removed super-admin therefore keeps full powers for up to 24h and can reinstate itself permanently, so the feature's core promise (super-admin alone controls who has access) is not enforced against the one person it most needs to be. The plan's Decisions accepted a role-change lag, but justified it by "no DB call per protected request" — that rationale covers the whole `/v1` group, not these 3 rarely-hit endpoints, and it never considered privileged self-reinstatement | Re-read the actor row inside the `/v1/admins` handlers (or a small middleware mounted only on that sub-group): 403 when the row is gone or is no longer `is_super_admin`. One query on three low-traffic endpoints, which does not reopen the tradeoff the plan rejected |
+| 🔴 | fit | 1 | `.github/workflows/ci-cd.yml:346-349` vs `:367-370` (prd), `:160-163` vs `:181-184` (stg) | `deploy-api-<env>` needs only `terraform-api-<env>`, `migrate-database-<env>` needs only `terraform-database-<env>` — they run in parallel with no ordering. Login previously touched no database at all; it now hard-depends on the `admins` table through `bootstrapFirstSuperAdmin`. If the Lambda lands before the migration (or the migrate job fails), every login answers `502 Could not verify credentials` until the table exists. Nothing in the delivery guarantees the contract's one non-negotiable constraint, "no lockout during or after the migration"; grants are fine (`migrate.py:112-134` re-grants on ALL TABLES after the migrations run), only the ordering is missing | Add `migrate-database-<env>` to `deploy-api-<env>`'s `needs` in both the stg and prd jobs, so the API can never go live ahead of the table it now requires |
+| 🟡 | rot | 4 | `aidd_docs/memory/architecture.md:23` | Still states "Auth is a single admin identity (`ADMIN_EMAIL`/`ADMIN_PASSWORD_HASH` env vars) issuing a JWT, not a user table" — the exact claim phase 4 was told to retire, now contradicting both the code and the rewritten `auth.md:5`. Project memory is auto-loaded into every session, so the stale line actively misinforms. The executor caught `testing.md` as a deviation and missed this one | Rewrite the line to point at the `admins` table and the super-admin role, deferring to `auth.md` as the canonical home |
+| 🟡 | rot | 3 | `code/www-back-office/src/pages/admins.tsx:235` | The confirmation dialog tells the operator the target "perdra immédiatement l'accès au back-office", which `aidd_docs/memory/auth.md:19` documents as false and the live reproduction above disproves | Fix the behavior (finding 1) so the sentence becomes true, or reword to say access ends at the admin's next login / within 24h |
+| 🟡 | code | 2 | `code/api/internal/routes/admins.go:133-137`, `code/database/migrations/002_create_admins.sql:3` | Email is trimmed but never case-normalised, and the UNIQUE constraint is case-sensitive. Verified live: `POST` `reviewer@test.fr` then `Reviewer@Test.fr` both returned `201`, producing two admin rows for one mailbox. Deleting one leaves the other able to log in — a silent hole in the very access control this feature exists to provide | Lowercase the email on create and on the login lookup (`routes/auth.go:45`), or make the column `CITEXT` / add a unique index on `lower(email)` |
+| 🟡 | code | 2 | `code/api/internal/routes/admins.go:138-141` | No minimum password length on admin creation. Verified live: `{"password":"x"}` returned `201`, minting a back-office admin behind a one-character password | Enforce a server-side floor (12 chars) and mirror it with `minLength` on the form input |
+| 🟡 | rot | 4 | `aidd_docs/memory/api.md:11-22`, `aidd_docs/memory/database.md:10` | These are the canonical homes for the route list and the table list, and neither mentions `/v1/admins` nor the `admins` table; `api.md:22` still enumerates the `/v1` protection model without the super-admin layer. Phase 4's scope named only `.env.example` and `auth.md`, but the project rule is that the canonical home must not go stale | Add `/v1/admins` to the `api.md` route list and the super-admin layer to `:22`, and the `admins` table to the `database.md` catalogue, each linking to `auth.md` rather than restating it |
+| 🟡 | functional | 3 | `code/www-back-office/src/pages/admins.tsx` | Phase-3 acceptance criterion 4 (manual create-then-delete through the form and the `AlertDialog`) is unverified: no browser automation exists in this environment either. API-level and static checks rule out the common wiring breaks, but the rendered flow has never been exercised | Walk the flow once in a real browser against the local API, or add a component test covering submit and confirm-delete |
+| 🟢 | code | 1 | `code/api/internal/routes/admins.go:82-85` | The bootstrap INSERT has no conflict guard. Two concurrent first logins both read `count = 0`; one then trips the unique constraint and gets a `502`, while the other succeeds. Transient and self-healing on retry, but avoidable | `INSERT ... ON CONFLICT (email) DO NOTHING` |
+| 🟢 | code | 2 | `code/api/internal/routes/admins.go:250-254` | `deleteAdmin` selects `password_hash` into memory and never uses it — only `is_super_admin` is needed, and phase 2 made "never select the hash unless needed" an explicit rule for the list endpoint | Select `id, is_super_admin` only |
+| 🟢 | code | 1 | `code/api/internal/routes/auth.go:45` vs `code/api/internal/routes/admins.go:133` | Create trims the email, login does not, so a client sending trailing whitespace fails against a correctly stored row. Asymmetry, not a regression (the old handler compared untrimmed too) | `strings.TrimSpace` the submitted email in the login handler as well |
+| 🟢 | code | 3 | `code/www-back-office/src/components/layout/app-layout.tsx:143-147` | The `.filter().map()` refactor left the mapped JSX at its old indentation, so the block reads one level shallower than it nests. No formatter runs in CI (`package.json` scripts hold only `oxlint`), so nothing catches it | Re-indent the mapped block |
+
+## Verification
+
+| Metric        | Value                                             |
+| ------------- | ------------------------------------------------- |
+| Verified      | 94% (15/16)                                        |
+| Files checked | `code/database/migrations/002_create_admins.sql`, `code/api/internal/routes/admins.go`, `code/api/internal/routes/admins_test.go`, `code/api/internal/routes/auth.go`, `code/api/internal/routes/auth_test.go`, `code/api/internal/auth/auth.go`, `code/api/internal/app/app.go`, `code/api/internal/app/app_test.go`, `code/api/internal/jwt/jwt.go`, `code/api/.env.example`, `code/www-back-office/src/pages/admins.tsx`, `code/www-back-office/src/lib/api.ts`, `code/www-back-office/src/stores/auth.ts`, `code/www-back-office/src/router.tsx`, `code/www-back-office/src/components/layout/app-layout.tsx`, `code/www-back-office/src/components/ui/alert-dialog.tsx`, `aidd_docs/memory/auth.md`, `aidd_docs/memory/testing.md`, `.github/workflows/ci-cd.yml`, `infrastructure/scripts/migrate.py` |
+| Unchecked     | Phase 3, criterion 4 (manual create/delete through the form and the dialog) — fix |
+| Unplanned     | `aidd_docs/memory/testing.md:22` updated outside phase 4's declared scope (correct and necessary, the line would otherwise have contradicted the code); `package.json` / `package-lock.json` gained `@radix-ui/react-alert-dialog`, the expected consequence of the planned `shadcn add alert-dialog`; no scratch tooling leaked — `cmd/minttoken` never entered history (`git log --diff-filter=A -- "*minttoken*"` is empty) and `git ls-files code/api/cmd` lists only `api/main.go` and `server/main.go` |
