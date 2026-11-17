@@ -317,3 +317,25 @@ export async function getShopifyStatus(): Promise<ShopifyStatus> {
     }
   }
 }
+
+export type StagingStatus = {
+  connected: boolean
+  status?: string
+  error?: string
+}
+
+export async function getStagingStatus(): Promise<StagingStatus> {
+  try {
+    return await apiFetch<StagingStatus>('/v1/infra/staging/status')
+  } catch (err) {
+    if (err instanceof UnauthorizedError) throw err
+    return {
+      connected: false,
+      error: err instanceof Error ? err.message : 'Erreur inconnue',
+    }
+  }
+}
+
+export function startStaging() {
+  return apiFetch<{ status: string }>('/v1/infra/staging/start', { method: 'POST' })
+}

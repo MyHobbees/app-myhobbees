@@ -13,6 +13,7 @@ import { OrdersPage } from '@/pages/orders'
 import { ProductDetailPage } from '@/pages/product-detail'
 import { ProductsPage } from '@/pages/products'
 import { ShopifyStatusPage } from '@/pages/shopify-status'
+import { StagingDbPage } from '@/pages/staging-db'
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -31,6 +32,7 @@ export const router = createBrowserRouter([
       { path: 'leads', element: <LeadsPage /> },
       { path: 'analytics', element: <AnalyticsPage /> },
       { path: 'dev-tools', element: <DevToolsPage /> },
+      { path: 'staging-db', element: <StagingDbPage /> },
     ],
   },
 ])

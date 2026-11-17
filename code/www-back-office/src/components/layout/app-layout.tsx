@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import {
   Boxes,
+  Database,
   LayoutDashboard,
   LogOut,
   Mail,
@@ -69,6 +70,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     items: [
       { title: 'Shopify', url: '/shopify', icon: Store },
       { title: 'Outils dev', url: '/dev-tools', icon: Wrench },
+      { title: 'Staging DB', url: '/staging-db', icon: Database },
     ],
   },
 ]
