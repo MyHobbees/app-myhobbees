@@ -42,11 +42,14 @@ func testAdminsPool(t *testing.T) *pgxpool.Pool {
 		t.Skipf("local dev postgres unreachable (run `docker compose up postgres`): %v", err)
 	}
 
-	if _, err := pool.Exec(ctx, `TRUNCATE admins RESTART IDENTITY`); err != nil {
-		t.Skipf("admins table unavailable, run migration 002_create_admins.sql: %v", err)
+	// credential_shares is truncated alongside admins: creating an admin
+	// via this pool now always inserts a row there too (migration
+	// 003_create_credential_shares.sql).
+	if _, err := pool.Exec(ctx, `TRUNCATE admins, credential_shares RESTART IDENTITY`); err != nil {
+		t.Skipf("admins/credential_shares tables unavailable, run migrations 002 and 003: %v", err)
 	}
 	t.Cleanup(func() {
-		_, _ = pool.Exec(context.Background(), `TRUNCATE admins RESTART IDENTITY`)
+		_, _ = pool.Exec(context.Background(), `TRUNCATE admins, credential_shares RESTART IDENTITY`)
 	})
 
 	return pool
@@ -121,6 +124,11 @@ func TestBootstrapFirstSuperAdmin_NoEnvVarsIsNoOp(t *testing.T) {
 
 const adminsTestJWTSecret = "test-secret-at-least-32-characters-long"
 
+// adminsTestShareSecret must be exactly 32 bytes (AES-256-GCM): createAdmin
+// now seals a credential-share token on every successful creation and
+// refuses to run without a validly-sized CREDENTIAL_SHARE_SECRET.
+const adminsTestShareSecret = "a-32-byte-secret-for-tests-ok!!!"
+
 // insertAdmin inserts an admin row directly (bypassing bootstrap/create so
 // the caller controls the id) and returns its real id, used to build a
 // matching JWT subject.
@@ -143,6 +151,7 @@ func insertAdmin(t *testing.T, pool *pgxpool.Pool, email string, isSuperAdmin bo
 func adminsServer(t *testing.T) *httptest.Server {
 	t.Helper()
 	t.Setenv("JWT_SECRET", adminsTestJWTSecret)
+	t.Setenv("CREDENTIAL_SHARE_SECRET", adminsTestShareSecret)
 	srv := httptest.NewServer(auth.Middleware(auth.RequireSuperAdmin(Admins())))
 	t.Cleanup(srv.Close)
 	return srv
@@ -196,22 +205,62 @@ func TestAdmins_CreateSucceeds(t *testing.T) {
 	srv := adminsServer(t)
 
 	res := doJSON(t, http.MethodPost, srv.URL+"/", token, map[string]any{
-		"email":    "new-admin@myhobbees.fr",
-		"password": "a-strong-password",
+		"email": "new-admin@myhobbees.fr",
 	})
 	defer res.Body.Close()
-	var created adminJSON
-	if err := json.NewDecoder(res.Body).Decode(&created); err != nil {
+	raw, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Fatalf("read body: %v", err)
+	}
+	if res.StatusCode != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", res.StatusCode, raw)
+	}
+
+	var decoded createAdminResponse
+	if err := json.Unmarshal(raw, &decoded); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if decoded.Admin.IsSuperAdmin {
+		t.Error("expected isSuperAdmin=false by default")
+	}
+	if decoded.Admin.Email != "new-admin@myhobbees.fr" {
+		t.Errorf("unexpected email: %s", decoded.Admin.Email)
+	}
+	if decoded.ShareToken == "" {
+		t.Fatal("expected a non-empty shareToken")
+	}
+	if bytes.Contains(raw, []byte(`"password"`)) {
+		t.Fatalf("response must never carry a plaintext password field: %s", raw)
+	}
+}
+
+// TestAdmins_CreateIgnoresSubmittedPassword is the regression test for the
+// Test Scope edge case "input POST /v1/admins avec un champ password": a
+// client still sending one must never influence the real credential. Since
+// createAdminBody has no Password field at all, a submitted one simply
+// never reaches the handler — this asserts the request still succeeds
+// (proving it wasn't rejected either) and still carries a server-generated
+// shareToken.
+func TestAdmins_CreateIgnoresSubmittedPassword(t *testing.T) {
+	pool := testAdminsPool(t)
+	superID := insertAdmin(t, pool, "super@myhobbees.fr", true)
+	token := tokenFor(t, superID, "super@myhobbees.fr", true)
+	srv := adminsServer(t)
+
+	res := doJSON(t, http.MethodPost, srv.URL+"/", token, map[string]any{
+		"email":    "client-supplied-password@myhobbees.fr",
+		"password": "whatever-the-client-sends",
+	})
+	defer res.Body.Close()
+	var decoded createAdminResponse
+	if err := json.NewDecoder(res.Body).Decode(&decoded); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
 	if res.StatusCode != http.StatusCreated {
-		t.Fatalf("expected 201, got %d", res.StatusCode)
+		t.Fatalf("expected 201 even with a submitted password field, got %d", res.StatusCode)
 	}
-	if created.IsSuperAdmin {
-		t.Error("expected isSuperAdmin=false by default")
-	}
-	if created.Email != "new-admin@myhobbees.fr" {
-		t.Errorf("unexpected email: %s", created.Email)
+	if decoded.ShareToken == "" {
+		t.Fatal("expected a server-generated shareToken regardless of the submitted password field")
 	}
 }
 
@@ -273,7 +322,7 @@ func TestAdmins_NonSuperAdminIsForbiddenOnAllThreeEndpoints(t *testing.T) {
 	srv := adminsServer(t)
 
 	createRes := doJSON(t, http.MethodPost, srv.URL+"/", token, map[string]any{
-		"email": "x@myhobbees.fr", "password": "whatever",
+		"email": "x@myhobbees.fr",
 	})
 	if createRes.StatusCode != http.StatusForbidden {
 		t.Errorf("POST: expected 403, got %d", createRes.StatusCode)
@@ -356,7 +405,7 @@ func TestAdmins_DuplicateEmailReturnsExplicit400NotRaw500(t *testing.T) {
 	srv := adminsServer(t)
 
 	res := doJSON(t, http.MethodPost, srv.URL+"/", token, map[string]any{
-		"email": "taken@myhobbees.fr", "password": "a-strong-password",
+		"email": "taken@myhobbees.fr",
 	})
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusBadRequest {
@@ -383,7 +432,7 @@ func TestAdmins_DuplicateEmailIsCaseInsensitive(t *testing.T) {
 	srv := adminsServer(t)
 
 	res := doJSON(t, http.MethodPost, srv.URL+"/", token, map[string]any{
-		"email": "Reviewer@Test.fr", "password": "a-strong-password",
+		"email": "Reviewer@Test.fr",
 	})
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusBadRequest {
@@ -409,7 +458,7 @@ func TestAdmins_CreateStoresEmailLowercased(t *testing.T) {
 	srv := adminsServer(t)
 
 	res := doJSON(t, http.MethodPost, srv.URL+"/", token, map[string]any{
-		"email": "Mixed.Case@Myhobbees.fr", "password": "a-strong-password",
+		"email": "Mixed.Case@Myhobbees.fr",
 	})
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusCreated {
@@ -425,26 +474,20 @@ func TestAdmins_CreateStoresEmailLowercased(t *testing.T) {
 	}
 }
 
-func TestAdmins_CreateRejectsShortPassword(t *testing.T) {
-	pool := testAdminsPool(t)
-	superID := insertAdmin(t, pool, "super@myhobbees.fr", true)
-	token := tokenFor(t, superID, "super@myhobbees.fr", true)
-	srv := adminsServer(t)
-
-	res := doJSON(t, http.MethodPost, srv.URL+"/", token, map[string]any{
-		"email": "short-password@myhobbees.fr", "password": "short1",
-	})
-	defer res.Body.Close()
-	if res.StatusCode != http.StatusBadRequest {
-		t.Fatalf("expected 400 for a password under the 12-char floor, got %d", res.StatusCode)
+// TestAdmins_CreateGeneratesPasswordMeetingTheFloor asserts the
+// server-generated password (generateStrongPassword) itself satisfies the
+// length floor the client-supplied password used to be checked against —
+// now enforced by construction, not by validating client input.
+func TestAdmins_CreateGeneratesPasswordMeetingTheFloor(t *testing.T) {
+	if generatedPasswordLength < 12 {
+		t.Fatalf("generatedPasswordLength must be at least 12, got %d", generatedPasswordLength)
 	}
-
-	stored, err := findAdminByEmail(context.Background(), pool, "short-password@myhobbees.fr")
+	password, err := generateStrongPassword()
 	if err != nil {
-		t.Fatalf("find admin: %v", err)
+		t.Fatalf("generate password: %v", err)
 	}
-	if stored != nil {
-		t.Fatal("expected no admin to be created with a too-short password")
+	if len(password) != generatedPasswordLength {
+		t.Fatalf("expected a %d-character password, got %d", generatedPasswordLength, len(password))
 	}
 }
 
@@ -480,7 +523,7 @@ func TestAdmins_DeletedSuperAdminTokenIsRejectedLive(t *testing.T) {
 	// super-admin either — the exact self-reinstatement the review caught
 	// live.
 	recreateRes := doJSON(t, http.MethodPost, srv.URL+"/", removedToken, map[string]any{
-		"email": "removed-super@myhobbees.fr", "password": "a-strong-password", "isSuperAdmin": true,
+		"email": "removed-super@myhobbees.fr", "isSuperAdmin": true,
 	})
 	defer recreateRes.Body.Close()
 	if recreateRes.StatusCode != http.StatusForbidden {

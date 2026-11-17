@@ -287,3 +287,31 @@ func TestValidateSecret(t *testing.T) {
 		})
 	}
 }
+
+// TestValidateShareSecret covers the exact-size contract CREDENTIAL_SHARE_SECRET
+// has: unlike JWT_SECRET's "at least", AES-256-GCM needs precisely 32 bytes,
+// so both 31 and 33 must be rejected just like empty.
+func TestValidateShareSecret(t *testing.T) {
+	cases := []struct {
+		name    string
+		secret  string
+		wantErr bool
+	}{
+		{"empty", "", true},
+		{"31 bytes", strings.Repeat("a", 31), true},
+		{"32 bytes", strings.Repeat("a", 32), false},
+		{"33 bytes", strings.Repeat("a", 33), true},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateShareSecret(tc.secret)
+			if tc.wantErr && err == nil {
+				t.Fatal("expected an error, got nil")
+			}
+			if !tc.wantErr && err != nil {
+				t.Fatalf("expected no error, got %v", err)
+			}
+		})
+	}
+}

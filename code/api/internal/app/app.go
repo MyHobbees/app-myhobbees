@@ -42,11 +42,15 @@ func New() *chi.Mux {
 
 	r.Route("/v1", func(r chi.Router) {
 		// --- Routes publiques : pas de auth.Middleware ici, volontairement. ---
-		// Only these two routes bypass auth: Auth() exposes POST /login, and
+		// Only these three routes bypass auth: Auth() exposes POST /login,
 		// CreateLead is the public lead-capture endpoint code/www-shop's "Me
-		// prévenir" form posts to. Nothing else belongs in this section.
+		// prévenir" form posts to, and GetCredentialShare is the one-time
+		// reveal link emailed/handed to a freshly created admin — it must
+		// be openable without a back-office session, by design. Nothing
+		// else belongs in this section.
 		r.Mount("/auth", routes.Auth())
 		r.Post("/leads", routes.CreateLead)
+		r.Get("/credential-shares/{token}", routes.GetCredentialShare)
 
 		// --- Tout le reste de /v1 est protégé par défaut. ---
 		// A single point of truth: anything mounted inside this group

@@ -2,9 +2,11 @@ package routes
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"log"
+	"math/big"
 	"net/http"
 	"os"
 	"strconv"
@@ -17,6 +19,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/myhobbees/api/internal/auth"
+	"github.com/myhobbees/api/internal/credentialshare"
 	"github.com/myhobbees/api/internal/db"
 	"github.com/myhobbees/api/internal/httpjson"
 )
@@ -87,11 +90,32 @@ func bootstrapFirstSuperAdmin(ctx context.Context, pool *pgxpool.Pool) error {
 	return err
 }
 
-// minAdminPasswordLength is the server-side floor on new admin passwords.
-// The back-office form mirrors it with minLength, but the server is the
-// enforcement point: a client-side attribute alone never stops a direct
-// POST.
-const minAdminPasswordLength = 12
+// generatedPasswordLength is the length of the random password the server
+// generates for every new admin. There is no client-supplied password
+// anymore (see createAdminBody): the server is now the only source of
+// truth for it, and the only way to retrieve it is the one-time
+// credential-share link.
+const generatedPasswordLength = 20
+
+// generatedPasswordCharset deliberately excludes characters that are easy
+// to misread when a human ends up eyeballing the revealed password
+// (0/O, 1/l/I), while still covering upper, lower, digits, and symbols.
+const generatedPasswordCharset = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*-_="
+
+// generateStrongPassword returns a cryptographically random password of
+// generatedPasswordLength characters drawn from generatedPasswordCharset.
+func generateStrongPassword() (string, error) {
+	charsetLen := big.NewInt(int64(len(generatedPasswordCharset)))
+	out := make([]byte, generatedPasswordLength)
+	for i := range out {
+		n, err := rand.Int(rand.Reader, charsetLen)
+		if err != nil {
+			return "", err
+		}
+		out[i] = generatedPasswordCharset[n.Int64()]
+	}
+	return string(out), nil
+}
 
 // adminJSON is the wire representation of an admin, deliberately missing
 // PasswordHash: it is built field by field rather than from the admin
@@ -113,11 +137,28 @@ func toAdminJSON(a admin) adminJSON {
 	}
 }
 
+// createAdminBody deliberately has no Password field: the server generates
+// the password itself (generateStrongPassword), so any "password" field a
+// client still sends is simply absent from this struct and json.Decode
+// ignores it — it can never become the real credential.
 type createAdminBody struct {
 	Email        string `json:"email"`
-	Password     string `json:"password"`
 	IsSuperAdmin bool   `json:"isSuperAdmin"`
 }
+
+// createAdminResponse is the 201 body: the admin (never carrying
+// password_hash) plus a one-time shareToken. The generated plaintext
+// password itself never appears here — only inside the sealed token, and
+// only until GetCredentialShare consumes it once.
+type createAdminResponse struct {
+	Admin      adminJSON `json:"admin"`
+	ShareToken string    `json:"shareToken"`
+}
+
+// credentialShareTTL bounds how long a freshly created admin's share link
+// stays openable before GET /v1/credential-shares/{token} starts
+// rejecting it as expired, regardless of whether it was ever consumed.
+const credentialShareTTL = 24 * time.Hour
 
 // requireLiveSuperAdmin re-verifies the acting principal against the
 // database, not just its JWT claim. auth.RequireSuperAdmin alone trusts
@@ -200,8 +241,14 @@ func createAdmin(w http.ResponseWriter, req *http.Request) {
 		httpjson.Error(w, http.StatusBadRequest, "Invalid email")
 		return
 	}
-	if len(body.Password) < minAdminPasswordLength {
-		httpjson.Error(w, http.StatusBadRequest, "Password must be at least 12 characters")
+
+	shareSecret := os.Getenv("CREDENTIAL_SHARE_SECRET")
+	if err := auth.ValidateShareSecret(shareSecret); err != nil {
+		// Defense in depth: main.go refuses to start without this, but
+		// never seal a token (or generate a password no one could then
+		// retrieve) against a secret that wouldn't satisfy AES-256 anyway.
+		log.Printf("admins: credential share secret misconfigured: %v", err)
+		httpjson.Error(w, http.StatusInternalServerError, "Could not create admin")
 		return
 	}
 
@@ -223,7 +270,17 @@ func createAdmin(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
+	generatedPassword, err := generateStrongPassword()
+	if err != nil {
+		// Never interpolate generatedPassword in a log line, here or
+		// anywhere else: it is the one plaintext secret this endpoint
+		// handles, and a log is not the one-time share link.
+		log.Printf("admins: generate password: %v", err)
+		httpjson.Error(w, http.StatusInternalServerError, "Could not create admin")
+		return
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(generatedPassword), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("admins: hash password: %v", err)
 		httpjson.Error(w, http.StatusInternalServerError, "Could not create admin")
@@ -244,7 +301,30 @@ func createAdmin(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	httpjson.OK(w, http.StatusCreated, toAdminJSON(created))
+	var shareID int64
+	err = pool.QueryRow(req.Context(), `INSERT INTO credential_shares DEFAULT VALUES RETURNING id`).Scan(&shareID)
+	if err != nil {
+		log.Printf("admins: insert credential share: %v", err)
+		httpjson.Error(w, http.StatusBadGateway, "Could not create admin")
+		return
+	}
+
+	shareToken, err := credentialshare.Seal(shareSecret, credentialshare.Payload{
+		Email:    created.Email,
+		Password: generatedPassword,
+		ShareID:  shareID,
+		Exp:      time.Now().Add(credentialShareTTL).Unix(),
+	})
+	if err != nil {
+		log.Printf("admins: seal credential share: %v", err)
+		httpjson.Error(w, http.StatusInternalServerError, "Could not create admin")
+		return
+	}
+
+	httpjson.OK(w, http.StatusCreated, createAdminResponse{
+		Admin:      toAdminJSON(created),
+		ShareToken: shareToken,
+	})
 }
 
 func listAdmins(w http.ResponseWriter, req *http.Request) {
