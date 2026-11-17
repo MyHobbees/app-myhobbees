@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 
+import { baseUrl } from '@/lib/api'
+
 export type Env = 'loc' | 'stg' | 'prd'
 
 type EnvState = {
@@ -14,8 +16,6 @@ export const useEnvStore = create<EnvState>()((set) => ({
   env: null,
   setEnv: (env) => set({ env }),
 }))
-
-const baseUrl = import.meta.env.VITE_API_URL ?? ''
 
 // initEnv never throws: a network failure must never block the app from
 // loading, it just leaves env at null, which every stgOnly filter treats

@@ -1,6 +1,6 @@
 import { useAuthStore } from '@/stores/auth'
 
-const baseUrl = import.meta.env.VITE_API_URL ?? ''
+export const baseUrl = import.meta.env.VITE_API_URL ?? ''
 
 export class UnauthorizedError extends Error {
   constructor() {
