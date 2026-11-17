@@ -149,7 +149,7 @@ type createAdminBody struct {
 // createAdminResponse is the 201 body: the admin (never carrying
 // password_hash) plus a one-time shareToken. The generated plaintext
 // password itself never appears here — only inside the sealed token, and
-// only until GetCredentialShare consumes it once.
+// only until ConsumeCredentialShare consumes it once.
 type createAdminResponse struct {
 	Admin      adminJSON `json:"admin"`
 	ShareToken string    `json:"shareToken"`

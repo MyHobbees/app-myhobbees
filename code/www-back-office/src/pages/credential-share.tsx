@@ -138,7 +138,7 @@ export function CredentialSharePage() {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                Ce lien ne fonctionnera plus : enregistrez ces identifiants
+                Ce lien ne fonctionnera plus : enregistre ces identifiants
                 dès maintenant.
               </p>
             </div>
