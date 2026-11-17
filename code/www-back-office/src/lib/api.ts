@@ -288,11 +288,26 @@ export function getAdmins() {
   return apiFetch<Admin[]>('/v1/admins')
 }
 
-export function createAdmin(email: string, password: string, isSuperAdmin: boolean) {
-  return apiFetch<Admin>('/v1/admins', {
+export function createAdmin(email: string, isSuperAdmin: boolean) {
+  return apiFetch<{ admin: Admin; shareToken: string }>('/v1/admins', {
     method: 'POST',
-    body: JSON.stringify({ email, password, isSuperAdmin }),
+    body: JSON.stringify({ email, isSuperAdmin }),
   })
+}
+
+export type CredentialShare = { email: string; password: string }
+
+// getCredentialShare deliberately uses fetch directly, not apiFetch:
+// GET /v1/credential-shares/:token is public (no Bearer token exists for
+// whoever just opened the link, and none should be sent), and a 401 there
+// must never trigger apiFetch's logout-on-401 side effect against an
+// unrelated, possibly absent, back-office session.
+export async function getCredentialShare(token: string): Promise<CredentialShare> {
+  const res = await fetch(`${baseUrl}/v1/credential-shares/${token}`)
+  if (!res.ok) {
+    throw new Error('Ce lien est invalide, expiré ou a déjà été utilisé')
+  }
+  return res.json() as Promise<CredentialShare>
 }
 
 export function deleteAdmin(id: number) {

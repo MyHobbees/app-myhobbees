@@ -1,6 +1,6 @@
 ---
 objective: "Créer un admin ne demande plus de taper un mot de passe : le serveur en génère un, et le super-admin obtient un lien à usage unique à transmettre, qui révèle les identifiants une seule fois puis se détruit — sans jamais stocker le mot de passe en clair."
-status: pending
+status: done
 ---
 
 # Plan: Partage sécurisé des identifiants d'un admin créé

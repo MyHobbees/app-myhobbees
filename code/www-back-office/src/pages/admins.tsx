@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
+import { Copy, Plus, Trash2 } from 'lucide-react'
 
 import {
   AlertDialog,
@@ -14,9 +14,16 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
@@ -32,12 +39,12 @@ import { formatDateTime } from '@/lib/format'
 export function AdminsPage() {
   const [admins, setAdmins] = useState<Admin[] | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [formOpen, setFormOpen] = useState(false)
+  const [sheetOpen, setSheetOpen] = useState(false)
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [isSuperAdmin, setIsSuperAdmin] = useState(false)
   const [creating, setCreating] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [shareLink, setShareLink] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Admin | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -50,22 +57,31 @@ export function AdminsPage() {
       )
   }, [])
 
+  function resetForm() {
+    setEmail('')
+    setIsSuperAdmin(false)
+    setFormError(null)
+    setShareLink(null)
+  }
+
   async function onCreate(e: FormEvent) {
     e.preventDefault()
     setCreating(true)
     setFormError(null)
     try {
-      const created = await createAdmin(email, password, isSuperAdmin)
+      const { admin: created, shareToken } = await createAdmin(email, isSuperAdmin)
       setAdmins((prev) => [...(prev ?? []), created])
-      setEmail('')
-      setPassword('')
-      setIsSuperAdmin(false)
-      setFormOpen(false)
+      setShareLink(`${window.location.origin}/credential/${shareToken}`)
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Erreur inconnue')
     } finally {
       setCreating(false)
     }
+  }
+
+  function onCloseSheet() {
+    setSheetOpen(false)
+    resetForm()
   }
 
   async function onConfirmDelete() {
@@ -92,7 +108,7 @@ export function AdminsPage() {
             Gestion des comptes ayant accès au back-office
           </p>
         </div>
-        <Button onClick={() => setFormOpen((open) => !open)}>
+        <Button onClick={() => setSheetOpen(true)}>
           <Plus />
           Ajouter un admin
         </Button>
@@ -105,67 +121,97 @@ export function AdminsPage() {
         </Alert>
       )}
 
-      {formOpen && (
-        <Card className="max-w-sm">
-          <CardHeader>
-            <CardTitle>Ajouter un administrateur</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={onCreate} className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="admin-email">Email</Label>
-                <Input
-                  id="admin-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+      <Sheet
+        open={sheetOpen}
+        onOpenChange={(open) => {
+          if (!open) onCloseSheet()
+        }}
+      >
+        <SheetContent>
+          {shareLink === null ? (
+            <>
+              <SheetHeader>
+                <SheetTitle>Ajouter un administrateur</SheetTitle>
+                <SheetDescription>
+                  Un mot de passe est généré automatiquement ; vous recevrez
+                  un lien à usage unique pour le transmettre.
+                </SheetDescription>
+              </SheetHeader>
+              <form
+                onSubmit={onCreate}
+                className="flex flex-1 flex-col gap-4 px-4"
+              >
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="admin-email">Email</Label>
+                  <Input
+                    id="admin-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={isSuperAdmin}
+                    onChange={(e) => setIsSuperAdmin(e.target.checked)}
+                    className="size-4 rounded border-input"
+                  />
+                  Super-admin
+                </label>
+                {formError && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{formError}</AlertDescription>
+                  </Alert>
+                )}
+                <div className="mt-auto flex justify-end gap-2 pb-4">
+                  <Button type="button" variant="outline" onClick={onCloseSheet}>
+                    Annuler
+                  </Button>
+                  <Button type="submit" disabled={creating}>
+                    {creating ? 'Création…' : 'Créer'}
+                  </Button>
+                </div>
+              </form>
+            </>
+          ) : (
+            <>
+              <SheetHeader>
+                <SheetTitle>Administrateur créé</SheetTitle>
+                <SheetDescription>
+                  Lien à usage unique : il expire sous 24h et ne pourra plus
+                  être affiché une fois ouvert.
+                </SheetDescription>
+              </SheetHeader>
+              <div className="flex flex-col gap-4 px-4">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="share-link">Lien à transmettre</Label>
+                  <div className="flex gap-2">
+                    <Input id="share-link" readOnly value={shareLink} />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      aria-label="Copier le lien"
+                      onClick={() => {
+                        void navigator.clipboard.writeText(shareLink)
+                      }}
+                    >
+                      <Copy />
+                    </Button>
+                  </div>
+                </div>
               </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="admin-password">Mot de passe</Label>
-                <Input
-                  id="admin-password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  minLength={12}
-                  required
-                />
-                <span className="text-xs text-muted-foreground">
-                  12 caractères minimum
-                </span>
-              </div>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={isSuperAdmin}
-                  onChange={(e) => setIsSuperAdmin(e.target.checked)}
-                  className="size-4 rounded border-input"
-                />
-                Super-admin
-              </label>
-              {formError && (
-                <Alert variant="destructive">
-                  <AlertDescription>{formError}</AlertDescription>
-                </Alert>
-              )}
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setFormOpen(false)}
-                >
-                  Annuler
+              <SheetFooter>
+                <Button type="button" onClick={onCloseSheet}>
+                  Fermer
                 </Button>
-                <Button type="submit" disabled={creating}>
-                  {creating ? 'Création…' : 'Créer'}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
+              </SheetFooter>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
 
       <div className="rounded-lg border">
         <Table>

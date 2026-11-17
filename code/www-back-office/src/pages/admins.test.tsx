@@ -30,7 +30,7 @@ beforeEach(() => {
 })
 
 describe('AdminsPage', () => {
-  it('submits the create form and appends the new admin to the table', async () => {
+  it('submits the create form, appends the new admin, and shows the one-time share link', async () => {
     const user = userEvent.setup()
     const created = {
       id: 2,
@@ -38,7 +38,10 @@ describe('AdminsPage', () => {
       isSuperAdmin: false,
       createdAt: '2026-11-10T00:00:00Z',
     }
-    vi.mocked(api.createAdmin).mockResolvedValue(created)
+    vi.mocked(api.createAdmin).mockResolvedValue({
+      admin: created,
+      shareToken: 'abc123',
+    })
 
     render(<AdminsPage />)
     await waitFor(() =>
@@ -47,17 +50,29 @@ describe('AdminsPage', () => {
 
     await user.click(screen.getByRole('button', { name: /ajouter un admin/i }))
     await user.type(screen.getByLabelText(/^email$/i), created.email)
-    await user.type(screen.getByLabelText(/mot de passe/i), 'a-strong-password')
     await user.click(screen.getByRole('button', { name: /^créer$/i }))
 
     await waitFor(() =>
       expect(screen.getByText(created.email)).toBeInTheDocument(),
     )
-    expect(api.createAdmin).toHaveBeenCalledWith(
-      created.email,
-      'a-strong-password',
-      false,
+    expect(api.createAdmin).toHaveBeenCalledWith(created.email, false)
+
+    const shareLinkInput = await screen.findByLabelText(/lien à transmettre/i)
+    expect(shareLinkInput).toHaveValue(
+      `${window.location.origin}/credential/abc123`,
     )
+  })
+
+  it('has no password field in the create form', async () => {
+    const user = userEvent.setup()
+    render(<AdminsPage />)
+    await waitFor(() =>
+      expect(screen.getByText('super@myhobbees.fr')).toBeInTheDocument(),
+    )
+
+    await user.click(screen.getByRole('button', { name: /ajouter un admin/i }))
+
+    expect(screen.queryByLabelText(/mot de passe/i)).not.toBeInTheDocument()
   })
 
   it('cancelling the delete confirmation makes no network call and keeps the row', async () => {
