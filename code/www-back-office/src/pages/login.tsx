@@ -34,7 +34,7 @@ export function LoginPage() {
     setError(null)
     try {
       const res = await login(email, password)
-      storeLogin(res.token, res.email)
+      storeLogin(res.token, res.email, res.isSuperAdmin)
       navigate('/', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue')

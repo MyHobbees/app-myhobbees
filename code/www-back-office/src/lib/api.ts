@@ -28,7 +28,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
 }
 
 export function login(email: string, password: string) {
-  return apiFetch<{ token: string; email: string }>('/v1/auth/login', {
+  return apiFetch<{ token: string; email: string; isSuperAdmin: boolean }>('/v1/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
   })
@@ -275,6 +275,28 @@ export type Lead = {
 
 export function getLeads() {
   return apiFetch<Lead[]>('/v1/leads')
+}
+
+export type Admin = {
+  id: number
+  email: string
+  isSuperAdmin: boolean
+  createdAt: string
+}
+
+export function getAdmins() {
+  return apiFetch<Admin[]>('/v1/admins')
+}
+
+export function createAdmin(email: string, password: string, isSuperAdmin: boolean) {
+  return apiFetch<Admin>('/v1/admins', {
+    method: 'POST',
+    body: JSON.stringify({ email, password, isSuperAdmin }),
+  })
+}
+
+export function deleteAdmin(id: number) {
+  return apiFetch<void>(`/v1/admins/${id}`, { method: 'DELETE' })
 }
 
 export type PostHogDayCount = { date: string; count: number }

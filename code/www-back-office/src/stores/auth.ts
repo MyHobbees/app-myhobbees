@@ -4,7 +4,8 @@ import { persist } from 'zustand/middleware'
 type AuthState = {
   token: string | null
   email: string | null
-  login: (token: string, email: string) => void
+  isSuperAdmin: boolean | null
+  login: (token: string, email: string, isSuperAdmin: boolean) => void
   logout: () => void
 }
 
@@ -13,8 +14,9 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       token: null,
       email: null,
-      login: (token, email) => set({ token, email }),
-      logout: () => set({ token: null, email: null }),
+      isSuperAdmin: null,
+      login: (token, email, isSuperAdmin) => set({ token, email, isSuperAdmin }),
+      logout: () => set({ token: null, email: null, isSuperAdmin: null }),
     }),
     { name: 'back-office-auth' },
   ),

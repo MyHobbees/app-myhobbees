@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router'
 
 import { ProtectedRoute } from '@/components/layout/protected-route'
+import { AdminsPage } from '@/pages/admins'
 import { AnalyticsPage } from '@/pages/analytics'
 import { CustomerDetailPage } from '@/pages/customer-detail'
 import { DashboardPage } from '@/pages/dashboard'
@@ -31,6 +32,7 @@ export const router = createBrowserRouter([
       { path: 'leads', element: <LeadsPage /> },
       { path: 'analytics', element: <AnalyticsPage /> },
       { path: 'dev-tools', element: <DevToolsPage /> },
+      { path: 'admins', element: <AdminsPage /> },
     ],
   },
 ])

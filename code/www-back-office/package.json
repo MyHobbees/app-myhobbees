@@ -15,6 +15,7 @@
     "@fontsource/hind": "^5.2.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cn": "^0.4.0",
     "lucide-react": "^1.23.0",
     "radix-ui": "^1.6.1",
     "react": "^19.2.7",
