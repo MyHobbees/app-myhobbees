@@ -163,7 +163,13 @@ jobs:
   deploy-api-stg:
     name: Deploy API (stg)
     runs-on: ubuntu-latest
-    needs: [terraform-api-stg, migrate-database-stg]
+    # Unlike prd, the stg database's running state is no longer CI's concern:
+    # it's started/stopped on demand from the prd back-office (staging DB
+    # control) and auto-stops after idling, so migrate-database-stg routinely
+    # fails simply because the instance is off. Deploy API (stg) must not
+    # block on it — code deploys regardless, migrations catch up whenever
+    # the instance is next running.
+    needs: [terraform-api-stg]
     if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v6
