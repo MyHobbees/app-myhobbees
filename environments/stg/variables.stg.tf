@@ -124,6 +124,21 @@ variable "admin_password_hash" {
   default   = ""
 }
 
+variable "posthog_personal_api_key" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "posthog_project_id" {
+  type    = string
+  default = ""
+}
+
+variable "posthog_host" {
+  default = "https://eu.posthog.com"
+}
+
 variable "api_url" {
   default = "https://d0lz0ybs4c.execute-api.eu-west-3.amazonaws.com"
 }
