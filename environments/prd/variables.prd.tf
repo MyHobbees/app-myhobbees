@@ -124,6 +124,12 @@ variable "admin_password_hash" {
   default   = ""
 }
 
+variable "credential_share_secret" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
 variable "posthog_personal_api_key" {
   type      = string
   sensitive = true
