@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: Nettoyage des variables d'env et de la mémoire projet

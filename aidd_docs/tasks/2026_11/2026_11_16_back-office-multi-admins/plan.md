@@ -1,6 +1,6 @@
 ---
 objective: "Le back-office supporte plusieurs administrateurs stockés en base (plus un seul couple email/mot de passe en variables d'env), avec un rôle super-admin seul habilité à créer/lister/supprimer des admins, sans jamais casser le login déjà fonctionnel en prod."
-status: pending
+status: done
 ---
 
 # Plan: Gestion multi-admins du back-office

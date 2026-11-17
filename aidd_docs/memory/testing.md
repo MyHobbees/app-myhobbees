@@ -19,5 +19,5 @@
 ## Browser QA
 
 - Entry: `cd code/www-back-office && npm run dev` (Vite); `cd code/www-shop && npm run dev` (`shopify hydrogen dev`)
-- Auth: back-office logs in via `POST /v1/auth/login` against the `ADMIN_EMAIL` / `ADMIN_PASSWORD_HASH` env pair — see [auth.md](auth.md)
+- Auth: back-office logs in via `POST /v1/auth/login` against the `admins` table (bootstrapped from `ADMIN_EMAIL` / `ADMIN_PASSWORD_HASH` on an empty table) — see [auth.md](auth.md)
 - State: Shopify fixtures are seeded and torn down through the API's own endpoints, `POST /v1/shopify/seed` and `POST /v1/shopify/seed/cleanup`, both blocked when `APP_ENV=prd`
