@@ -28,7 +28,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
 }
 
 export function login(email: string, password: string) {
-  return apiFetch<{ token: string; email: string }>('/v1/auth/login', {
+  return apiFetch<{ token: string; email: string; isSuperAdmin: boolean }>('/v1/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
   })
@@ -277,6 +277,52 @@ export function getLeads() {
   return apiFetch<Lead[]>('/v1/leads')
 }
 
+export type Admin = {
+  id: number
+  email: string
+  isSuperAdmin: boolean
+  createdAt: string
+}
+
+export function getAdmins() {
+  return apiFetch<Admin[]>('/v1/admins')
+}
+
+export function createAdmin(email: string, isSuperAdmin: boolean) {
+  return apiFetch<{ admin: Admin; shareToken: string }>('/v1/admins', {
+    method: 'POST',
+    body: JSON.stringify({ email, isSuperAdmin }),
+  })
+}
+
+export type CredentialShare = { email: string; password: string }
+
+// getCredentialShare deliberately uses fetch directly, not apiFetch:
+// POST /v1/credential-shares is public (no Bearer token exists for
+// whoever just opened the link, and none should be sent), and a 401 there
+// must never trigger apiFetch's logout-on-401 side effect against an
+// unrelated, possibly absent, back-office session.
+//
+// The token travels in the JSON body, not the URL: the API route is a
+// POST, not a GET with the token in the path, specifically so the token
+// never lands in server access logs, browser history, or a Referer
+// header (see code/api/internal/routes/credential_shares.go).
+export async function getCredentialShare(token: string): Promise<CredentialShare> {
+  const res = await fetch(`${baseUrl}/v1/credential-shares`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token }),
+  })
+  if (!res.ok) {
+    throw new Error('Ce lien est invalide, expiré ou a déjà été utilisé')
+  }
+  return res.json() as Promise<CredentialShare>
+}
+
+export function deleteAdmin(id: number) {
+  return apiFetch<void>(`/v1/admins/${id}`, { method: 'DELETE' })
+}
+
 export type PostHogDayCount = { date: string; count: number }
 export type PostHogEventCount = { event: string; count: number }
 export type PostHogOfferCount = { offer: string; count: number }
@@ -316,4 +362,26 @@ export async function getShopifyStatus(): Promise<ShopifyStatus> {
       error: err instanceof Error ? err.message : 'Erreur inconnue',
     }
   }
+}
+
+export type StagingStatus = {
+  connected: boolean
+  status?: string
+  error?: string
+}
+
+export async function getStagingStatus(): Promise<StagingStatus> {
+  try {
+    return await apiFetch<StagingStatus>('/v1/infra/staging/status')
+  } catch (err) {
+    if (err instanceof UnauthorizedError) throw err
+    return {
+      connected: false,
+      error: err instanceof Error ? err.message : 'Erreur inconnue',
+    }
+  }
+}
+
+export function startStaging() {
+  return apiFetch<{ status: string }>('/v1/infra/staging/start', { method: 'POST' })
 }

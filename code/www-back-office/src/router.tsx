@@ -1,7 +1,9 @@
 import { createBrowserRouter } from 'react-router'
 
 import { ProtectedRoute } from '@/components/layout/protected-route'
+import { AdminsPage } from '@/pages/admins'
 import { AnalyticsPage } from '@/pages/analytics'
+import { CredentialSharePage } from '@/pages/credential-share'
 import { CustomerDetailPage } from '@/pages/customer-detail'
 import { DashboardPage } from '@/pages/dashboard'
 import { CustomersPage } from '@/pages/customers'
@@ -13,9 +15,13 @@ import { OrdersPage } from '@/pages/orders'
 import { ProductDetailPage } from '@/pages/product-detail'
 import { ProductsPage } from '@/pages/products'
 import { ShopifyStatusPage } from '@/pages/shopify-status'
+import { StagingDbPage } from '@/pages/staging-db'
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
+  // Public, deliberately outside ProtectedRoute's children: the recipient
+  // of a credential-share link has no back-office session yet.
+  { path: '/credential/:token', element: <CredentialSharePage /> },
   {
     path: '/',
     element: <ProtectedRoute />,
@@ -31,6 +37,8 @@ export const router = createBrowserRouter([
       { path: 'leads', element: <LeadsPage /> },
       { path: 'analytics', element: <AnalyticsPage /> },
       { path: 'dev-tools', element: <DevToolsPage /> },
+      { path: 'admins', element: <AdminsPage /> },
+      { path: 'staging-db', element: <StagingDbPage /> },
     ],
   },
 ])

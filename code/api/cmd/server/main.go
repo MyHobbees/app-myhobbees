@@ -19,6 +19,9 @@ func main() {
 	if err := auth.ValidateSecret(os.Getenv("JWT_SECRET")); err != nil {
 		log.Fatalf("refusing to start: %v", err)
 	}
+	if err := auth.ValidateShareSecret(os.Getenv("CREDENTIAL_SHARE_SECRET")); err != nil {
+		log.Fatalf("refusing to start: %v", err)
+	}
 
 	port := os.Getenv("PORT")
 	if port == "" {

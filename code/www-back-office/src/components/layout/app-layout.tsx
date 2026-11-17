@@ -1,12 +1,14 @@
 import type { ReactNode } from 'react'
 import {
   Boxes,
+  Database,
   LayoutDashboard,
   LogOut,
   Mail,
   Monitor,
   Moon,
   Package,
+  ShieldCheck,
   Store,
   Sun,
   TrendingUp,
@@ -45,6 +47,7 @@ type NavItem = {
   url: string
   icon: typeof Package
   disabled?: boolean
+  superAdminOnly?: boolean
 }
 
 const navGroups: { label: string; items: NavItem[] }[] = [
@@ -69,6 +72,13 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     items: [
       { title: 'Shopify', url: '/shopify', icon: Store },
       { title: 'Outils dev', url: '/dev-tools', icon: Wrench },
+      {
+        title: 'Administrateurs',
+        url: '/admins',
+        icon: ShieldCheck,
+        superAdminOnly: true,
+      },
+      { title: 'Staging DB', url: '/staging-db', icon: Database },
     ],
   },
 ]
@@ -111,6 +121,7 @@ function ThemeToggle() {
 export function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation()
   const email = useAuthStore((s) => s.email)
+  const isSuperAdmin = useAuthStore((s) => s.isSuperAdmin)
   const logout = useAuthStore((s) => s.logout)
 
   function isActive(url: string) {
@@ -131,27 +142,29 @@ export function AppLayout({ children }: { children: ReactNode }) {
               <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {group.items.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      {item.disabled ? (
-                        <SidebarMenuButton disabled className="opacity-50">
-                          <item.icon />
-                          <span>{item.title}</span>
-                        </SidebarMenuButton>
-                      ) : (
-                        <SidebarMenuButton
-                          asChild
-                          isActive={isActive(item.url)}
-                          className="data-[active=true]:bg-brand/10 data-[active=true]:text-brand"
-                        >
-                          <Link to={item.url}>
+                  {group.items
+                    .filter((item) => !item.superAdminOnly || isSuperAdmin)
+                    .map((item) => (
+                      <SidebarMenuItem key={item.title}>
+                        {item.disabled ? (
+                          <SidebarMenuButton disabled className="opacity-50">
                             <item.icon />
                             <span>{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      )}
-                    </SidebarMenuItem>
-                  ))}
+                          </SidebarMenuButton>
+                        ) : (
+                          <SidebarMenuButton
+                            asChild
+                            isActive={isActive(item.url)}
+                            className="data-[active=true]:bg-brand/10 data-[active=true]:text-brand"
+                          >
+                            <Link to={item.url}>
+                              <item.icon />
+                              <span>{item.title}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        )}
+                      </SidebarMenuItem>
+                    ))}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>

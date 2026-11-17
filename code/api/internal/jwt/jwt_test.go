@@ -8,7 +8,7 @@ import (
 func TestSignVerifyRoundTrip(t *testing.T) {
 	const secret = "test-secret-at-least-32-characters-long"
 
-	token, err := Sign(secret, "user-123", "user@example.com", time.Hour)
+	token, err := Sign(secret, "user-123", "user@example.com", true, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
@@ -23,10 +23,13 @@ func TestSignVerifyRoundTrip(t *testing.T) {
 	if claims.Email != "user@example.com" {
 		t.Errorf("email = %q, want user@example.com", claims.Email)
 	}
+	if !claims.IsSuperAdmin {
+		t.Error("isSuperAdmin = false, want true")
+	}
 }
 
 func TestVerifyRejectsWrongSecret(t *testing.T) {
-	token, err := Sign("secret-one-secret-one-secret-one-xx", "u", "", time.Hour)
+	token, err := Sign("secret-one-secret-one-secret-one-xx", "u", "", false, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
@@ -37,7 +40,7 @@ func TestVerifyRejectsWrongSecret(t *testing.T) {
 
 func TestVerifyRejectsExpired(t *testing.T) {
 	const secret = "test-secret-at-least-32-characters-long"
-	token, err := Sign(secret, "u", "", -time.Minute)
+	token, err := Sign(secret, "u", "", false, -time.Minute)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
