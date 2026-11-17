@@ -17,6 +17,18 @@ func New() *chi.Mux {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
+	// API Gateway's ANY /{proxy+} catch-all route forwards OPTIONS preflight
+	// requests to this Lambda instead of letting API Gateway answer them
+	// natively, so chi must return a 2xx itself — a non-2xx preflight status
+	// fails CORS in the browser even when the Access-Control-* headers
+	// (added by API Gateway) are present.
+	r.Options("/*", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "*")
+		w.WriteHeader(http.StatusNoContent)
+	})
+
 	r.Mount("/health", routes.Health())
 
 	r.Route("/v1", func(r chi.Router) {
