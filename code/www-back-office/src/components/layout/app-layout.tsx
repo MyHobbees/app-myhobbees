@@ -40,6 +40,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar'
 import { useAuthStore } from '@/stores/auth'
+import { useEnvStore, type Env } from '@/stores/env'
 import { useThemeStore, type Theme } from '@/stores/theme'
 
 type NavItem = {
@@ -48,6 +49,7 @@ type NavItem = {
   icon: typeof Package
   disabled?: boolean
   superAdminOnly?: boolean
+  stgOnly?: boolean
 }
 
 const navGroups: { label: string; items: NavItem[] }[] = [
@@ -71,7 +73,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     label: 'Système',
     items: [
       { title: 'Shopify', url: '/shopify', icon: Store },
-      { title: 'Outils dev', url: '/dev-tools', icon: Wrench },
+      { title: 'Outils dev', url: '/dev-tools', icon: Wrench, stgOnly: true },
       {
         title: 'Administrateurs',
         url: '/admins',
@@ -123,6 +125,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const email = useAuthStore((s) => s.email)
   const isSuperAdmin = useAuthStore((s) => s.isSuperAdmin)
   const logout = useAuthStore((s) => s.logout)
+  const env = useEnvStore((s) => s.env)
 
   function isActive(url: string) {
     return url === '/'
@@ -144,6 +147,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <SidebarMenu>
                   {group.items
                     .filter((item) => !item.superAdminOnly || isSuperAdmin)
+                    .filter((item) => !item.stgOnly || env === ('stg' satisfies Env))
                     .map((item) => (
                       <SidebarMenuItem key={item.title}>
                         {item.disabled ? (

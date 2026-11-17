@@ -68,6 +68,8 @@ func New() *chi.Mux {
 			r.Mount("/analytics", routes.Analytics())
 			r.Mount("/infra/staging", routes.Staging())
 			r.Get("/leads", routes.ListLeads)
+			r.Post("/leads/seed", routes.SeedLeads)
+			r.Delete("/leads/seed", routes.CleanupSeedLeads)
 
 			// Admin management is further restricted to super-admins
 			// only, on top of (not instead of) the group's own

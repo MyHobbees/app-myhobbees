@@ -22,6 +22,7 @@ flowchart LR
 ## Environments
 
 - `loc`, `stg`, `prd`, each with its own Terraform/deploy variables under `environments/<env>/`
+- `www-back-office` detects which one it's talking to by calling the public `GET /health` (which echoes `APP_ENV` as `env`) once at app load (`initEnv()` in `src/stores/env.ts`, called from `main.tsx`), never persisted and never a build-time Vite var — a stale/cached value could drift from the server actually being hit. A failed/unreachable call leaves `env` at `null`, treated as "not stg" by every gate (fail-closed). This is the same mechanism `src/components/layout/app-layout.tsx`'s `superAdminOnly` nav filter uses, extended with a `stgOnly` flag: currently only "Outils dev" (`/dev-tools`) carries it, since that page now seeds/cleans the `leads` table directly in Postgres (no Shopify involved) and only makes sense on the one shared environment nobody can just `psql` into — see [api.md](api.md). The server-side guard is the actual source of truth (`APP_ENV == "stg"` exactly, in `code/api/internal/routes/leads.go`'s `SeedLeads`/`CleanupSeedLeads`); the nav filter only hides the entry point, it is not the security boundary.
 
 ## Monitoring
 

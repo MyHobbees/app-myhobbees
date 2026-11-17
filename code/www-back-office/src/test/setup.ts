@@ -19,3 +19,21 @@ if (!Element.prototype.hasPointerCapture) {
 if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {}
 }
+
+// jsdom also doesn't implement matchMedia, touched at module load by
+// src/stores/theme.ts and at mount by src/hooks/use-mobile.ts (used by the
+// shadcn Sidebar) — both are reached as soon as any test imports
+// src/components/layout/app-layout.tsx.
+if (!window.matchMedia) {
+  window.matchMedia = (query: string) =>
+    ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    }) as MediaQueryList
+}

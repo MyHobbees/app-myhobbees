@@ -143,3 +143,19 @@ func (c *Client) Query(ctx context.Context, query string, variables map[string]a
 	}
 	return nil
 }
+
+// userError and checkUserErrors turn a GraphQL mutation's userErrors array
+// into a Go error; fulfill.go is their only remaining consumer now that
+// seed.go (the Shopify-catalog seeding removed in favor of leads.go's
+// Postgres-only seed) is gone.
+type userError struct {
+	Field   []string `json:"field"`
+	Message string   `json:"message"`
+}
+
+func checkUserErrors(operation string, errs []userError) error {
+	if len(errs) == 0 {
+		return nil
+	}
+	return fmt.Errorf("%s: %s", operation, errs[0].Message)
+}
