@@ -40,8 +40,12 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar'
 import { useAuthStore } from '@/stores/auth'
-import { useEnvStore } from '@/stores/env'
+import { useEnvStore, type Env } from '@/stores/env'
 import { useThemeStore, type Theme } from '@/stores/theme'
+
+// Ties the stgOnly gate's literal to the Env union, so a typo here (e.g.
+// "sgt") fails to compile instead of silently hiding "Outils dev" forever.
+const stgEnv: Env = 'stg'
 
 type NavItem = {
   title: string
@@ -147,7 +151,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <SidebarMenu>
                   {group.items
                     .filter((item) => !item.superAdminOnly || isSuperAdmin)
-                    .filter((item) => !item.stgOnly || env === 'stg')
+                    .filter((item) => !item.stgOnly || env === stgEnv)
                     .map((item) => (
                       <SidebarMenuItem key={item.title}>
                         {item.disabled ? (
