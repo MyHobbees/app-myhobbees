@@ -33,7 +33,7 @@ func TestStaging_StatusNotConfigured(t *testing.T) {
 	t.Setenv("JWT_SECRET", secret)
 	t.Setenv("STAGING_DB_IDENTIFIER", "")
 
-	token, err := jwt.Sign(secret, "admin", "admin@myhobbees.fr", time.Hour)
+	token, err := jwt.Sign(secret, "admin", "admin@myhobbees.fr", true, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
@@ -59,7 +59,7 @@ func TestStaging_StartNotConfigured(t *testing.T) {
 	t.Setenv("JWT_SECRET", secret)
 	t.Setenv("STAGING_DB_IDENTIFIER", "")
 
-	token, err := jwt.Sign(secret, "admin", "admin@myhobbees.fr", time.Hour)
+	token, err := jwt.Sign(secret, "admin", "admin@myhobbees.fr", true, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}

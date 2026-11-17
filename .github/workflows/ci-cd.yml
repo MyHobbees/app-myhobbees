@@ -90,6 +90,8 @@ jobs:
           TF_STG__SHOPIFY_CLIENT_SECRET: ${{ secrets.TF_STG__SHOPIFY_CLIENT_SECRET }}
           TF_STG__ADMIN_EMAIL: ${{ secrets.TF_STG__ADMIN_EMAIL }}
           TF_STG__ADMIN_PASSWORD_HASH: ${{ secrets.TF_STG__ADMIN_PASSWORD_HASH }}
+          TF_STG__POSTHOG_PERSONAL_API_KEY: ${{ secrets.TF_STG__POSTHOG_PERSONAL_API_KEY }}
+          TF_STG__POSTHOG_PROJECT_ID: ${{ secrets.TF_STG__POSTHOG_PROJECT_ID }}
 
   ##############################################
   # DEPLOY - STG (branch: dev)
@@ -160,7 +162,7 @@ jobs:
   deploy-api-stg:
     name: Deploy API (stg)
     runs-on: ubuntu-latest
-    needs: [terraform-api-stg]
+    needs: [terraform-api-stg, migrate-database-stg]
     if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v6
@@ -276,6 +278,8 @@ jobs:
           TF_PRD__SHOPIFY_CLIENT_SECRET: ${{ secrets.TF_PRD__SHOPIFY_CLIENT_SECRET }}
           TF_PRD__ADMIN_EMAIL: ${{ secrets.TF_PRD__ADMIN_EMAIL }}
           TF_PRD__ADMIN_PASSWORD_HASH: ${{ secrets.TF_PRD__ADMIN_PASSWORD_HASH }}
+          TF_PRD__POSTHOG_PERSONAL_API_KEY: ${{ secrets.TF_PRD__POSTHOG_PERSONAL_API_KEY }}
+          TF_PRD__POSTHOG_PROJECT_ID: ${{ secrets.TF_PRD__POSTHOG_PROJECT_ID }}
 
   ##############################################
   # DEPLOY - PRD (branch: main)
@@ -346,7 +350,7 @@ jobs:
   deploy-api-prd:
     name: Deploy API (prd)
     runs-on: ubuntu-latest
-    needs: [terraform-api-prd]
+    needs: [terraform-api-prd, migrate-database-prd]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v6

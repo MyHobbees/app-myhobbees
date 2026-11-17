@@ -7,13 +7,15 @@ SERVICES = ['fronts', 'database', 'api']
 ENVIRONMENTS = ['stg', 'prd']
 SERVICE_SECRETS = {
     'database': ['db_password'],
-    'api':      ['db_app_password', 'jwt_secret', 'shopify_store_domain', 'shopify_client_id', 'shopify_client_secret', 'admin_email', 'admin_password_hash']
+    'api':      ['db_app_password', 'jwt_secret', 'shopify_store_domain', 'shopify_client_id', 'shopify_client_secret', 'admin_email', 'admin_password_hash', 'posthog_personal_api_key', 'posthog_project_id']
 }
 
-# Secrets not required for this (service, env): admin login and Shopify sync stay
-# disabled in prd until these are provided; Terraform falls back to "" defaults.
+# Secrets not required for this (service, env): admin login, Shopify sync and
+# the PostHog analytics overview stay disabled until these are provided;
+# Terraform falls back to "" defaults.
 OPTIONAL_SECRETS = {
-    ('api', 'prd'): ['shopify_store_domain', 'shopify_client_id', 'shopify_client_secret', 'admin_email', 'admin_password_hash'],
+    ('api', 'prd'): ['shopify_store_domain', 'shopify_client_id', 'shopify_client_secret', 'admin_email', 'admin_password_hash', 'posthog_personal_api_key', 'posthog_project_id'],
+    ('api', 'stg'): ['posthog_personal_api_key', 'posthog_project_id'],
 }
 
 if len(sys.argv) != 3:

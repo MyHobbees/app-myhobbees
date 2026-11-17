@@ -17,6 +17,7 @@ No lint or test step runs in CI (`.github/workflows/ci-cd.yml` only does Terrafo
 | ----- | ------- | ------ |
 | 1 | `cd code/api && go test ./...` | Go unit tests |
 | 2 | `cd code/www-back-office && npm run build` | `tsc -b` + Vite build |
+| 2 | `cd code/www-back-office && npm run test` | Vitest component tests (back-office changes touching tested components) |
 | 2 | `cd code/www-shop && npm run typecheck` | React Router typegen + `tsc --noEmit` |
 
 ## Behavior

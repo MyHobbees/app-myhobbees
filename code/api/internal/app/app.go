@@ -42,11 +42,19 @@ func New() *chi.Mux {
 
 	r.Route("/v1", func(r chi.Router) {
 		// --- Routes publiques : pas de auth.Middleware ici, volontairement. ---
-		// Only these two routes bypass auth: Auth() exposes POST /login, and
+		// Only these three routes bypass auth: Auth() exposes POST /login,
 		// CreateLead is the public lead-capture endpoint code/www-shop's "Me
-		// prévenir" form posts to. Nothing else belongs in this section.
+		// prévenir" form posts to, and ConsumeCredentialShare is the
+		// one-time reveal link emailed/handed to a freshly created admin —
+		// it must be openable without a back-office session, by design.
+		// It is a POST with the token in the body, not a GET with the
+		// token in the path: middleware.Logger below logs the full
+		// request URL on every call, and a path segment would also land
+		// in browser history and Referer headers. Nothing else belongs in
+		// this section.
 		r.Mount("/auth", routes.Auth())
 		r.Post("/leads", routes.CreateLead)
+		r.Post("/credential-shares", routes.ConsumeCredentialShare)
 
 		// --- Tout le reste de /v1 est protégé par défaut. ---
 		// A single point of truth: anything mounted inside this group
@@ -60,6 +68,15 @@ func New() *chi.Mux {
 			r.Mount("/analytics", routes.Analytics())
 			r.Mount("/infra/staging", routes.Staging())
 			r.Get("/leads", routes.ListLeads)
+
+			// Admin management is further restricted to super-admins
+			// only, on top of (not instead of) the group's own
+			// auth.Middleware — every other route above stays
+			// reachable by any valid admin.
+			r.Group(func(r chi.Router) {
+				r.Use(auth.RequireSuperAdmin)
+				r.Mount("/admins", routes.Admins())
+			})
 		})
 	})
 
