@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -201,6 +202,63 @@ func TestMiddleware_ShortSecret(t *testing.T) {
 	}
 	if rec.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d", rec.Code)
+	}
+}
+
+func TestRequireSuperAdmin_AllowsSuperAdmin(t *testing.T) {
+	called := false
+	next := okHandlerCalled(&called)
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/admins", nil)
+	req = req.WithContext(context.WithValue(req.Context(), principalKey, Principal{
+		Subject: "1", Email: "super@myhobbees.fr", IsSuperAdmin: true,
+	}))
+	rec := httptest.NewRecorder()
+
+	RequireSuperAdmin(next).ServeHTTP(rec, req)
+
+	if !called {
+		t.Fatal("expected next handler to be called for a super-admin principal")
+	}
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+}
+
+func TestRequireSuperAdmin_RejectsNonSuperAdmin(t *testing.T) {
+	called := false
+	next := okHandlerCalled(&called)
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/admins", nil)
+	req = req.WithContext(context.WithValue(req.Context(), principalKey, Principal{
+		Subject: "2", Email: "admin@myhobbees.fr", IsSuperAdmin: false,
+	}))
+	rec := httptest.NewRecorder()
+
+	RequireSuperAdmin(next).ServeHTTP(rec, req)
+
+	if called {
+		t.Fatal("next handler must not be called for a non-super-admin principal")
+	}
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected 403, got %d", rec.Code)
+	}
+}
+
+func TestRequireSuperAdmin_RejectsMissingPrincipal(t *testing.T) {
+	called := false
+	next := okHandlerCalled(&called)
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/admins", nil)
+	rec := httptest.NewRecorder()
+
+	RequireSuperAdmin(next).ServeHTTP(rec, req)
+
+	if called {
+		t.Fatal("next handler must not be called without a principal in context")
+	}
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected 403, got %d", rec.Code)
 	}
 }
 

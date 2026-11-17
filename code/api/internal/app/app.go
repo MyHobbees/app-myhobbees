@@ -59,6 +59,15 @@ func New() *chi.Mux {
 			r.Mount("/shopify", routes.Shopify())
 			r.Mount("/analytics", routes.Analytics())
 			r.Get("/leads", routes.ListLeads)
+
+			// Admin management is further restricted to super-admins
+			// only, on top of (not instead of) the group's own
+			// auth.Middleware — every other route above stays
+			// reachable by any valid admin.
+			r.Group(func(r chi.Router) {
+				r.Use(auth.RequireSuperAdmin)
+				r.Mount("/admins", routes.Admins())
+			})
 		})
 	})
 

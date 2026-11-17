@@ -68,3 +68,17 @@ func PrincipalFrom(ctx context.Context) (Principal, bool) {
 	p, ok := ctx.Value(principalKey).(Principal)
 	return p, ok
 }
+
+// RequireSuperAdmin must run after Middleware (which populates the
+// Principal from the JWT): it rejects any request whose principal is
+// missing or is not a super-admin, before the route's own handler runs.
+func RequireSuperAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		principal, ok := PrincipalFrom(r.Context())
+		if !ok || !principal.IsSuperAdmin {
+			httpjson.Error(w, http.StatusForbidden, "Forbidden")
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
