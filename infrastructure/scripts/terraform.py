@@ -7,7 +7,7 @@ SERVICES = ['fronts', 'database', 'api']
 ENVIRONMENTS = ['stg', 'prd']
 SERVICE_SECRETS = {
     'database': ['db_password'],
-    'api':      ['db_app_password', 'jwt_secret', 'shopify_store_domain', 'shopify_client_id', 'shopify_client_secret', 'admin_email', 'admin_password_hash', 'posthog_personal_api_key', 'posthog_project_id']
+    'api':      ['db_app_password', 'jwt_secret', 'shopify_store_domain', 'shopify_client_id', 'shopify_client_secret', 'admin_email', 'admin_password_hash', 'credential_share_secret', 'posthog_personal_api_key', 'posthog_project_id']
 }
 
 # Secrets not required for this (service, env): admin login, Shopify sync and
