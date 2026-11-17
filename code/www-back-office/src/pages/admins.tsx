@@ -181,7 +181,9 @@ export function AdminsPage() {
                 <SheetTitle>Administrateur créé</SheetTitle>
                 <SheetDescription>
                   Lien à usage unique : il expire sous 24h et ne pourra plus
-                  être affiché une fois ouvert.
+                  être affiché une fois ouvert. C'est la seule copie — s'il est
+                  perdu ou ouvert par quelqu'un d'autre, il faudra recréer le
+                  compte pour en obtenir un nouveau.
                 </SheetDescription>
               </SheetHeader>
               <div className="flex flex-col gap-4 px-4">

@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router'
 
 import { CredentialSharePage } from './credential-share'
@@ -19,21 +20,44 @@ function renderAtToken(token: string, { strict = false } = {}) {
     </MemoryRouter>
   )
   // main.tsx renders the whole app inside <StrictMode>, which
-  // double-invokes effects in development — the exact condition that
-  // exposed the double-consumption bug (review.md warning 1). Tests that
-  // care about that must opt into the same wrapper; the plain render
-  // (strict: false, the default) covers the ordinary single-mount case.
+  // double-invokes effects in development. The page no longer consumes the
+  // token from an effect (see the 'does nothing on mount' test below), but
+  // tests that touch StrictMode still render through it to document that
+  // the guarantee holds regardless of the wrapper.
   return render(strict ? <StrictMode>{tree}</StrictMode> : tree)
 }
 
 describe('CredentialSharePage', () => {
-  it('reveals the email and password on success', async () => {
+  // vitest does not reset a vi.mock()'d fn's call count between tests in
+  // the same file by default, so the exact-call-count assertions below
+  // would otherwise accumulate across tests rather than starting fresh.
+  beforeEach(() => {
+    vi.mocked(api.getCredentialShare).mockReset()
+  })
+
+  // review.md's challenge pass: an effect-driven fetch on mount gets
+  // consumed by anything that merely loads the page without a human
+  // intending to — React.StrictMode's double-invoke (what originally
+  // exposed this), but also link-scanning security middleware (Defender
+  // Safe Links, Proofpoint) that executes a page's JS rather than just
+  // fetching the URL. Gating consumption behind an explicit click removes
+  // that whole class of trigger: nothing can "load" a click.
+  it('does not call getCredentialShare on mount, even under StrictMode', () => {
+    renderAtToken('valid-token', { strict: true })
+
+    expect(screen.getByRole('button', { name: /révéler/i })).toBeInTheDocument()
+    expect(api.getCredentialShare).not.toHaveBeenCalled()
+  })
+
+  it('reveals the email and password after clicking Révéler', async () => {
+    const user = userEvent.setup()
     vi.mocked(api.getCredentialShare).mockResolvedValue({
       email: 'new-admin@myhobbees.fr',
       password: 'a-generated-strong-password',
     })
 
     renderAtToken('valid-token')
+    await user.click(screen.getByRole('button', { name: /révéler/i }))
 
     await waitFor(() =>
       expect(screen.getByLabelText(/^email$/i)).toHaveValue(
@@ -43,15 +67,17 @@ describe('CredentialSharePage', () => {
     expect(screen.getByLabelText('Mot de passe')).toHaveValue(
       'a-generated-strong-password',
     )
-    expect(api.getCredentialShare).toHaveBeenCalledWith('valid-token')
+    expect(api.getCredentialShare).toHaveBeenCalledExactlyOnceWith('valid-token')
   })
 
   it('shows a generic error message and no credentials on failure, without crashing', async () => {
+    const user = userEvent.setup()
     vi.mocked(api.getCredentialShare).mockRejectedValue(
       new Error('Ce lien est invalide, expiré ou a déjà été utilisé'),
     )
 
     renderAtToken('already-consumed-token')
+    await user.click(screen.getByRole('button', { name: /révéler/i }))
 
     await waitFor(() =>
       expect(
@@ -62,29 +88,15 @@ describe('CredentialSharePage', () => {
     expect(screen.queryByLabelText('Mot de passe')).not.toBeInTheDocument()
   })
 
-  // Direct reproduction of review.md's warning 1: the token-consuming
-  // effect has no guard, and <StrictMode> (which wraps the real app in
-  // main.tsx) double-invokes effects in development. A one-time,
-  // non-idempotent consumption called twice would see its own first
-  // success as a second call's "already consumed" 404 — simulated here by
-  // having the mock resolve once, then reject on any further call, the
-  // same shape the real server would answer with.
-  it('consumes the token at most once under StrictMode, and never shows the credentials and the error at the same time', async () => {
-    let calls = 0
-    vi.mocked(api.getCredentialShare).mockImplementation(() => {
-      calls += 1
-      if (calls === 1) {
-        return Promise.resolve({
-          email: 'strict-mode@myhobbees.fr',
-          password: 'a-generated-strong-password',
-        })
-      }
-      return Promise.reject(
-        new Error('Ce lien est invalide, expiré ou a déjà été utilisé'),
-      )
+  it('never shows the credentials and the error at the same time', async () => {
+    const user = userEvent.setup()
+    vi.mocked(api.getCredentialShare).mockResolvedValue({
+      email: 'strict-mode@myhobbees.fr',
+      password: 'a-generated-strong-password',
     })
 
     renderAtToken('strict-mode-token', { strict: true })
+    await user.click(screen.getByRole('button', { name: /révéler/i }))
 
     await waitFor(() =>
       expect(screen.getByLabelText(/^email$/i)).toHaveValue(
@@ -98,6 +110,6 @@ describe('CredentialSharePage', () => {
     expect(
       screen.queryByText(/lien est invalide, expiré ou a déjà été utilisé/i),
     ).not.toBeInTheDocument()
-    expect(calls).toBe(1)
+    expect(api.getCredentialShare).toHaveBeenCalledOnce()
   })
 })

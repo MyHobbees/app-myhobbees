@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { Copy } from 'lucide-react'
 import { useParams } from 'react-router'
 
@@ -20,28 +20,27 @@ import { getCredentialShare, type CredentialShare } from '@/lib/api'
 // exclusive by construction, so the UI can never render both at once (see
 // aidd_docs/tasks/.../review.md, warning 1 — the previous three-flag
 // version could set both data and error and paint them simultaneously).
+//
+// Consumption happens only from the button's onClick, never from an effect
+// on mount. The token is spent server-side the instant it's read, so an
+// automatic fetch is "safe" only until something else reads the link first
+// without a human meaning to: React.StrictMode double-invoking effects
+// (what flagged this originally), but also link-scanning security
+// middleware (Defender Safe Links, Proofpoint) that executes a page's JS
+// rather than just fetching the URL. A discrete user gesture can't be
+// double-invoked by either, so this isn't a guard against a known trigger —
+// it removes the class of trigger entirely.
 type State =
+  | { status: 'idle' }
   | { status: 'loading' }
   | { status: 'success'; data: CredentialShare }
   | { status: 'error'; message: string }
 
 export function CredentialSharePage() {
   const { token } = useParams<{ token: string }>()
-  const [state, setState] = useState<State>({ status: 'loading' })
+  const [state, setState] = useState<State>({ status: 'idle' })
 
-  // Guards against the effect running twice for the same token. This
-  // matters here specifically because the effect's side effect is
-  // destructive and non-idempotent (it spends the one-time token
-  // server-side): React.StrictMode double-invokes effects in development
-  // to surface exactly this kind of bug, and without the guard the first
-  // call would reveal the credentials while the second call's 404
-  // (already consumed) overwrites the state right after. The ref persists
-  // across that double-invocation (StrictMode re-runs the effect on the
-  // same component instance, it does not reset refs), so it is the
-  // standard fix for a one-shot effect under StrictMode.
-  const consumedTokenRef = useRef<string | null>(null)
-
-  useEffect(() => {
+  function reveal() {
     if (!token) {
       setState({
         status: 'error',
@@ -49,9 +48,7 @@ export function CredentialSharePage() {
       })
       return
     }
-    if (consumedTokenRef.current === token) return
-    consumedTokenRef.current = token
-
+    setState({ status: 'loading' })
     getCredentialShare(token)
       .then((data) => setState({ status: 'success', data }))
       .catch((err) =>
@@ -60,7 +57,7 @@ export function CredentialSharePage() {
           message: err instanceof Error ? err.message : 'Erreur inconnue',
         }),
       )
-  }, [token])
+  }
 
   return (
     <div className="flex min-h-svh items-center justify-center p-6">
@@ -70,6 +67,21 @@ export function CredentialSharePage() {
           <CardDescription>Identifiants d'administration</CardDescription>
         </CardHeader>
         <CardContent>
+          {state.status === 'idle' && (
+            <div className="flex flex-col gap-3">
+              <p className="text-sm text-muted-foreground">
+                Ce lien n'affiche les identifiants qu'une seule fois. Ne clique
+                que si tu es prêt·e à les copier immédiatement : une fois
+                révélés, ils ne pourront plus jamais être réaffichés ni
+                renvoyés — la seule façon d'en obtenir de nouveaux est de
+                recréer le compte.
+              </p>
+              <Button type="button" onClick={reveal}>
+                Révéler les identifiants
+              </Button>
+            </div>
+          )}
+
           {state.status === 'loading' && (
             <p className="text-sm text-muted-foreground">Chargement…</p>
           )}
