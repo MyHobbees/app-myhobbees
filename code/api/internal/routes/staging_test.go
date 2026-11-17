@@ -6,13 +6,26 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/myhobbees/api/internal/auth"
 	"github.com/myhobbees/api/internal/jwt"
 )
 
 // Staging() no longer applies auth.Middleware itself: that single
 // responsibility lives in app.go's protected /v1 group (mirrors
-// analytics_test.go). Tests here wrap it the same way app.go does.
+// analytics_test.go). Unlike Analytics(), Staging() is mounted in app.go at
+// a path ("/infra/staging") that does not match its own route names
+// ("/status", "/start") byte-for-byte, so wrapping it bare at the test
+// server's root would never exercise the real mounted path and would pass
+// even if app.go's mount path drifted again. Mount it the same way app.go
+// does instead.
+func stagingTestServer(t *testing.T) *httptest.Server {
+	t.Helper()
+	r := chi.NewRouter()
+	r.Mount("/infra/staging", Staging())
+	return httptest.NewServer(auth.Middleware(r))
+}
 
 func TestStaging_StatusNotConfigured(t *testing.T) {
 	secret := "test-secret-at-least-32-characters-long"
@@ -24,10 +37,10 @@ func TestStaging_StatusNotConfigured(t *testing.T) {
 		t.Fatalf("sign: %v", err)
 	}
 
-	srv := httptest.NewServer(auth.Middleware(Staging()))
+	srv := stagingTestServer(t)
 	defer srv.Close()
 
-	req, _ := http.NewRequest(http.MethodGet, srv.URL+"/status", nil)
+	req, _ := http.NewRequest(http.MethodGet, srv.URL+"/infra/staging/status", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 
 	res, err := http.DefaultClient.Do(req)
@@ -50,10 +63,10 @@ func TestStaging_StartNotConfigured(t *testing.T) {
 		t.Fatalf("sign: %v", err)
 	}
 
-	srv := httptest.NewServer(auth.Middleware(Staging()))
+	srv := stagingTestServer(t)
 	defer srv.Close()
 
-	req, _ := http.NewRequest(http.MethodPost, srv.URL+"/start", nil)
+	req, _ := http.NewRequest(http.MethodPost, srv.URL+"/infra/staging/start", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 
 	res, err := http.DefaultClient.Do(req)

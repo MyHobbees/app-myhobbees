@@ -39,8 +39,14 @@ data "archive_file" "AutostopPlaceholder" {
               Statistics=["Maximum"],
           )
           datapoints = metrics.get("Datapoints", [])
-          had_connection = any(point["Maximum"] > 0 for point in datapoints)
-          if had_connection:
+          if not datapoints:
+              # No datapoints yet is not the same as "idle": right after a
+              # start, CloudWatch hasn't populated DatabaseConnections for
+              # this window yet. Treat that as unknown and never stop.
+              return {"stopped": False, "reason": "no datapoints yet, not enough data"}
+
+          all_idle = all(point["Maximum"] == 0 for point in datapoints)
+          if not all_idle:
               return {"stopped": False, "reason": "connection seen in the last 30 minutes"}
 
           describe = rds.describe_db_instances(DBInstanceIdentifier=db_instance_id)
