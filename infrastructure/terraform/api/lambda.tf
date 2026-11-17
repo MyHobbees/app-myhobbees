@@ -64,6 +64,8 @@ resource "aws_lambda_function" "Api" {
       ADMIN_EMAIL         = var.admin_email
       ADMIN_PASSWORD_HASH = var.admin_password_hash
 
+      CREDENTIAL_SHARE_SECRET = var.credential_share_secret
+
       POSTHOG_PERSONAL_API_KEY = var.posthog_personal_api_key
       POSTHOG_PROJECT_ID       = var.posthog_project_id
       POSTHOG_HOST             = var.posthog_host
