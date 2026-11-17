@@ -8,6 +8,7 @@
 ## Main entities
 
 - `leads` (`001_create_leads.sql`): one row per `www-shop` "Me prévenir" pre-launch form submission — email, the three answers (`activities` as a text array, `acquisition_channel`, `subscription_interest`), optional `utm_source`/`utm_medium`/`utm_campaign`/`referrer`, `created_at`. Written only by the public `POST /v1/leads` API route.
+- `admins` (`002_create_admins.sql`): one row per back-office admin — unique `email`, bcrypt `password_hash`, `is_super_admin`, `created_at`. Bootstrapped and managed through `/v1/auth/login` and `/v1/admins` — see [auth.md](auth.md).
 
 ## Conventions
 

@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -19,7 +20,7 @@ func withSecret(t *testing.T, secret string) {
 
 func TestMiddleware_ValidToken(t *testing.T) {
 	withSecret(t, testSecret)
-	token, err := jwt.Sign(testSecret, "admin", "admin@myhobbees.fr", time.Hour)
+	token, err := jwt.Sign(testSecret, "admin", "admin@myhobbees.fr", false, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
@@ -74,7 +75,7 @@ func TestMiddleware_MissingToken(t *testing.T) {
 
 func TestMiddleware_InvalidSignature(t *testing.T) {
 	withSecret(t, testSecret)
-	token, err := jwt.Sign("a-different-secret-at-least-32-chars", "admin", "admin@myhobbees.fr", time.Hour)
+	token, err := jwt.Sign("a-different-secret-at-least-32-chars", "admin", "admin@myhobbees.fr", false, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
@@ -98,7 +99,7 @@ func TestMiddleware_InvalidSignature(t *testing.T) {
 
 func TestMiddleware_ExpiredToken(t *testing.T) {
 	withSecret(t, testSecret)
-	token, err := jwt.Sign(testSecret, "admin", "admin@myhobbees.fr", -time.Hour)
+	token, err := jwt.Sign(testSecret, "admin", "admin@myhobbees.fr", false, -time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
@@ -154,7 +155,7 @@ func okHandlerCalled(called *bool) http.Handler {
 func TestMiddleware_EmptySecret(t *testing.T) {
 	withSecret(t, "")
 
-	forged, err := jwt.Sign("", "admin", "attacker@evil.com", time.Hour)
+	forged, err := jwt.Sign("", "admin", "attacker@evil.com", false, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
@@ -182,7 +183,7 @@ func TestMiddleware_ShortSecret(t *testing.T) {
 	shortSecret := "too-short"
 	withSecret(t, shortSecret)
 
-	forged, err := jwt.Sign(shortSecret, "admin", "attacker@evil.com", time.Hour)
+	forged, err := jwt.Sign(shortSecret, "admin", "attacker@evil.com", false, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
@@ -204,6 +205,63 @@ func TestMiddleware_ShortSecret(t *testing.T) {
 	}
 }
 
+func TestRequireSuperAdmin_AllowsSuperAdmin(t *testing.T) {
+	called := false
+	next := okHandlerCalled(&called)
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/admins", nil)
+	req = req.WithContext(context.WithValue(req.Context(), principalKey, Principal{
+		Subject: "1", Email: "super@myhobbees.fr", IsSuperAdmin: true,
+	}))
+	rec := httptest.NewRecorder()
+
+	RequireSuperAdmin(next).ServeHTTP(rec, req)
+
+	if !called {
+		t.Fatal("expected next handler to be called for a super-admin principal")
+	}
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+}
+
+func TestRequireSuperAdmin_RejectsNonSuperAdmin(t *testing.T) {
+	called := false
+	next := okHandlerCalled(&called)
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/admins", nil)
+	req = req.WithContext(context.WithValue(req.Context(), principalKey, Principal{
+		Subject: "2", Email: "admin@myhobbees.fr", IsSuperAdmin: false,
+	}))
+	rec := httptest.NewRecorder()
+
+	RequireSuperAdmin(next).ServeHTTP(rec, req)
+
+	if called {
+		t.Fatal("next handler must not be called for a non-super-admin principal")
+	}
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected 403, got %d", rec.Code)
+	}
+}
+
+func TestRequireSuperAdmin_RejectsMissingPrincipal(t *testing.T) {
+	called := false
+	next := okHandlerCalled(&called)
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/admins", nil)
+	rec := httptest.NewRecorder()
+
+	RequireSuperAdmin(next).ServeHTTP(rec, req)
+
+	if called {
+		t.Fatal("next handler must not be called without a principal in context")
+	}
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected 403, got %d", rec.Code)
+	}
+}
+
 func TestValidateSecret(t *testing.T) {
 	cases := []struct {
 		name    string
@@ -220,6 +278,34 @@ func TestValidateSecret(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := ValidateSecret(tc.secret)
+			if tc.wantErr && err == nil {
+				t.Fatal("expected an error, got nil")
+			}
+			if !tc.wantErr && err != nil {
+				t.Fatalf("expected no error, got %v", err)
+			}
+		})
+	}
+}
+
+// TestValidateShareSecret covers the exact-size contract CREDENTIAL_SHARE_SECRET
+// has: unlike JWT_SECRET's "at least", AES-256-GCM needs precisely 32 bytes,
+// so both 31 and 33 must be rejected just like empty.
+func TestValidateShareSecret(t *testing.T) {
+	cases := []struct {
+		name    string
+		secret  string
+		wantErr bool
+	}{
+		{"empty", "", true},
+		{"31 bytes", strings.Repeat("a", 31), true},
+		{"32 bytes", strings.Repeat("a", 32), false},
+		{"33 bytes", strings.Repeat("a", 33), true},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateShareSecret(tc.secret)
 			if tc.wantErr && err == nil {
 				t.Fatal("expected an error, got nil")
 			}

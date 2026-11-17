@@ -21,8 +21,9 @@ const principalKey ctxKey = "principal"
 const MinSecretBytes = 32
 
 type Principal struct {
-	Subject string
-	Email   string
+	Subject      string
+	Email        string
+	IsSuperAdmin bool
 }
 
 // ValidateSecret returns an error when secret is too weak (empty, missing,
@@ -30,6 +31,22 @@ type Principal struct {
 func ValidateSecret(secret string) error {
 	if len(secret) < MinSecretBytes {
 		return fmt.Errorf("JWT_SECRET must be set and at least %d bytes long, got %d", MinSecretBytes, len(secret))
+	}
+	return nil
+}
+
+// ShareSecretBytes is the exact length CREDENTIAL_SHARE_SECRET must have:
+// AES-256-GCM requires a 32-byte key, not merely a minimum like JWT_SECRET's
+// HMAC key.
+const ShareSecretBytes = 32
+
+// ValidateShareSecret returns an error unless secret is exactly
+// ShareSecretBytes long. Unlike ValidateSecret, there is no "at least" here:
+// crypto/aes.NewCipher rejects any other length outright, so a wrong-sized
+// secret must be caught before it ever reaches credentialshare.Seal/Open.
+func ValidateShareSecret(secret string) error {
+	if len(secret) != ShareSecretBytes {
+		return fmt.Errorf("CREDENTIAL_SHARE_SECRET must be exactly %d bytes for AES-256, got %d", ShareSecretBytes, len(secret))
 	}
 	return nil
 }
@@ -56,7 +73,7 @@ func Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		principal := Principal{Subject: claims.Subject, Email: claims.Email}
+		principal := Principal{Subject: claims.Subject, Email: claims.Email, IsSuperAdmin: claims.IsSuperAdmin}
 		next.ServeHTTP(w, r.WithContext(
 			context.WithValue(r.Context(), principalKey, principal),
 		))
@@ -66,4 +83,18 @@ func Middleware(next http.Handler) http.Handler {
 func PrincipalFrom(ctx context.Context) (Principal, bool) {
 	p, ok := ctx.Value(principalKey).(Principal)
 	return p, ok
+}
+
+// RequireSuperAdmin must run after Middleware (which populates the
+// Principal from the JWT): it rejects any request whose principal is
+// missing or is not a super-admin, before the route's own handler runs.
+func RequireSuperAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		principal, ok := PrincipalFrom(r.Context())
+		if !ok || !principal.IsSuperAdmin {
+			httpjson.Error(w, http.StatusForbidden, "Forbidden")
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
