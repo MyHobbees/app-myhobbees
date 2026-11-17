@@ -143,26 +143,26 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   {group.items
                     .filter((item) => !item.superAdminOnly || isSuperAdmin)
                     .map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      {item.disabled ? (
-                        <SidebarMenuButton disabled className="opacity-50">
-                          <item.icon />
-                          <span>{item.title}</span>
-                        </SidebarMenuButton>
-                      ) : (
-                        <SidebarMenuButton
-                          asChild
-                          isActive={isActive(item.url)}
-                          className="data-[active=true]:bg-brand/10 data-[active=true]:text-brand"
-                        >
-                          <Link to={item.url}>
+                      <SidebarMenuItem key={item.title}>
+                        {item.disabled ? (
+                          <SidebarMenuButton disabled className="opacity-50">
                             <item.icon />
                             <span>{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      )}
-                    </SidebarMenuItem>
-                  ))}
+                          </SidebarMenuButton>
+                        ) : (
+                          <SidebarMenuButton
+                            asChild
+                            isActive={isActive(item.url)}
+                            className="data-[active=true]:bg-brand/10 data-[active=true]:text-brand"
+                          >
+                            <Link to={item.url}>
+                              <item.icon />
+                              <span>{item.title}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        )}
+                      </SidebarMenuItem>
+                    ))}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>

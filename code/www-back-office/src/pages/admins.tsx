@@ -129,8 +129,12 @@ export function AdminsPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  minLength={12}
                   required
                 />
+                <span className="text-xs text-muted-foreground">
+                  12 caractères minimum
+                </span>
               </div>
               <label className="flex items-center gap-2 text-sm">
                 <input
@@ -232,8 +236,10 @@ export function AdminsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Supprimer cet administrateur ?</AlertDialogTitle>
             <AlertDialogDescription>
-              {deleteTarget?.email} perdra immédiatement l'accès au back-office.
-              Cette action est irréversible.
+              {deleteTarget?.email} perdra immédiatement ses droits de gestion
+              des administrateurs ; son accès au reste du back-office prendra
+              fin à l'expiration de son jeton (sous 24h). Cette action est
+              irréversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           {deleteError && (
