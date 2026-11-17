@@ -1,10 +1,8 @@
 package routes
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
-	"os"
 
 	"github.com/go-chi/chi/v5"
 
@@ -197,56 +195,6 @@ func Shopify() chi.Router {
 		httpjson.OK(w, http.StatusOK, customer)
 	})
 
-	r.Post("/seed", func(w http.ResponseWriter, req *http.Request) {
-		client, ok := seedClient(w)
-		if !ok {
-			return
-		}
-
-		result, err := client.SeedBase(req.Context())
-		if err != nil {
-			httpjson.Error(w, http.StatusBadGateway, err.Error())
-			return
-		}
-		httpjson.OK(w, http.StatusOK, result)
-	})
-
-	r.Post("/seed/cleanup", func(w http.ResponseWriter, req *http.Request) {
-		client, ok := seedClient(w)
-		if !ok {
-			return
-		}
-
-		result, err := client.Cleanup(req.Context())
-		if err != nil {
-			httpjson.Error(w, http.StatusBadGateway, err.Error())
-			return
-		}
-		httpjson.OK(w, http.StatusOK, result)
-	})
-
-	r.Post("/seed/orders", func(w http.ResponseWriter, req *http.Request) {
-		client, ok := seedClient(w)
-		if !ok {
-			return
-		}
-
-		var body struct {
-			Orders []shopify.OrderSpec `json:"orders"`
-		}
-		if err := json.NewDecoder(req.Body).Decode(&body); err != nil || len(body.Orders) == 0 {
-			httpjson.Error(w, http.StatusBadRequest, "Invalid body")
-			return
-		}
-
-		result, err := client.SeedOrders(req.Context(), body.Orders)
-		if err != nil {
-			httpjson.Error(w, http.StatusBadGateway, err.Error())
-			return
-		}
-		httpjson.OK(w, http.StatusOK, result)
-	})
-
 	return r
 }
 
@@ -261,12 +209,4 @@ func shopifyClient(w http.ResponseWriter) (*shopify.Client, bool) {
 		return nil, false
 	}
 	return client, true
-}
-
-func seedClient(w http.ResponseWriter) (*shopify.Client, bool) {
-	if os.Getenv("APP_ENV") == "prd" {
-		httpjson.Error(w, http.StatusForbidden, "Seed interdit en production")
-		return nil, false
-	}
-	return shopifyClient(w)
 }

@@ -2,9 +2,13 @@ package routes
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
+	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -194,4 +198,120 @@ func nullIfEmpty(s string) any {
 		return nil
 	}
 	return s
+}
+
+const (
+	// seedEmailDomain is RFC 2606's reserved test TLD: no real signup can
+	// ever land here, so matching on it for cleanup can never delete a real
+	// lead.
+	seedEmailDomain  = "example.test"
+	seedEmailPattern = "seed-%@" + seedEmailDomain
+	seedDefaultCount = 10
+	seedMinCount     = 1
+	seedMaxCount     = 100
+)
+
+// seedActivities/seedAcquisitionChannels/seedSubscriptionInterests mirror
+// the plausible values code/www-shop's me-prevenir.tsx offers real
+// visitors (ACTIVITIES/ACQUISITION_CHANNELS) and the 3 real subscription
+// offer titles (see subscriptionOfferLabels above) — inspiration only, not
+// imported, since this is Go generating test fixtures, not the TS form.
+var (
+	seedActivities            = []string{"Crochet", "Couture", "Peinture", "Autre"}
+	seedAcquisitionChannels   = []string{"Instagram", "TikTok", "Recherche Google", "Bouche-à-oreille", "Autre"}
+	seedSubscriptionInterests = []string{"Box créative surprise", "Box + accès à l’application", "Parcours d’apprentissage"}
+)
+
+// requireStg is the single-point-of-truth guard for both seed endpoints:
+// "stg uniquement" means exactly that, not "everything but prd" — loc is
+// blocked too, by design (a developer testing locally seeds their own DB
+// directly; this button exists for stg, the one shared environment nobody
+// can just psql into).
+func requireStg(w http.ResponseWriter) bool {
+	if os.Getenv("APP_ENV") != "stg" {
+		httpjson.Error(w, http.StatusForbidden, "Only available on stg")
+		return false
+	}
+	return true
+}
+
+// SeedLeads is mounted inside app.go's protected /v1 group (any
+// authenticated admin, not super-admin-only: the guard that matters here is
+// the environment, not the role). Seeded rows are recognizable by email
+// alone (seed-<n>@example.test), with no extra column, so CleanupSeedLeads
+// can target exactly them.
+func SeedLeads(w http.ResponseWriter, req *http.Request) {
+	if !requireStg(w) {
+		return
+	}
+
+	count := seedDefaultCount
+	if raw := req.URL.Query().Get("count"); raw != "" {
+		n, err := strconv.Atoi(raw)
+		if err != nil {
+			httpjson.Error(w, http.StatusBadRequest, "count must be a number")
+			return
+		}
+		count = n
+	}
+	if count < seedMinCount || count > seedMaxCount {
+		httpjson.Error(w, http.StatusBadRequest, fmt.Sprintf("count must be between %d and %d", seedMinCount, seedMaxCount))
+		return
+	}
+
+	pool, err := db.Pool(req.Context())
+	if err != nil {
+		log.Printf("leads: db pool: %v", err)
+		httpjson.Error(w, http.StatusBadGateway, "Could not seed leads")
+		return
+	}
+
+	// base+i, not a shared counter: leads.email carries no unique
+	// constraint (see code/database/migrations), but a distinct number per
+	// row still lets several successive seeds coexist without ever
+	// reusing an email.
+	base := time.Now().UnixNano()
+	for i := 0; i < count; i++ {
+		email := fmt.Sprintf("seed-%d@%s", base+int64(i), seedEmailDomain)
+		activities := []string{seedActivities[rand.Intn(len(seedActivities))]}
+		channel := seedAcquisitionChannels[rand.Intn(len(seedAcquisitionChannels))]
+		interest := seedSubscriptionInterests[rand.Intn(len(seedSubscriptionInterests))]
+
+		_, err := pool.Exec(req.Context(), `
+			INSERT INTO leads (email, activities, acquisition_channel, subscription_interest)
+			VALUES ($1, $2, $3, $4)
+		`, email, activities, channel, interest)
+		if err != nil {
+			log.Printf("leads: seed insert: %v", err)
+			httpjson.Error(w, http.StatusBadGateway, "Could not seed leads")
+			return
+		}
+	}
+
+	httpjson.OK(w, http.StatusOK, map[string]int{"created": count})
+}
+
+// CleanupSeedLeads deletes every row matching the seed email pattern and
+// nothing else: a real signup can never match seedEmailPattern (see
+// seedEmailDomain's doc comment), so this can't touch a genuine lead.
+func CleanupSeedLeads(w http.ResponseWriter, req *http.Request) {
+	if !requireStg(w) {
+		return
+	}
+
+	pool, err := db.Pool(req.Context())
+	if err != nil {
+		log.Printf("leads: db pool: %v", err)
+		httpjson.Error(w, http.StatusBadGateway, "Could not cleanup seeded leads")
+		return
+	}
+
+	tag, err := pool.Exec(req.Context(), `DELETE FROM leads WHERE email LIKE $1`, seedEmailPattern)
+	if err != nil {
+		log.Printf("leads: seed cleanup: %v", err)
+		httpjson.Error(w, http.StatusBadGateway, "Could not cleanup seeded leads")
+		return
+	}
+
+	httpjson.OK(w, http.StatusOK, map[string]int64{"deleted": tag.RowsAffected()})
 }
