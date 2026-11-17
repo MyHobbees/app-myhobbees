@@ -73,7 +73,7 @@ func bootstrapFirstSuperAdmin(ctx context.Context, pool *pgxpool.Pool) error {
 		return nil
 	}
 
-	email := os.Getenv("ADMIN_EMAIL")
+	email := strings.ToLower(strings.TrimSpace(os.Getenv("ADMIN_EMAIL")))
 	hash := os.Getenv("ADMIN_PASSWORD_HASH")
 	if email == "" || hash == "" {
 		return nil
@@ -82,9 +82,16 @@ func bootstrapFirstSuperAdmin(ctx context.Context, pool *pgxpool.Pool) error {
 	_, err := pool.Exec(ctx, `
 		INSERT INTO admins (email, password_hash, is_super_admin)
 		VALUES ($1, $2, true)
+		ON CONFLICT (email) DO NOTHING
 	`, email, hash)
 	return err
 }
+
+// minAdminPasswordLength is the server-side floor on new admin passwords.
+// The back-office form mirrors it with minLength, but the server is the
+// enforcement point: a client-side attribute alone never stops a direct
+// POST.
+const minAdminPasswordLength = 12
 
 // adminJSON is the wire representation of an admin, deliberately missing
 // PasswordHash: it is built field by field rather than from the admin
@@ -112,10 +119,68 @@ type createAdminBody struct {
 	IsSuperAdmin bool   `json:"isSuperAdmin"`
 }
 
+// requireLiveSuperAdmin re-verifies the acting principal against the
+// database, not just its JWT claim. auth.RequireSuperAdmin alone trusts
+// is_super_admin as it stood when the token was signed, up to 24h ago: a
+// deleted or demoted super-admin keeps a token that still satisfies that
+// check, and can use it to list/create/delete admins — including
+// recreating itself as a super-admin. Verified live (see
+// aidd_docs/tasks/.../review.md finding 1): deleting a super-admin left
+// its old token fully capable on /v1/admins/* until this guard existed.
+//
+// This is deliberately scoped to the admins sub-router only, not the rest
+// of /v1: the plan's "no DB call per protected request" tradeoff is still
+// right for leads/analytics/shopify (high traffic, low stakes), but these
+// 3 endpoints are rare and are exactly the ones that control who holds
+// super-admin, so the one extra query here is worth it.
+func requireLiveSuperAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		principal, ok := auth.PrincipalFrom(req.Context())
+		if !ok {
+			httpjson.Error(w, http.StatusForbidden, "Forbidden")
+			return
+		}
+		actorID, err := strconv.ParseInt(principal.Subject, 10, 64)
+		if err != nil {
+			httpjson.Error(w, http.StatusForbidden, "Forbidden")
+			return
+		}
+
+		pool, err := db.Pool(req.Context())
+		if err != nil {
+			log.Printf("admins: db pool: %v", err)
+			httpjson.Error(w, http.StatusBadGateway, "Could not verify admin")
+			return
+		}
+
+		var isSuperAdmin bool
+		err = pool.QueryRow(req.Context(), `SELECT is_super_admin FROM admins WHERE id = $1`, actorID).Scan(&isSuperAdmin)
+		if errors.Is(err, pgx.ErrNoRows) {
+			httpjson.Error(w, http.StatusForbidden, "Forbidden")
+			return
+		}
+		if err != nil {
+			log.Printf("admins: verify actor: %v", err)
+			httpjson.Error(w, http.StatusBadGateway, "Could not verify admin")
+			return
+		}
+		if !isSuperAdmin {
+			httpjson.Error(w, http.StatusForbidden, "Forbidden")
+			return
+		}
+
+		next.ServeHTTP(w, req)
+	})
+}
+
 // Admins is mounted inside app.go's super-admin-only group: every handler
 // here assumes auth.Middleware and auth.RequireSuperAdmin already ran.
+// requireLiveSuperAdmin runs here, not in app.go, so it is scoped to only
+// these 3 endpoints regardless of how Admins() gets mounted (also true in
+// tests, which wire it directly).
 func Admins() chi.Router {
 	r := chi.NewRouter()
+	r.Use(requireLiveSuperAdmin)
 
 	r.Post("/", createAdmin)
 	r.Get("/", listAdmins)
@@ -130,13 +195,13 @@ func createAdmin(w http.ResponseWriter, req *http.Request) {
 		httpjson.Error(w, http.StatusBadRequest, "Invalid body")
 		return
 	}
-	body.Email = strings.TrimSpace(body.Email)
+	body.Email = strings.ToLower(strings.TrimSpace(body.Email))
 	if body.Email == "" || !emailPattern.MatchString(body.Email) {
 		httpjson.Error(w, http.StatusBadRequest, "Invalid email")
 		return
 	}
-	if body.Password == "" {
-		httpjson.Error(w, http.StatusBadRequest, "Password is required")
+	if len(body.Password) < minAdminPasswordLength {
+		httpjson.Error(w, http.StatusBadRequest, "Password must be at least 12 characters")
 		return
 	}
 
@@ -246,12 +311,12 @@ func deleteAdmin(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var target admin
+	var targetIsSuperAdmin bool
 	err = pool.QueryRow(req.Context(), `
-		SELECT id, email, password_hash, is_super_admin, created_at
+		SELECT is_super_admin
 		FROM admins
 		WHERE id = $1
-	`, targetID).Scan(&target.ID, &target.Email, &target.PasswordHash, &target.IsSuperAdmin, &target.CreatedAt)
+	`, targetID).Scan(&targetIsSuperAdmin)
 	if errors.Is(err, pgx.ErrNoRows) {
 		httpjson.Error(w, http.StatusNotFound, "Admin not found")
 		return
@@ -262,7 +327,7 @@ func deleteAdmin(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if target.IsSuperAdmin {
+	if targetIsSuperAdmin {
 		superAdmins, err := countSuperAdmins(req.Context(), pool)
 		if err != nil {
 			log.Printf("admins: count super admins: %v", err)

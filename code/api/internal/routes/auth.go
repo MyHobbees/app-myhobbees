@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -41,6 +42,8 @@ func Auth() chi.Router {
 			httpjson.Error(w, http.StatusBadGateway, "Could not verify credentials")
 			return
 		}
+
+		body.Email = strings.ToLower(strings.TrimSpace(body.Email))
 
 		a, err := findAdminByEmail(req.Context(), pool, body.Email)
 		if err != nil {

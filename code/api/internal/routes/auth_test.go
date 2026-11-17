@@ -122,6 +122,26 @@ func TestLogin_WrongPasswordIsUnauthorized(t *testing.T) {
 	}
 }
 
+// TestLogin_EmailIsTrimmedAndCaseInsensitive covers two review findings at
+// once: login must accept trailing whitespace the way create already did
+// (asymmetry finding), and it must treat differently-cased emails as the
+// same mailbox (case-sensitivity finding) rather than failing to find a
+// row that was stored lowercased.
+func TestLogin_EmailIsTrimmedAndCaseInsensitive(t *testing.T) {
+	testAdminsPool(t)
+	t.Setenv("JWT_SECRET", testJWTSecret)
+	t.Setenv("ADMIN_EMAIL", "super@myhobbees.fr")
+	t.Setenv("ADMIN_PASSWORD_HASH", bcryptHash(t, "correct horse"))
+
+	srv := httptest.NewServer(Auth())
+	defer srv.Close()
+
+	res, decoded := loginRequest(t, srv, "  Super@MyHobbees.fr  ", "correct horse")
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200 for a padded/mixed-case email, got %d (%v)", res.StatusCode, decoded)
+	}
+}
+
 func TestLogin_NoEnvVarsAndEmptyTableIsUnauthorizedNotPanic(t *testing.T) {
 	testAdminsPool(t)
 	t.Setenv("JWT_SECRET", testJWTSecret)

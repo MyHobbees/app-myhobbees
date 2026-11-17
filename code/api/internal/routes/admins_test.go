@@ -356,7 +356,7 @@ func TestAdmins_DuplicateEmailReturnsExplicit400NotRaw500(t *testing.T) {
 	srv := adminsServer(t)
 
 	res := doJSON(t, http.MethodPost, srv.URL+"/", token, map[string]any{
-		"email": "taken@myhobbees.fr", "password": "whatever",
+		"email": "taken@myhobbees.fr", "password": "a-strong-password",
 	})
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusBadRequest {
@@ -368,5 +368,122 @@ func TestAdmins_DuplicateEmailReturnsExplicit400NotRaw500(t *testing.T) {
 	}
 	if decoded["error"] == "" {
 		t.Fatal("expected a human-readable error message, not an empty/raw body")
+	}
+}
+
+// TestAdmins_DuplicateEmailIsCaseInsensitive is the live-reproduced finding
+// from the review: creating "Reviewer@Test.fr" after "reviewer@test.fr"
+// must be rejected as the same mailbox, not create a second account that
+// could outlive the deletion of the first.
+func TestAdmins_DuplicateEmailIsCaseInsensitive(t *testing.T) {
+	pool := testAdminsPool(t)
+	superID := insertAdmin(t, pool, "super@myhobbees.fr", true)
+	insertAdmin(t, pool, "reviewer@test.fr", false)
+	token := tokenFor(t, superID, "super@myhobbees.fr", true)
+	srv := adminsServer(t)
+
+	res := doJSON(t, http.MethodPost, srv.URL+"/", token, map[string]any{
+		"email": "Reviewer@Test.fr", "password": "a-strong-password",
+	})
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected 400 for a same-mailbox email differing only in case, got %d", res.StatusCode)
+	}
+
+	var count int
+	err := pool.QueryRow(context.Background(), `SELECT COUNT(*) FROM admins WHERE lower(email) = 'reviewer@test.fr'`).Scan(&count)
+	if err != nil {
+		t.Fatalf("count rows for this mailbox: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("expected exactly 1 stored row for this mailbox, got %d matches", count)
+	}
+}
+
+// TestAdmins_CreateStoresEmailLowercased asserts the create endpoint itself
+// normalizes case, independent of what findAdminByEmail is given.
+func TestAdmins_CreateStoresEmailLowercased(t *testing.T) {
+	pool := testAdminsPool(t)
+	superID := insertAdmin(t, pool, "super@myhobbees.fr", true)
+	token := tokenFor(t, superID, "super@myhobbees.fr", true)
+	srv := adminsServer(t)
+
+	res := doJSON(t, http.MethodPost, srv.URL+"/", token, map[string]any{
+		"email": "Mixed.Case@Myhobbees.fr", "password": "a-strong-password",
+	})
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusCreated {
+		t.Fatalf("expected 201, got %d", res.StatusCode)
+	}
+
+	stored, err := findAdminByEmail(context.Background(), pool, "mixed.case@myhobbees.fr")
+	if err != nil {
+		t.Fatalf("find admin: %v", err)
+	}
+	if stored == nil {
+		t.Fatal("expected the stored email to be lowercased")
+	}
+}
+
+func TestAdmins_CreateRejectsShortPassword(t *testing.T) {
+	pool := testAdminsPool(t)
+	superID := insertAdmin(t, pool, "super@myhobbees.fr", true)
+	token := tokenFor(t, superID, "super@myhobbees.fr", true)
+	srv := adminsServer(t)
+
+	res := doJSON(t, http.MethodPost, srv.URL+"/", token, map[string]any{
+		"email": "short-password@myhobbees.fr", "password": "short1",
+	})
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected 400 for a password under the 12-char floor, got %d", res.StatusCode)
+	}
+
+	stored, err := findAdminByEmail(context.Background(), pool, "short-password@myhobbees.fr")
+	if err != nil {
+		t.Fatalf("find admin: %v", err)
+	}
+	if stored != nil {
+		t.Fatal("expected no admin to be created with a too-short password")
+	}
+}
+
+// TestAdmins_DeletedSuperAdminTokenIsRejectedLive is the direct regression
+// test for review finding 1: a super-admin's JWT stays signature-valid for
+// up to 24h after its row is deleted, but requireLiveSuperAdmin must
+// re-check the database on every /v1/admins request and reject it, not
+// just trust the claim set at sign time.
+func TestAdmins_DeletedSuperAdminTokenIsRejectedLive(t *testing.T) {
+	pool := testAdminsPool(t)
+	remainingSuperID := insertAdmin(t, pool, "super@myhobbees.fr", true)
+	removedID := insertAdmin(t, pool, "removed-super@myhobbees.fr", true)
+	removedToken := tokenFor(t, removedID, "removed-super@myhobbees.fr", true)
+	srv := adminsServer(t)
+
+	remainingToken := tokenFor(t, remainingSuperID, "super@myhobbees.fr", true)
+	delRes := doJSON(t, http.MethodDelete, adminURL(srv.URL, removedID), remainingToken, nil)
+	delRes.Body.Close()
+	if delRes.StatusCode != http.StatusNoContent {
+		t.Fatalf("expected 204 deleting the second super admin, got %d", delRes.StatusCode)
+	}
+
+	// The removed admin's token is still signature-valid (not expired, not
+	// forged) and still claims isSuperAdmin=true: only the live DB check
+	// can catch that its row is gone.
+	listRes := doJSON(t, http.MethodGet, srv.URL+"/", removedToken, nil)
+	defer listRes.Body.Close()
+	if listRes.StatusCode != http.StatusForbidden {
+		t.Fatalf("expected 403 for a deleted super admin's still-valid token, got %d", listRes.StatusCode)
+	}
+
+	// The same old token must not be able to recreate itself as a
+	// super-admin either — the exact self-reinstatement the review caught
+	// live.
+	recreateRes := doJSON(t, http.MethodPost, srv.URL+"/", removedToken, map[string]any{
+		"email": "removed-super@myhobbees.fr", "password": "a-strong-password", "isSuperAdmin": true,
+	})
+	defer recreateRes.Body.Close()
+	if recreateRes.StatusCode != http.StatusForbidden {
+		t.Fatalf("expected 403 when a deleted super admin's token tries to recreate itself, got %d", recreateRes.StatusCode)
 	}
 }
