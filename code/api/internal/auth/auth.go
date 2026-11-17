@@ -21,8 +21,9 @@ const principalKey ctxKey = "principal"
 const MinSecretBytes = 32
 
 type Principal struct {
-	Subject string
-	Email   string
+	Subject      string
+	Email        string
+	IsSuperAdmin bool
 }
 
 // ValidateSecret returns an error when secret is too weak (empty, missing,
@@ -56,7 +57,7 @@ func Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		principal := Principal{Subject: claims.Subject, Email: claims.Email}
+		principal := Principal{Subject: claims.Subject, Email: claims.Email, IsSuperAdmin: claims.IsSuperAdmin}
 		next.ServeHTTP(w, r.WithContext(
 			context.WithValue(r.Context(), principalKey, principal),
 		))

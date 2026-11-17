@@ -19,7 +19,7 @@ func withSecret(t *testing.T, secret string) {
 
 func TestMiddleware_ValidToken(t *testing.T) {
 	withSecret(t, testSecret)
-	token, err := jwt.Sign(testSecret, "admin", "admin@myhobbees.fr", time.Hour)
+	token, err := jwt.Sign(testSecret, "admin", "admin@myhobbees.fr", false, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
@@ -74,7 +74,7 @@ func TestMiddleware_MissingToken(t *testing.T) {
 
 func TestMiddleware_InvalidSignature(t *testing.T) {
 	withSecret(t, testSecret)
-	token, err := jwt.Sign("a-different-secret-at-least-32-chars", "admin", "admin@myhobbees.fr", time.Hour)
+	token, err := jwt.Sign("a-different-secret-at-least-32-chars", "admin", "admin@myhobbees.fr", false, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
@@ -98,7 +98,7 @@ func TestMiddleware_InvalidSignature(t *testing.T) {
 
 func TestMiddleware_ExpiredToken(t *testing.T) {
 	withSecret(t, testSecret)
-	token, err := jwt.Sign(testSecret, "admin", "admin@myhobbees.fr", -time.Hour)
+	token, err := jwt.Sign(testSecret, "admin", "admin@myhobbees.fr", false, -time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
@@ -154,7 +154,7 @@ func okHandlerCalled(called *bool) http.Handler {
 func TestMiddleware_EmptySecret(t *testing.T) {
 	withSecret(t, "")
 
-	forged, err := jwt.Sign("", "admin", "attacker@evil.com", time.Hour)
+	forged, err := jwt.Sign("", "admin", "attacker@evil.com", false, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
@@ -182,7 +182,7 @@ func TestMiddleware_ShortSecret(t *testing.T) {
 	shortSecret := "too-short"
 	withSecret(t, shortSecret)
 
-	forged, err := jwt.Sign(shortSecret, "admin", "attacker@evil.com", time.Hour)
+	forged, err := jwt.Sign(shortSecret, "admin", "attacker@evil.com", false, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
