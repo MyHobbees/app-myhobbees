@@ -44,13 +44,17 @@ func New() *chi.Mux {
 		// --- Routes publiques : pas de auth.Middleware ici, volontairement. ---
 		// Only these three routes bypass auth: Auth() exposes POST /login,
 		// CreateLead is the public lead-capture endpoint code/www-shop's "Me
-		// prévenir" form posts to, and GetCredentialShare is the one-time
-		// reveal link emailed/handed to a freshly created admin — it must
-		// be openable without a back-office session, by design. Nothing
-		// else belongs in this section.
+		// prévenir" form posts to, and ConsumeCredentialShare is the
+		// one-time reveal link emailed/handed to a freshly created admin —
+		// it must be openable without a back-office session, by design.
+		// It is a POST with the token in the body, not a GET with the
+		// token in the path: middleware.Logger below logs the full
+		// request URL on every call, and a path segment would also land
+		// in browser history and Referer headers. Nothing else belongs in
+		// this section.
 		r.Mount("/auth", routes.Auth())
 		r.Post("/leads", routes.CreateLead)
-		r.Get("/credential-shares/{token}", routes.GetCredentialShare)
+		r.Post("/credential-shares", routes.ConsumeCredentialShare)
 
 		// --- Tout le reste de /v1 est protégé par défaut. ---
 		// A single point of truth: anything mounted inside this group

@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -17,8 +18,8 @@ import (
 
 // credentialSharesServer wires the same two routes app.go mounts for this
 // flow: the super-admin-only Admins() router (to create an admin and get a
-// shareToken) and the public GetCredentialShare handler (to consume it),
-// side by side under /v1 like the real app does.
+// shareToken) and the public ConsumeCredentialShare handler (to consume
+// it), side by side under /v1 like the real app does.
 func credentialSharesServer(t *testing.T) *httptest.Server {
 	t.Helper()
 	t.Setenv("JWT_SECRET", adminsTestJWTSecret)
@@ -26,7 +27,7 @@ func credentialSharesServer(t *testing.T) *httptest.Server {
 
 	r := chi.NewRouter()
 	r.Route("/v1", func(r chi.Router) {
-		r.Get("/credential-shares/{token}", GetCredentialShare)
+		r.Post("/credential-shares", ConsumeCredentialShare)
 		r.Group(func(r chi.Router) {
 			r.Use(auth.Middleware)
 			r.Use(auth.RequireSuperAdmin)
@@ -55,8 +56,15 @@ func createAdminViaHTTP(t *testing.T, baseURL, token, email string) createAdminR
 	return decoded
 }
 
-func getCredentialShare(baseURL, token string) *http.Response {
-	res, err := http.Get(baseURL + "/v1/credential-shares/" + token)
+// consumeCredentialShare POSTs the token in the JSON body, matching the
+// real route (app.go mounts ConsumeCredentialShare as a POST, not a GET
+// with the token in the path — see that handler's doc comment for why).
+func consumeCredentialShare(baseURL, token string) *http.Response {
+	body, err := json.Marshal(map[string]string{"token": token})
+	if err != nil {
+		panic(err)
+	}
+	res, err := http.Post(baseURL+"/v1/credential-shares", "application/json", bytes.NewReader(body))
 	if err != nil {
 		panic(err)
 	}
@@ -75,7 +83,7 @@ func TestCredentialShare_HappyPathCreateThenConsume(t *testing.T) {
 
 	created := createAdminViaHTTP(t, srv.URL, token, "shared-admin@myhobbees.fr")
 
-	res := getCredentialShare(srv.URL, created.ShareToken)
+	res := consumeCredentialShare(srv.URL, created.ShareToken)
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
 		t.Fatalf("expected 200 opening a fresh share token, got %d", res.StatusCode)
@@ -93,7 +101,7 @@ func TestCredentialShare_HappyPathCreateThenConsume(t *testing.T) {
 }
 
 // TestCredentialShare_SecondConsumeFails covers "Edge case - double
-// consultation": the same token must answer 404 on a second GET.
+// consultation": the same token must answer 404 on a second POST.
 func TestCredentialShare_SecondConsumeFails(t *testing.T) {
 	pool := testAdminsPool(t)
 	superID := insertAdmin(t, pool, "super@myhobbees.fr", true)
@@ -102,13 +110,13 @@ func TestCredentialShare_SecondConsumeFails(t *testing.T) {
 
 	created := createAdminViaHTTP(t, srv.URL, token, "once-only@myhobbees.fr")
 
-	first := getCredentialShare(srv.URL, created.ShareToken)
+	first := consumeCredentialShare(srv.URL, created.ShareToken)
 	first.Body.Close()
 	if first.StatusCode != http.StatusOK {
 		t.Fatalf("expected first open to succeed with 200, got %d", first.StatusCode)
 	}
 
-	second := getCredentialShare(srv.URL, created.ShareToken)
+	second := consumeCredentialShare(srv.URL, created.ShareToken)
 	defer second.Body.Close()
 	if second.StatusCode != http.StatusNotFound {
 		t.Fatalf("expected second open of the same token to be 404, got %d", second.StatusCode)
@@ -136,7 +144,7 @@ func TestCredentialShare_ExpiredTokenFails(t *testing.T) {
 		t.Fatalf("seal: %v", err)
 	}
 
-	res := getCredentialShare(srv.URL, expiredToken)
+	res := consumeCredentialShare(srv.URL, expiredToken)
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusNotFound {
 		t.Fatalf("expected 404 for an expired token, got %d", res.StatusCode)
@@ -161,7 +169,7 @@ func TestCredentialShare_TamperedTokenFails(t *testing.T) {
 		tampered[idx] = 'a'
 	}
 
-	res := getCredentialShare(srv.URL, string(tampered))
+	res := consumeCredentialShare(srv.URL, string(tampered))
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusNotFound {
 		t.Fatalf("expected 404 for a tampered token, got %d", res.StatusCode)
@@ -174,7 +182,7 @@ func TestCredentialShare_InvalidTokenFails(t *testing.T) {
 	testAdminsPool(t)
 	srv := credentialSharesServer(t)
 
-	res := getCredentialShare(srv.URL, "this-is-not-a-real-token")
+	res := consumeCredentialShare(srv.URL, "this-is-not-a-real-token")
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusNotFound {
 		t.Fatalf("expected 404 for an invalid token, got %d", res.StatusCode)
@@ -182,10 +190,10 @@ func TestCredentialShare_InvalidTokenFails(t *testing.T) {
 }
 
 // TestCredentialShare_ConcurrentReadsExactlyOneSucceeds covers "Edge case -
-// lecture simultanée": firing two concurrent GETs at the same freshly
+// lecture simultanée": firing two concurrent POSTs at the same freshly
 // created token must let exactly one see 200, the other 404 — never both
 // 200, and never both 404. This is the direct test for the atomic
-// `UPDATE ... WHERE consumed_at IS NULL` in GetCredentialShare; run with
+// `UPDATE ... WHERE consumed_at IS NULL` in ConsumeCredentialShare; run with
 // `go test -race` to also catch any data race in reaching that guarantee.
 func TestCredentialShare_ConcurrentReadsExactlyOneSucceeds(t *testing.T) {
 	pool := testAdminsPool(t)
@@ -201,7 +209,7 @@ func TestCredentialShare_ConcurrentReadsExactlyOneSucceeds(t *testing.T) {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			res := getCredentialShare(srv.URL, created.ShareToken)
+			res := consumeCredentialShare(srv.URL, created.ShareToken)
 			defer res.Body.Close()
 			statuses[i] = res.StatusCode
 		}(i)
@@ -221,5 +229,31 @@ func TestCredentialShare_ConcurrentReadsExactlyOneSucceeds(t *testing.T) {
 	}
 	if okCount != 1 || notFoundCount != 1 {
 		t.Fatalf("expected exactly one 200 and one 404 among concurrent reads, got %d 200s and %d 404s", okCount, notFoundCount)
+	}
+}
+
+// TestConsumeCredentialShare_MisconfiguredSecretReturns500 is the
+// regression test for the review's minor finding: GetCredentialShare used
+// to pass os.Getenv straight into Open, so a wrong-sized
+// CREDENTIAL_SHARE_SECRET would collapse into Open's generic
+// ErrInvalidOrExpired and surface as an ordinary 404 ("every link is
+// silently invalid") instead of a loud, diagnosable failure — asymmetric
+// with createAdmin, which already re-validates the secret before sealing.
+// This calls the handler directly (no DB, no router) since the
+// misconfiguration must be caught before either is ever touched.
+func TestConsumeCredentialShare_MisconfiguredSecretReturns500(t *testing.T) {
+	t.Setenv("CREDENTIAL_SHARE_SECRET", "too-short-for-aes-256")
+
+	body, err := json.Marshal(map[string]string{"token": "whatever-token"})
+	if err != nil {
+		t.Fatalf("marshal body: %v", err)
+	}
+	req := httptest.NewRequest(http.MethodPost, "/v1/credential-shares", bytes.NewReader(body))
+	rec := httptest.NewRecorder()
+
+	ConsumeCredentialShare(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("expected 500 for a misconfigured share secret, got %d", rec.Code)
 	}
 }
