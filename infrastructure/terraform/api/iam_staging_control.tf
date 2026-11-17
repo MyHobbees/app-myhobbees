@@ -24,7 +24,7 @@ resource "aws_iam_role_policy" "StagingControl" {
         "rds:StopDBInstance",
         "rds:DescribeDBInstances",
       ]
-      Resource = "arn:aws:rds:eu-west-3:${data.aws_caller_identity.current.account_id}:db:${var.app}-stg-database"
+      Resource = "arn:aws:rds:${var.aws_app_region}:${data.aws_caller_identity.current.account_id}:db:${var.app}-stg-database"
     }]
   })
 }

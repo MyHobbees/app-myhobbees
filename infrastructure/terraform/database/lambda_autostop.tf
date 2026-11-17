@@ -16,6 +16,7 @@ data "archive_file" "AutostopPlaceholder" {
   source {
     filename = "lambda_function.py"
     content  = <<-PYEOF
+      import json
       import os
       from datetime import datetime, timedelta, timezone
 
@@ -73,6 +74,13 @@ data "archive_file" "AutostopPlaceholder" {
           status = instances[0]["DBInstanceStatus"] if instances else None
 
           should_stop, reason = decide(datapoints, status)
+          print(json.dumps({
+              "db_instance_id": db_instance_id,
+              "decision": "stop" if should_stop else "no-stop",
+              "reason": reason,
+              "datapoint_count": len(datapoints),
+              "status": status,
+          }))
           if not should_stop:
               return {"stopped": False, "reason": reason}
 

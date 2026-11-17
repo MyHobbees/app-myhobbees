@@ -22,6 +22,7 @@ const statusLabels: Record<string, string> = {
 export function StagingDbPage() {
   const [status, setStatus] = useState<StagingStatus | null>(null)
   const [starting, setStarting] = useState(false)
+  const [startError, setStartError] = useState<string | null>(null)
 
   function refresh() {
     return getStagingStatus().then(setStatus)
@@ -33,9 +34,12 @@ export function StagingDbPage() {
 
   async function handleStart() {
     setStarting(true)
+    setStartError(null)
     try {
       await startStaging()
       await refresh()
+    } catch (error) {
+      setStartError(error instanceof Error ? error.message : String(error))
     } finally {
       setStarting(false)
     }
@@ -82,6 +86,13 @@ export function StagingDbPage() {
             </Alert>
           ) : null}
 
+          {startError ? (
+            <Alert variant="destructive">
+              <AlertTitle>Erreur</AlertTitle>
+              <AlertDescription>{startError}</AlertDescription>
+            </Alert>
+          ) : null}
+
           <div>
             <Button disabled={busy || !canStart} onClick={handleStart}>
               Démarrer le staging
@@ -90,7 +101,7 @@ export function StagingDbPage() {
 
           <p className="text-sm text-muted-foreground">
             La base redémarre seule après 7 jours d'arrêt continu, et s'arrête
-            seule après 30 minutes sans connexion.
+            seule après ~30 minutes d'inactivité confirmée.
           </p>
         </CardContent>
       </Card>
