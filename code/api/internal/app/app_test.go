@@ -46,6 +46,7 @@ func TestProtectedRoutesRequireAuth(t *testing.T) {
 	// aidd_docs/tasks/.../review.md, the fail-closed-by-accident finding).
 	protectedPaths := []string{
 		"/v1/shopify/status",
+		"/v1/infra/staging/status",
 		"/v1/example/me",
 		"/v1/analytics/posthog/overview?days=30",
 		"/v1/leads",
