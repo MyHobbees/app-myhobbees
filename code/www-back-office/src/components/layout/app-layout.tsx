@@ -43,10 +43,6 @@ import { useAuthStore } from '@/stores/auth'
 import { useEnvStore, type Env } from '@/stores/env'
 import { useThemeStore, type Theme } from '@/stores/theme'
 
-// Ties the stgOnly gate's literal to the Env union, so a typo here (e.g.
-// "sgt") fails to compile instead of silently hiding "Outils dev" forever.
-const stgEnv: Env = 'stg'
-
 type NavItem = {
   title: string
   url: string
@@ -151,7 +147,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <SidebarMenu>
                   {group.items
                     .filter((item) => !item.superAdminOnly || isSuperAdmin)
-                    .filter((item) => !item.stgOnly || env === stgEnv)
+                    .filter((item) => !item.stgOnly || env === ('stg' satisfies Env))
                     .map((item) => (
                       <SidebarMenuItem key={item.title}>
                         {item.disabled ? (

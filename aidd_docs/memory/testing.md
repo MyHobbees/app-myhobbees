@@ -2,7 +2,7 @@
 
 ## Strategy
 
-- Unit tests across the Go API. Three frontend component-test suites exist so far, all in `code/www-back-office/src/pages/`: `admins.test.tsx` (create-form submit, delete-confirm/cancel), `credential-share.test.tsx`, and `dev-tools.test.tsx` (seed/cleanup quantity form, error display) — added because no browser-automation tool is available in this environment to exercise those click paths directly, see [auth.md](auth.md). No other integration, e2e, or frontend tests exist in any of the three frontends.
+- Unit tests across the Go API. Four frontend component-test suites exist so far: `src/pages/admins.test.tsx` (create-form submit, delete-confirm/cancel), `src/pages/credential-share.test.tsx`, `src/pages/dev-tools.test.tsx` (seed/cleanup quantity form, error display), and `src/components/layout/app-layout.test.tsx` (the `stgOnly` nav filter) — added because no browser-automation tool is available in this environment to exercise those click paths directly, see [auth.md](auth.md). No other integration, e2e, or frontend tests exist in any of the three frontends.
 
 ## Tools
 
