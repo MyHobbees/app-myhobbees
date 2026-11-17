@@ -21,6 +21,34 @@ data "archive_file" "AutostopPlaceholder" {
 
       import boto3
 
+      WINDOW_SECONDS = 1800
+      PERIOD_SECONDS = 60
+      EXPECTED_DATAPOINTS = WINDOW_SECONDS // PERIOD_SECONDS
+      MIN_DATAPOINTS = EXPECTED_DATAPOINTS - 2
+
+
+      def decide(datapoints, status):
+          # RDS reports a live DatabaseConnections=0 datapoint within ~60s of
+          # reaching "available" -- a single zero datapoint only proves "no
+          # connection in the last minute", not "idle for 30 minutes". The
+          # only way to tell a freshly started instance apart from a genuinely
+          # idle one is datapoint *coverage*: querying Period=60 over the full
+          # 1800s window, a confirmed-idle instance has been reporting zeros
+          # for the whole window and so returns close to EXPECTED_DATAPOINTS
+          # (30) datapoints; an instance that started a few minutes ago has
+          # only as many datapoints as minutes elapsed since start, far below
+          # that count. Only trust the all-zero verdict once coverage is
+          # near-complete (allowing a small tolerance for metric publish
+          # delay); anything sparser is "not enough confirmed history yet",
+          # exactly like the zero-datapoints case, just generalized.
+          if status != "available":
+              return False, "instance not available"
+          if len(datapoints) < MIN_DATAPOINTS:
+              return False, "not enough confirmed idle history yet"
+          if not all(point["Maximum"] == 0 for point in datapoints):
+              return False, "connection seen in the last 30 minutes"
+          return True, "confirmed idle for 30 minutes"
+
 
       def lambda_handler(event, context):
           db_instance_id = os.environ["DB_INSTANCE_ID"]
@@ -33,26 +61,20 @@ data "archive_file" "AutostopPlaceholder" {
               Namespace="AWS/RDS",
               MetricName="DatabaseConnections",
               Dimensions=[{"Name": "DBInstanceIdentifier", "Value": db_instance_id}],
-              StartTime=now - timedelta(minutes=30),
+              StartTime=now - timedelta(seconds=WINDOW_SECONDS),
               EndTime=now,
-              Period=1800,
+              Period=PERIOD_SECONDS,
               Statistics=["Maximum"],
           )
           datapoints = metrics.get("Datapoints", [])
-          if not datapoints:
-              # No datapoints yet is not the same as "idle": right after a
-              # start, CloudWatch hasn't populated DatabaseConnections for
-              # this window yet. Treat that as unknown and never stop.
-              return {"stopped": False, "reason": "no datapoints yet, not enough data"}
-
-          all_idle = all(point["Maximum"] == 0 for point in datapoints)
-          if not all_idle:
-              return {"stopped": False, "reason": "connection seen in the last 30 minutes"}
 
           describe = rds.describe_db_instances(DBInstanceIdentifier=db_instance_id)
           instances = describe.get("DBInstances", [])
-          if not instances or instances[0]["DBInstanceStatus"] != "available":
-              return {"stopped": False, "reason": "instance not available"}
+          status = instances[0]["DBInstanceStatus"] if instances else None
+
+          should_stop, reason = decide(datapoints, status)
+          if not should_stop:
+              return {"stopped": False, "reason": reason}
 
           rds.stop_db_instance(DBInstanceIdentifier=db_instance_id)
           return {"stopped": True}

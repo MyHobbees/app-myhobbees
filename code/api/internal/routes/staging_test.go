@@ -14,12 +14,13 @@ import (
 
 // Staging() no longer applies auth.Middleware itself: that single
 // responsibility lives in app.go's protected /v1 group (mirrors
-// analytics_test.go). Unlike Analytics(), Staging() is mounted in app.go at
-// a path ("/infra/staging") that does not match its own route names
-// ("/status", "/start") byte-for-byte, so wrapping it bare at the test
-// server's root would never exercise the real mounted path and would pass
-// even if app.go's mount path drifted again. Mount it the same way app.go
-// does instead.
+// analytics_test.go). This suite only exercises Staging()'s own route
+// handlers in isolation (status codes, the not-configured branch); it
+// mounts at its own "/infra/staging" literal rather than going through
+// app.New(), so it does NOT guard against app.go's mount path drifting —
+// that regression guard lives in
+// TestStagingMountedAtStagingSubpath in internal/app/app_test.go, which
+// builds the real router and would 404 if the mount path regressed.
 func stagingTestServer(t *testing.T) *httptest.Server {
 	t.Helper()
 	r := chi.NewRouter()
