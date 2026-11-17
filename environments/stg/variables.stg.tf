@@ -82,7 +82,12 @@ variable "db_deletion_protection" {
 }
 
 variable "db_app_username" {
-  default = "myhobbees"
+  # Must match the role infrastructure/scripts/migrate.py::ensure_app_user
+  # actually creates ("{APP_NAME}_app"), not the RDS master username
+  # (var.db_username) — they used to share the same literal default, so the
+  # Lambda silently authenticated as the master role with the app
+  # password and failed (SQLSTATE 28P01) as soon as the two secrets diverged.
+  default = "myhobbees_app"
 }
 
 variable "db_app_password" {
