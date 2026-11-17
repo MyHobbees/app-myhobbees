@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Loader2, Trash2 } from 'lucide-react'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -10,215 +10,114 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { seedBase, seedCleanup, seedOrders } from '@/lib/api'
+import { cleanupSeedLeads, seedLeads } from '@/lib/api'
 
-type SeedSummary = {
-  products: number
-  customers: number
-  orders: number
-  renewals: number
-}
-
-type CleanupSummary = {
-  orders: number
-  customers: number
-  products: number
-  sellingPlanGroups: number
-}
-
-const THROTTLE_WAIT_MS = 60_000
-
-function wait(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
+const DEFAULT_COUNT = 10
 
 export function DevToolsPage() {
-  const [running, setRunning] = useState<'seed' | 'cleanup' | null>(null)
-  const [progress, setProgress] = useState<string | null>(null)
-  const [seedResult, setSeedResult] = useState<SeedSummary | null>(null)
-  const [cleanupResult, setCleanupResult] = useState<CleanupSummary | null>(null)
+  const [count, setCount] = useState(String(DEFAULT_COUNT))
+  const [seeding, setSeeding] = useState(false)
+  const [cleaning, setCleaning] = useState(false)
+  const [seedResult, setSeedResult] = useState<{ created: number } | null>(null)
+  const [cleanupResult, setCleanupResult] = useState<{ deleted: number } | null>(
+    null,
+  )
   const [error, setError] = useState<string | null>(null)
 
-  function reset() {
-    setProgress(null)
-    setSeedResult(null)
-    setCleanupResult(null)
+  async function onSeed(e: FormEvent) {
+    e.preventDefault()
+    setSeeding(true)
     setError(null)
-  }
-
-  async function onSeed() {
-    setRunning('seed')
-    reset()
     try {
-      setProgress('Création des produits et clients…')
-      const base = await seedBase()
-
-      let queue = base.orders
-      const total = queue.length
-      let created = 0
-      let renewals = 0
-      setProgress(`Création des commandes : 0/${total}`)
-
-      while (queue.length > 0) {
-        const res = await seedOrders(queue)
-        created += res.created
-        renewals += res.renewals
-        queue = queue.slice(res.created)
-        if (queue.length > 0) {
-          setProgress(
-            `Création des commandes : ${created}/${total} — pause (limite Shopify, reprise auto)`,
-          )
-          await wait(THROTTLE_WAIT_MS)
-        }
-      }
-
-      setSeedResult({
-        products: base.products,
-        customers: base.customers,
-        orders: created,
-        renewals,
-      })
+      const result = await seedLeads(Number(count))
+      setSeedResult(result)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue')
     } finally {
-      setRunning(null)
-      setProgress(null)
+      setSeeding(false)
     }
   }
 
   async function onCleanup() {
-    setRunning('cleanup')
-    reset()
+    setCleaning(true)
+    setError(null)
     try {
-      const totals: CleanupSummary = {
-        orders: 0,
-        customers: 0,
-        products: 0,
-        sellingPlanGroups: 0,
-      }
-      let remaining = true
-      while (remaining) {
-        const res = await seedCleanup()
-        totals.orders += res.orders
-        totals.customers += res.customers
-        totals.products += res.products
-        totals.sellingPlanGroups += res.sellingPlanGroups
-        remaining = res.remaining
-        setProgress(
-          `Suppression… ${totals.orders} commandes, ${totals.customers} clients, ${totals.products} produits`,
-        )
-        if (remaining && res.throttled) {
-          await wait(THROTTLE_WAIT_MS)
-        }
-      }
-      setCleanupResult(totals)
+      const result = await cleanupSeedLeads()
+      setCleanupResult(result)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue')
     } finally {
-      setRunning(null)
-      setProgress(null)
+      setCleaning(false)
     }
   }
 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">Outils de développement</h1>
+        <h1 className="text-2xl font-semibold">Outils dev</h1>
         <p className="text-muted-foreground">
-          Utilitaires réservés aux environnements de développement
+          Peuple la base de données de staging avec des leads de test (sans
+          dépendance à Shopify)
         </p>
       </div>
 
       <Card className="max-w-xl">
         <CardHeader>
-          <CardTitle>Données de test</CardTitle>
+          <CardTitle>Leads de test</CardTitle>
           <CardDescription>
-            Génère le catalogue de test : la Box Passion en abonnement 12 mois
-            (une passion créative par mois), les 12 box individuelles
-            correspondantes, des clients et des commandes avec renouvellements
-            simulés. Shopify limite la création de commandes (~5/min) : la
-            génération complète prend quelques minutes.
+            Insère directement des lignes dans la table <code>leads</code>,
+            reconnaissables par leur email au format{' '}
+            <code>seed-&lt;n&gt;@example.test</code>, pour peupler la page
+            Inscriptions sans jamais toucher à Shopify.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <div className="flex flex-wrap gap-2">
-            <Button
-              onClick={onSeed}
-              disabled={running !== null}
-            >
-              {running === 'seed' && <Loader2 className="animate-spin" />}
-              {running === 'seed'
-                ? 'Génération en cours…'
-                : 'Générer des données de test'}
+          <form onSubmit={onSeed} className="flex items-end gap-2">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="seed-count">Quantité</Label>
+              <Input
+                id="seed-count"
+                type="number"
+                min={1}
+                max={100}
+                value={count}
+                onChange={(e) => setCount(e.target.value)}
+                className="w-24"
+              />
+            </div>
+            <Button type="submit" disabled={seeding}>
+              {seeding && <Loader2 className="animate-spin" />}
+              {seeding ? 'Génération en cours…' : 'Seeder'}
             </Button>
+          </form>
+
+          {seedResult && (
+            <p className="text-sm text-muted-foreground">
+              ✓ {seedResult.created} leads de test créées
+            </p>
+          )}
+
+          <Separator />
+
+          <div>
             <Button
               variant="outline"
               onClick={onCleanup}
-              disabled={running !== null}
+              disabled={cleaning}
               className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
             >
-              {running === 'cleanup' ? (
-                <Loader2 className="animate-spin" />
-              ) : (
-                <Trash2 />
-              )}
-              {running === 'cleanup'
-                ? 'Suppression en cours…'
-                : 'Tout supprimer'}
+              {cleaning ? <Loader2 className="animate-spin" /> : <Trash2 />}
+              {cleaning ? 'Suppression en cours…' : 'Nettoyer les leads de test'}
             </Button>
           </div>
 
-          {progress && (
-            <p className="text-sm text-muted-foreground">{progress}</p>
-          )}
-
-          {seedResult && (
-            <dl className="flex flex-col gap-3 text-sm">
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Produits</dt>
-                <dd className="font-medium">{seedResult.products}</dd>
-              </div>
-              <Separator />
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Clients</dt>
-                <dd className="font-medium">{seedResult.customers}</dd>
-              </div>
-              <Separator />
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Commandes</dt>
-                <dd className="font-medium">{seedResult.orders}</dd>
-              </div>
-              <Separator />
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">dont renouvellements</dt>
-                <dd className="font-medium">{seedResult.renewals}</dd>
-              </div>
-            </dl>
-          )}
-
           {cleanupResult && (
-            <dl className="flex flex-col gap-3 text-sm">
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Commandes supprimées</dt>
-                <dd className="font-medium">{cleanupResult.orders}</dd>
-              </div>
-              <Separator />
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Clients supprimés</dt>
-                <dd className="font-medium">{cleanupResult.customers}</dd>
-              </div>
-              <Separator />
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Produits supprimés</dt>
-                <dd className="font-medium">{cleanupResult.products}</dd>
-              </div>
-              <Separator />
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Groupes d'abonnement</dt>
-                <dd className="font-medium">{cleanupResult.sellingPlanGroups}</dd>
-              </div>
-            </dl>
+            <p className="text-sm text-muted-foreground">
+              ✓ {cleanupResult.deleted} leads de test supprimées
+            </p>
           )}
 
           {error && (
