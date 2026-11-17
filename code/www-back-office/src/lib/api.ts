@@ -1,6 +1,6 @@
 import { useAuthStore } from '@/stores/auth'
 
-const baseUrl = import.meta.env.VITE_API_URL ?? ''
+export const baseUrl = import.meta.env.VITE_API_URL ?? ''
 
 export class UnauthorizedError extends Error {
   constructor() {
@@ -44,51 +44,6 @@ export type ShopifyStatus = {
     currency: string
     plan: string
   }
-}
-
-export type OrderSpec = {
-  customerId: string
-  variantId: string
-  quantity: number
-  processedAt: string
-  tags?: string[]
-  contractId?: string
-}
-
-export type SeedBase = {
-  products: number
-  customers: number
-  orders: OrderSpec[]
-}
-
-export type SeedOrdersResult = {
-  created: number
-  renewals: number
-  throttled: boolean
-}
-
-export function seedBase() {
-  return apiFetch<SeedBase>('/v1/shopify/seed', { method: 'POST' })
-}
-
-export function seedOrders(orders: OrderSpec[]) {
-  return apiFetch<SeedOrdersResult>('/v1/shopify/seed/orders', {
-    method: 'POST',
-    body: JSON.stringify({ orders }),
-  })
-}
-
-export type CleanupResult = {
-  orders: number
-  customers: number
-  products: number
-  sellingPlanGroups: number
-  remaining: boolean
-  throttled: boolean
-}
-
-export function seedCleanup() {
-  return apiFetch<CleanupResult>('/v1/shopify/seed/cleanup', { method: 'POST' })
 }
 
 export type Money = { amount: string; currency: string }
@@ -275,6 +230,16 @@ export type Lead = {
 
 export function getLeads() {
   return apiFetch<Lead[]>('/v1/leads')
+}
+
+export function seedLeads(count: number) {
+  return apiFetch<{ created: number }>(`/v1/leads/seed?count=${count}`, {
+    method: 'POST',
+  })
+}
+
+export function cleanupSeedLeads() {
+  return apiFetch<{ deleted: number }>('/v1/leads/seed', { method: 'DELETE' })
 }
 
 export type Admin = {

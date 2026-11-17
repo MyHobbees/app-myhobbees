@@ -4,10 +4,12 @@ import { RouterProvider } from 'react-router/dom'
 
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { router } from '@/router'
+import { initEnv } from '@/stores/env'
 import { initTheme } from '@/stores/theme'
 import './index.css'
 
 initTheme()
+void initEnv()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

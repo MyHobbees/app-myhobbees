@@ -11,8 +11,8 @@
 - `/v1/auth`: `POST /login`, admin credential check against the `admins` table, issues a JWT — see [auth.md](auth.md)
 - `/v1/admins`: `POST /`, `GET /`, `DELETE /{id}` — super-admin only, manages the `admins` table — see [auth.md](auth.md)
 - `/v1/example`: sample protected routes (`/me`, `/db-check`) kept as a reference pattern
-- `/v1/shopify`: status, analytics, orders, products, customers, and seed/cleanup endpoints proxying the Shopify Admin API — see [integration.md](integration.md)
-- `/v1/leads`: `POST /`, public, stores a `www-shop` "Me prévenir" pre-launch form submission — see [database.md](database.md); `GET /`, protected, lists submissions for the back-office
+- `/v1/shopify`: status, analytics, orders, products, customers proxying the Shopify Admin API — see [integration.md](integration.md)
+- `/v1/leads`: `POST /`, public, stores a `www-shop` "Me prévenir" pre-launch form submission — see [database.md](database.md); `GET /`, protected, lists submissions for the back-office; `POST /seed` and `DELETE /seed`, protected and additionally gated on `APP_ENV == "stg"` exactly (403 on `loc` and `prd` too), populate/clean test rows directly in Postgres — no Shopify involved, see [deployment.md](deployment.md)
 - `/v1/analytics`: `GET /posthog/overview`, protected, PostHog HogQL-derived overview (visitors, event counts, pageviews by day) cached per period; the "visitor → email" rate is sourced from the `leads` table count, not the PostHog event, for reliability
 
 ## Contracts
