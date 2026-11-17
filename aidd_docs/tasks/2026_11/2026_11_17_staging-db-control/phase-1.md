@@ -80,7 +80,7 @@ journey
 
 > One line in the existing single point of truth for `/v1` auth.
 
-1. In `code/api/internal/app/app.go`, inside the existing `r.Group(func(r chi.Router) { r.Use(auth.Middleware); ... })` block, add `r.Mount("/infra", routes.Staging())` next to the `/shopify` and `/analytics` mounts — not inside the inner `RequireSuperAdmin` group.
+1. In `code/api/internal/app/app.go`, inside the existing `r.Group(func(r chi.Router) { r.Use(auth.Middleware); ... })` block, add `r.Mount("/infra/staging", routes.Staging())` next to the `/shopify` and `/analytics` mounts — not inside the inner `RequireSuperAdmin` group. (Mounting at bare `/infra` was tried first and shipped a 404 end-to-end against the back-office's `/v1/infra/staging/*` calls — fixed in `9d119297`; this instruction reflects the corrected path, not the original bug.)
 
 ### `4)` Tidy modules
 
