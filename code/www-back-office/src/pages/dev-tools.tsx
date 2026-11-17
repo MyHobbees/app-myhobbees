@@ -14,10 +14,23 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { cleanupSeedLeads, seedLeads } from '@/lib/api'
+import { useEnvStore } from '@/stores/env'
 
 const DEFAULT_COUNT = 10
 
 export function DevToolsPage() {
+  // Same intent as admins.tsx surfacing its restriction at mount (it fires
+  // GET /v1/admins immediately instead of waiting for a click): here there
+  // is no safe idempotent GET to probe with, so this reads the client-side
+  // env store (already populated by initEnv() at app load) to show the
+  // restriction before any button is even clickable, rather than only
+  // after a 403 comes back. The server-side APP_ENV == "stg" check in
+  // SeedLeads/CleanupSeedLeads remains the actual security boundary — this
+  // is UX only, and fails closed the same way the nav filter does (null or
+  // non-stg both disable the page).
+  const env = useEnvStore((s) => s.env)
+  const isStg = env === 'stg'
+
   const [count, setCount] = useState(String(DEFAULT_COUNT))
   const [seeding, setSeeding] = useState(false)
   const [cleaning, setCleaning] = useState(false)
@@ -31,6 +44,8 @@ export function DevToolsPage() {
     e.preventDefault()
     setSeeding(true)
     setError(null)
+    setSeedResult(null)
+    setCleanupResult(null)
     try {
       const result = await seedLeads(Number(count))
       setSeedResult(result)
@@ -44,6 +59,8 @@ export function DevToolsPage() {
   async function onCleanup() {
     setCleaning(true)
     setError(null)
+    setSeedResult(null)
+    setCleanupResult(null)
     try {
       const result = await cleanupSeedLeads()
       setCleanupResult(result)
@@ -75,6 +92,16 @@ export function DevToolsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
+          {!isStg && (
+            <Alert variant="destructive">
+              <AlertTitle>Indisponible hors staging</AlertTitle>
+              <AlertDescription>
+                Cette page n'a d'effet qu'en environnement stg ; l'API
+                refusera toute tentative de seed ou de nettoyage ailleurs.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <form onSubmit={onSeed} className="flex items-end gap-2">
             <div className="flex flex-col gap-2">
               <Label htmlFor="seed-count">Quantité</Label>
@@ -85,10 +112,11 @@ export function DevToolsPage() {
                 max={100}
                 value={count}
                 onChange={(e) => setCount(e.target.value)}
+                disabled={!isStg}
                 className="w-24"
               />
             </div>
-            <Button type="submit" disabled={seeding}>
+            <Button type="submit" disabled={seeding || !isStg}>
               {seeding && <Loader2 className="animate-spin" />}
               {seeding ? 'Génération en cours…' : 'Seeder'}
             </Button>
@@ -106,7 +134,7 @@ export function DevToolsPage() {
             <Button
               variant="outline"
               onClick={onCleanup}
-              disabled={cleaning}
+              disabled={cleaning || !isStg}
               className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
             >
               {cleaning ? <Loader2 className="animate-spin" /> : <Trash2 />}
