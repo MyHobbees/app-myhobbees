@@ -220,7 +220,59 @@ var (
 	seedActivities            = []string{"Crochet", "Couture", "Peinture", "Autre"}
 	seedAcquisitionChannels   = []string{"Instagram", "TikTok", "Recherche Google", "Bouche-à-oreille", "Autre"}
 	seedSubscriptionInterests = []string{"Box créative surprise", "Box + accès à l’application", "Parcours d’apprentissage"}
+	seedUTMSources            = []string{"google", "instagram", "tiktok", "newsletter"}
+	seedUTMMediums            = []string{"cpc", "social", "email"}
+	seedUTMCampaigns          = []string{"lancement-2026", "box-creative-promo", "pre-launch"}
+	seedReferrers             = []string{"https://www.google.com/", "https://www.instagram.com/", "https://www.tiktok.com/"}
 )
+
+// seedCreatedAtWindowDays spreads seeded leads over the last month instead
+// of all landing at the exact same instant: the back-office's "7 derniers
+// jours" stat and countLeadsSince (analytics.go) are otherwise untestable
+// against seeded data, since every row would fall in (or out of) every
+// window identically.
+const seedCreatedAtWindowDays = 30
+
+func randomSeedCreatedAt() time.Time {
+	daysBack := rand.Intn(seedCreatedAtWindowDays)
+	secondsBack := rand.Intn(24 * 60 * 60)
+	return time.Now().
+		Add(-time.Duration(daysBack) * 24 * time.Hour).
+		Add(-time.Duration(secondsBack) * time.Second)
+}
+
+// randomSeedActivities picks 1 to 3 distinct activities: the real form is a
+// multi-select (code/www-shop/app/routes/me-prevenir.tsx), so a seed that
+// always picks exactly one misrepresents real submissions.
+func randomSeedActivities() []string {
+	shuffled := append([]string(nil), seedActivities...)
+	rand.Shuffle(len(shuffled), func(i, j int) { shuffled[i], shuffled[j] = shuffled[j], shuffled[i] })
+	n := 1 + rand.Intn(3)
+	if n > len(shuffled) {
+		n = len(shuffled)
+	}
+	return shuffled[:n]
+}
+
+// randomSeedAttribution mimics the real mix of acquisition paths instead of
+// leaving utm_*/referrer permanently empty: roughly half of leads arrive
+// through a tracked campaign (utm_* filled, no referrer), a quarter through
+// an untracked referrer link (referrer filled, no utm_*), and the rest
+// direct (nothing filled) — never a single column uniformly NULL or
+// uniformly filled.
+func randomSeedAttribution() (utmSource, utmMedium, utmCampaign, referrer any) {
+	switch rand.Intn(4) {
+	case 0, 1:
+		return seedUTMSources[rand.Intn(len(seedUTMSources))],
+			seedUTMMediums[rand.Intn(len(seedUTMMediums))],
+			seedUTMCampaigns[rand.Intn(len(seedUTMCampaigns))],
+			nil
+	case 2:
+		return nil, nil, nil, seedReferrers[rand.Intn(len(seedReferrers))]
+	default:
+		return nil, nil, nil, nil
+	}
+}
 
 // requireStg is the single-point-of-truth guard for both seed endpoints:
 // "stg uniquement" means exactly that, not "everything but prd" — loc is
@@ -266,6 +318,17 @@ func SeedLeads(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// All rows commit together or not at all: a mid-loop failure must never
+	// leave a partially-seeded, uncounted batch behind (the "created"
+	// response would otherwise lie about what actually landed).
+	tx, err := pool.Begin(req.Context())
+	if err != nil {
+		log.Printf("leads: seed begin tx: %v", err)
+		httpjson.Error(w, http.StatusBadGateway, "Could not seed leads")
+		return
+	}
+	defer tx.Rollback(req.Context())
+
 	// base+i, not a shared counter: leads.email carries no unique
 	// constraint (see code/database/migrations), but a distinct number per
 	// row still lets several successive seeds coexist without ever
@@ -273,19 +336,27 @@ func SeedLeads(w http.ResponseWriter, req *http.Request) {
 	base := time.Now().UnixNano()
 	for i := 0; i < count; i++ {
 		email := fmt.Sprintf("seed-%d@%s", base+int64(i), seedEmailDomain)
-		activities := []string{seedActivities[rand.Intn(len(seedActivities))]}
+		activities := randomSeedActivities()
 		channel := seedAcquisitionChannels[rand.Intn(len(seedAcquisitionChannels))]
 		interest := seedSubscriptionInterests[rand.Intn(len(seedSubscriptionInterests))]
+		createdAt := randomSeedCreatedAt()
+		utmSource, utmMedium, utmCampaign, referrer := randomSeedAttribution()
 
-		_, err := pool.Exec(req.Context(), `
-			INSERT INTO leads (email, activities, acquisition_channel, subscription_interest)
-			VALUES ($1, $2, $3, $4)
-		`, email, activities, channel, interest)
+		_, err := tx.Exec(req.Context(), `
+			INSERT INTO leads (email, activities, acquisition_channel, subscription_interest, utm_source, utm_medium, utm_campaign, referrer, created_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		`, email, activities, channel, interest, utmSource, utmMedium, utmCampaign, referrer, createdAt)
 		if err != nil {
 			log.Printf("leads: seed insert: %v", err)
 			httpjson.Error(w, http.StatusBadGateway, "Could not seed leads")
 			return
 		}
+	}
+
+	if err := tx.Commit(req.Context()); err != nil {
+		log.Printf("leads: seed commit: %v", err)
+		httpjson.Error(w, http.StatusBadGateway, "Could not seed leads")
+		return
 	}
 
 	httpjson.OK(w, http.StatusOK, map[string]int{"created": count})

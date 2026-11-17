@@ -123,6 +123,60 @@ func TestSeedLeads_HappyPath_SeedsThenCleansUpWithoutTouchingRealLeads(t *testin
 	}
 }
 
+// TestSeedLeads_DataIsVaried is the regression test for the review's
+// warning: seeded rows used to all share one created_at, carry exactly one
+// activity each, and never fill utm_*/referrer, making countLeadsSince's
+// day-window stat and the "Source" column always degenerate for seeded
+// data. A reasonably large batch must show variety on all three axes.
+func TestSeedLeads_DataIsVaried(t *testing.T) {
+	t.Setenv("APP_ENV", "stg")
+	pool := testLeadsPool(t)
+	ctx := context.Background()
+
+	rec := doSeedLeads("20")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 seeding, got %d: %s", rec.Code, rec.Body.String())
+	}
+	t.Cleanup(func() {
+		doCleanupSeedLeads()
+	})
+
+	var distinctDates int
+	if err := pool.QueryRow(ctx, `
+		SELECT COUNT(DISTINCT created_at::date) FROM leads WHERE email LIKE $1
+	`, seedEmailPattern).Scan(&distinctDates); err != nil {
+		t.Fatalf("count distinct dates: %v", err)
+	}
+	if distinctDates < 2 {
+		t.Fatalf("expected seeded leads spread over more than 1 day, got %d distinct day(s)", distinctDates)
+	}
+
+	var singleActivityCount, totalCount int
+	if err := pool.QueryRow(ctx, `
+		SELECT COUNT(*) FILTER (WHERE array_length(activities, 1) = 1), COUNT(*)
+		FROM leads WHERE email LIKE $1
+	`, seedEmailPattern).Scan(&singleActivityCount, &totalCount); err != nil {
+		t.Fatalf("count activities lengths: %v", err)
+	}
+	if singleActivityCount == totalCount {
+		t.Fatalf("expected some seeded leads to have more than 1 activity, all %d had exactly 1", totalCount)
+	}
+
+	var withUTM, withoutUTM int
+	if err := pool.QueryRow(ctx, `
+		SELECT COUNT(*) FILTER (WHERE utm_source IS NOT NULL), COUNT(*) FILTER (WHERE utm_source IS NULL)
+		FROM leads WHERE email LIKE $1
+	`, seedEmailPattern).Scan(&withUTM, &withoutUTM); err != nil {
+		t.Fatalf("count utm_source presence: %v", err)
+	}
+	if withUTM == 0 {
+		t.Fatalf("expected at least one seeded lead with utm_source filled, got none")
+	}
+	if withoutUTM == 0 {
+		t.Fatalf("expected at least one seeded lead without utm_source, got none (all filled)")
+	}
+}
+
 // TestSeedLeads_WrongEnvironment_Returns403AndTouchesNothing covers the
 // Test Scope's "mauvais environnement" edge case: both loc and prd must be
 // rejected with 403 on both the seed and cleanup routes, and no row may be
