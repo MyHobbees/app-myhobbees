@@ -1,0 +1,47 @@
+# Review: Staging DB control from the prd back-office
+
+- **Verdict**: approve
+- **Diff**: `6a1dc50c...5831d15d` (fourth pass, re-review after the warnings/minors commit)
+- **Axes run**: code, functional, relevancy
+- **Date**: 2026_11_17
+- **Findings**: 0 critical, 0 warning, 3 minor
+
+## Phases
+
+### Phase 1 — Go API: staging DB control
+
+- [x] `go build ./...` succeeds; `Stop` exists with the same fault-swallowing behavior as `Start` — `code/api/internal/awsrds/client.go:51-60` vs `:62-71`, both `errors.As` on `*types.InvalidDBInstanceStateFault`. From a clean `git worktree` of `5831d15d`: `go build ./...` OK, `go vet ./...` OK, `gofmt -l .` empty, `go test ./... -count=1` ok for `internal/app`, `internal/auth`, `internal/jwt`, `internal/posthog`, `internal/routes`
+- [ ] `GET /v1/infra/staging/status` returns `connected:false` when `STAGING_DB_IDENTIFIER` is unset, **and a real status string when set** (mockable via an interface or integration test) — first half proven twice (`code/api/internal/routes/staging_test.go:31-55` in isolation, `code/api/internal/app/app_test.go:94-105` through the real `app.New()` router, both 200). Second half still has no seam and no coverage: `FromEnv` returns a concrete `*Client` wrapping a real `*rds.Client` (`client.go:26-36`), so `Status`/`Start` cannot be faked. Owner-deferred to real stg validation — see `Verification`
+- [x] A request to `/v1/infra/staging/status` without a Bearer token returns 401 — `code/api/internal/app/app_test.go:40-70` asserts it alongside every other `/v1` mount; `TestStagingMountedAtStagingSubpath` (`:82-119`) removes the vacuity by authenticating, so a mount regression 404s instead of passing; no `auth.Middleware` re-applied in `code/api/internal/routes/staging.go`
+- [x] `go.mod` lists `aws-sdk-go-v2/config` and `aws-sdk-go-v2/service/rds` as direct requires; `go vet ./...` is clean — `code/api/go.mod`, both outside the `// indirect` block; `go vet ./...` clean in the clean worktree
+
+### Phase 2 — Terraform: IAM + auto-stop Lambda
+
+- [x] `api` with `var.env=prd` shows the policy; with `var.env=stg` nothing for `StagingControl` — gated `count = var.env == "prd" ? 1 : 0` (`infrastructure/terraform/api/iam_staging_control.tf:13`), exactly 3 actions (`:23-25`), exactly 1 ARN templated from `var.aws_app_region` + `data.aws_caller_identity` (`:10,27`). Repo-wide grep: no `rds:*`, no `DeleteDBInstance` in `code/api` or `infrastructure/terraform`. `tofu validate` **Success** for api/stg and api/prd from a clean worktree of `5831d15d`, with `variables.<env>.tf` copied in exactly as `infrastructure/scripts/terraform.py:66` does. Negative control without the var-file errors `An input variable with the name "aws_app_region" has not been declared`, proving the reference resolves through the same declaration `providers.tf:16` uses
+- [x] `database` with `var.env=stg` shows the Lambda, role, log group, and event rule; with `var.env=prd` nothing — all 9 resources gated `var.env == "stg" ? 1 : 0` (`lambda_autostop.tf:11,94,109,116,144,151,173,180,187`); `tofu validate` **Success** for database/stg and database/prd; handler `lambda_function.lambda_handler` (`:155`) matches the zipped `lambda_function.py`; log group `/aws/lambda/${var.app}-${var.env}-autostop` (`:146`) matches `function_name` (`:153`), so the handler's stdout lands in the provisioned group
+- [x] `infra.md` names the exact 3 actions, the 1 ARN, the no-data-loss guarantee, and the 7-day auto-restart — `aidd_docs/memory/infra.md:24-28`
+- [x] *(prior warning, re-verified by execution)* The autostop decision is observable on every invocation — extracted the committed heredoc, applied Terraform's `<<-` dedent (6 chars), stubbed `boto3`, and ran `lambda_handler` for 7 cases. Every run emitted **exactly one** line, each valid JSON with exactly the keys `db_instance_id`/`decision`/`reason`/`datapoint_count`/`status`, printed at `lambda_autostop.tf:77-83` **before** the no-stop return (`:84`) and before `stop_db_instance` (`:87`), so both branches are covered. `status=None` serializes to `null` cleanly. Decisions correct at the boundary: 30 zeros → `stop`, 28 zeros → `stop`, 27 zeros → `no-stop`, 0 datapoints → `no-stop`, 30 datapoints with one non-zero → `no-stop`, status `starting` → `no-stop`, no instance → `no-stop`
+
+### Phase 3 — Back-office: staging DB page
+
+- [x] `getStagingStatus()` and `startStaging()` resolve/throw through the same `apiFetch` error handling as `getShopifyStatus()` — `code/www-back-office/src/lib/api.ts:327-337` mirrors `:309-320`; `startStaging()` (`:339-341`) is a bare `apiFetch`, so 401 → `logout()` + `UnauthorizedError` and non-OK → thrown `Error` both come from `apiFetch` itself (`:18-25`)
+- [x] Loading, stopped, starting, available, and error states are visually distinct — five distinct render branches in `code/www-back-office/src/pages/staging-db.tsx`: `Skeleton` (`:65`), `destructive` Badge "Non configurée" (`:67`), green Badge for `available` (`:69-76`), `secondary` Badge with distinct French labels for `stopped`/`starting` (`:16-20`), plus two independent `destructive` Alerts for the status error (`:82-87`) and the start error (`:89-94`). Static evidence only, no browser run
+- [x] Navigating to `/staging-db` while logged out redirects to login — `code/www-back-office/src/router.tsx:35` sits inside the `ProtectedRoute` children at `:22-36`, same as every other page
+- [x] *(prior warning, re-verified end to end)* A failed start renders user-visible feedback — `startStaging()` rejects via `apiFetch` (`api.ts:24-25`, message = `body.error` or `Requête échouée (<status>)`) → `handleStart`'s `catch` (`staging-db.tsx:41-43`) → `setStartError(message)` → the `startError` Alert at `:89-94`. The `await refresh()` inside the same `try` (`:40`) is covered by the same `catch`; `setStartError(null)` at `:37` clears the previous attempt
+
+## Findings
+
+| Sev | Kind | Phase | Location | Issue | Fix |
+| --- | ---- | ----- | -------- | ----- | --- |
+| 🟢 | rot | 1 | `aidd_docs/tasks/2026_11/2026_11_17_staging-db-control/phase-1.md:83` | The plan is marked `status: done` while task 3 still instructs `r.Mount("/infra", routes.Staging())` — the exact mount that produced the first pass's critical. It contradicts its own acceptance criteria 2 and 3 (`/v1/infra/staging/status`) and the shipped `code/api/internal/app/app.go:61` (`r.Mount("/infra/staging", …)`). `TestStagingMountedAtStagingSubpath` now guards the code, but the plan a future reader opens still describes the bug as the instruction. | Correct the task to `r.Mount("/infra/staging", routes.Staging())` so the plan, the criteria, and the code agree. |
+| 🟢 | rot | 1 | `code/api/internal/routes/staging.go:15`, `code/api/internal/app/app_test.go:49` | Carried unchanged from the third pass and not among the two declared deferrals. Both doc comments cite `aidd_docs/tasks/.../review.md` with a literal ellipsis that resolves to no file, so the finding they point at cannot be looked up. The real path is `aidd_docs/tasks/2026_11/2026_11_17_staging-db-control/review.md`. | Write the real path, or drop the citation and keep the behavioral warning, which stands on its own. |
+| 🟢 | conform | 3 | `code/www-back-office/src/pages/staging-db.tsx:42` | New in this commit. The non-`Error` fallback is `String(error)`, while the two sibling handlers it was modelled on use `'Erreur inconnue'` (`code/www-back-office/src/pages/dev-tools.tsx:83,117`), as does `code/www-back-office/src/lib/api.ts:75` in this same feature. A non-`Error` rejection would render `[object Object]` to the admin instead of a readable message. | `setStartError(error instanceof Error ? error.message : 'Erreur inconnue')`, matching the three existing sites. |
+
+## Verification
+
+| Metric        | Value                                             |
+| ------------- | ------------------------------------------------- |
+| Verified      | 90% (9/10) |
+| Files checked | `code/api/internal/app/app.go`, `code/api/internal/app/app_test.go`, `code/api/internal/awsrds/client.go`, `code/api/internal/routes/staging.go`, `code/api/internal/routes/staging_test.go`, `code/api/go.mod`, `infrastructure/terraform/api/iam_staging_control.tf`, `infrastructure/terraform/api/lambda.tf`, `infrastructure/terraform/api/providers.tf`, `infrastructure/terraform/database/lambda_autostop.tf`, `environments/stg/variables.stg.tf`, `environments/prd/variables.prd.tf`, `infrastructure/scripts/terraform.py`, `code/www-back-office/src/lib/api.ts`, `code/www-back-office/src/pages/staging-db.tsx`, `code/www-back-office/src/router.tsx`, `code/www-back-office/src/components/layout/app-layout.tsx`, `aidd_docs/memory/infra.md`, `aidd_docs/tasks/2026_11/2026_11_17_staging-db-control/phase-1.md` |
+| Unchecked     | Phase 1 criterion 2, configured half (`Status`/`Start` against a real instance) — `not-applicable`, owner-deferred to real stg validation rather than a mock seam. It also leaves phase-1's Test Scope "Happy path" and "Edge case - already starting" journeys uncovered; `awsrds.Stop` having no caller is deferred on the same decision |
+| Unplanned     | none — `infrastructure/terraform/api/lambda.tf`'s only net change across `6a1dc50c..5831d15d` is `STAGING_DB_IDENTIFIER` (`:67`); `.github/workflows/ci-cd.yml`, `environments/prd/variables.prd.tf`, `environments/stg/variables.stg.tf` and `infrastructure/scripts/terraform.py` are touched by 0 commits on the branch |

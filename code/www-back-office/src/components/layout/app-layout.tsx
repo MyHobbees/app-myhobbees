@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import {
   Boxes,
+  Database,
   LayoutDashboard,
   LogOut,
   Mail,
@@ -77,6 +78,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
         icon: ShieldCheck,
         superAdminOnly: true,
       },
+      { title: 'Staging DB', url: '/staging-db', icon: Database },
     ],
   },
 ]

@@ -67,6 +67,8 @@ resource "aws_lambda_function" "Api" {
       POSTHOG_PERSONAL_API_KEY = var.posthog_personal_api_key
       POSTHOG_PROJECT_ID       = var.posthog_project_id
       POSTHOG_HOST             = var.posthog_host
+
+      STAGING_DB_IDENTIFIER = var.env == "prd" ? "${var.app}-stg-database" : ""
     }
   }
 

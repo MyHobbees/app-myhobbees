@@ -66,6 +66,7 @@ func New() *chi.Mux {
 			r.Mount("/example", routes.Example())
 			r.Mount("/shopify", routes.Shopify())
 			r.Mount("/analytics", routes.Analytics())
+			r.Mount("/infra/staging", routes.Staging())
 			r.Get("/leads", routes.ListLeads)
 
 			// Admin management is further restricted to super-admins

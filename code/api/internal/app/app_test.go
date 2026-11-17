@@ -49,6 +49,7 @@ func TestProtectedRoutesRequireAuth(t *testing.T) {
 	// aidd_docs/tasks/.../review.md, the fail-closed-by-accident finding).
 	protectedPaths := []string{
 		"/v1/shopify/status",
+		"/v1/infra/staging/status",
 		"/v1/example/me",
 		"/v1/analytics/posthog/overview?days=30",
 		"/v1/leads",
@@ -67,6 +68,55 @@ func TestProtectedRoutesRequireAuth(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestStagingMountedAtStagingSubpath exercises the real app.New() router
+// with a valid token, so it actually depends on where app.go mounts
+// Staging(). An unauthenticated request can't tell a correct mount from a
+// reverted one: auth.Middleware wraps the whole protected group, including
+// its NotFound fallback, so every path under /v1 401s regardless of whether
+// it resolves to a real route (see TestProtectedRoutesRequireAuth above,
+// which only proves the group requires a token — nothing about routing).
+// Authenticating removes that confound: if app.go's mount path ever
+// regresses to the old "/infra" bug, these requests 404 instead of
+// returning the status codes asserted below.
+func TestStagingMountedAtStagingSubpath(t *testing.T) {
+	secret := "test-secret-at-least-32-characters-long"
+	t.Setenv("JWT_SECRET", secret)
+	t.Setenv("STAGING_DB_IDENTIFIER", "")
+	srv := httptest.NewServer(New())
+	defer srv.Close()
+
+	token, err := jwt.Sign(secret, "admin", "admin@myhobbees.fr", true, time.Hour)
+	if err != nil {
+		t.Fatalf("sign: %v", err)
+	}
+
+	t.Run("status", func(t *testing.T) {
+		req, _ := http.NewRequest(http.MethodGet, srv.URL+"/v1/infra/staging/status", nil)
+		req.Header.Set("Authorization", "Bearer "+token)
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("get: %v", err)
+		}
+		defer res.Body.Close()
+		if res.StatusCode != http.StatusOK {
+			t.Fatalf("expected 200 from the real mount, got %d", res.StatusCode)
+		}
+	})
+
+	t.Run("start", func(t *testing.T) {
+		req, _ := http.NewRequest(http.MethodPost, srv.URL+"/v1/infra/staging/start", nil)
+		req.Header.Set("Authorization", "Bearer "+token)
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("post: %v", err)
+		}
+		defer res.Body.Close()
+		if res.StatusCode != http.StatusConflict {
+			t.Fatalf("expected 409 from the real mount, got %d", res.StatusCode)
+		}
+	})
 }
 
 // TestAdminsRouteRequiresSuperAdmin covers the phase 2 acceptance criterion:
