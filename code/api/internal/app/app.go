@@ -21,12 +21,21 @@ func New() *chi.Mux {
 	// requests to this Lambda instead of letting API Gateway answer them
 	// natively, so chi must return a 2xx itself — a non-2xx preflight status
 	// fails CORS in the browser even when the Access-Control-* headers
-	// (added by API Gateway) are present.
-	r.Options("/*", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "*")
-		w.WriteHeader(http.StatusNoContent)
+	// (added by API Gateway) are present. This has to run as middleware,
+	// ahead of routing: once a path matches an existing route (e.g.
+	// POST /v1/auth/login), chi's own 405 wins before any route-based
+	// OPTIONS handler (even a /* wildcard) gets a chance to answer.
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			if req.Method == http.MethodOptions {
+				w.Header().Set("Access-Control-Allow-Origin", "*")
+				w.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+				w.Header().Set("Access-Control-Allow-Headers", "*")
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+			next.ServeHTTP(w, req)
+		})
 	})
 
 	r.Mount("/health", routes.Health())
