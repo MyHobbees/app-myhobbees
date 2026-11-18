@@ -30,6 +30,10 @@ variable "back_office_endpoint" {
   default = "https://d2w680tajopann.cloudfront.net"
 }
 
+variable "back_office_domain" {
+  default = "back-office-stg.myhobbees.fr"
+}
+
 variable "app_endpoint" {
   default = "https://d1r0g3y5j3csmo.cloudfront.net"
 }
