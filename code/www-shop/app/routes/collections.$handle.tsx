@@ -13,11 +13,11 @@ export const meta: Route.MetaFunction = ({data}) => {
   }
 
   const title = `${data.collection.title} | My Hobbees`;
-  const description = data.collection.description || data.collection.title;
+  const description = data.collection.description || undefined;
 
   return [
     {title},
-    {name: 'description', content: description},
+    ...(description ? [{name: 'description', content: description}] : []),
     {tagName: 'link' as const, rel: 'canonical', href: data.canonicalUrl},
     ...buildOpenGraphTags({
       title,

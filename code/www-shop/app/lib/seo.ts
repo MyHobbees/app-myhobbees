@@ -14,7 +14,7 @@ export function canonicalUrl(request: Request, path?: string): string {
 
 export interface OpenGraphTagsOptions {
   title: string;
-  description: string;
+  description?: string;
   url: string;
   image?: string;
   type?: 'website' | 'product' | 'article';
@@ -29,7 +29,9 @@ export function buildOpenGraphTags(
 ): MetaTagEntry[] {
   const tags: MetaTagEntry[] = [
     {property: 'og:title', content: opts.title},
-    {property: 'og:description', content: opts.description},
+    ...(opts.description
+      ? [{property: 'og:description', content: opts.description}]
+      : []),
     {property: 'og:url', content: opts.url},
     {property: 'og:type', content: opts.type ?? 'website'},
     {
@@ -37,7 +39,9 @@ export function buildOpenGraphTags(
       content: opts.image ? 'summary_large_image' : 'summary',
     },
     {name: 'twitter:title', content: opts.title},
-    {name: 'twitter:description', content: opts.description},
+    ...(opts.description
+      ? [{name: 'twitter:description', content: opts.description}]
+      : []),
   ];
 
   if (opts.image) {
@@ -70,8 +74,26 @@ export function organizationJsonLd(shop: OrganizationJsonLdShop): string {
     url: shop.url,
   };
 
-  return JSON.stringify({
-    '@context': 'https://schema.org',
-    '@graph': [organization, website],
-  });
+  return escapeJsonLdForHtml(
+    JSON.stringify({
+      '@context': 'https://schema.org',
+      '@graph': [organization, website],
+    }),
+  );
+}
+
+/**
+ * Escapes a JSON-LD string for safe inlining into a raw `<script>` tag via
+ * `dangerouslySetInnerHTML`, where React does not sanitize the content.
+ * Guards against premature `</script>` termination and HTML-sensitive
+ * characters, plus the U+2028/U+2029 line/paragraph separators that are
+ * valid in JSON but illegal inside a JS string literal in some parsers.
+ */
+function escapeJsonLdForHtml(json: string): string {
+  return json
+    .replace(/&/g, '\\u0026')
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
 }

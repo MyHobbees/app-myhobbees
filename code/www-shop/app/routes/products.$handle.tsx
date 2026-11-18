@@ -27,8 +27,8 @@ export const meta: Route.MetaFunction = ({data}) => {
   }
 
   const {product, canonicalUrl: url} = data;
-  const title = product.seo?.title || product.title;
-  const description = product.seo?.description || product.description;
+  const title = product.seo?.title || product.title || 'Produit';
+  const description = product.seo?.description || product.description || undefined;
   const image = product.selectedOrFirstAvailableVariant?.image?.url;
 
   const productJsonLd: Record<string, unknown> = {
@@ -54,12 +54,12 @@ export const meta: Route.MetaFunction = ({data}) => {
   }
 
   return [
-    {title: `${title ?? 'Produit'} | My Hobbees`},
-    {name: 'description', content: description ?? ''},
+    {title: `${title} | My Hobbees`},
+    ...(description ? [{name: 'description', content: description}] : []),
     {tagName: 'link' as const, rel: 'canonical', href: url},
     ...buildOpenGraphTags({
-      title: title ?? 'Produit',
-      description: description ?? '',
+      title,
+      description,
       url,
       image,
       type: 'product',
