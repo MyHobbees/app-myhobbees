@@ -9,7 +9,10 @@ export function canonicalUrl(request: Request, path?: string): string {
   const url = new URL(request.url);
   const pathname = path ?? url.pathname;
   const normalizedPath = pathname.startsWith('/') ? pathname : `/${pathname}`;
-  return `${url.origin}${normalizedPath}`;
+  const origin = process.env.PUBLIC_SITE_URL
+    ? new URL(process.env.PUBLIC_SITE_URL).origin
+    : url.origin;
+  return `${origin}${normalizedPath}`;
 }
 
 export interface OpenGraphTagsOptions {

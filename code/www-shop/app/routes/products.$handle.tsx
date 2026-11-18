@@ -28,6 +28,7 @@ export const meta: Route.MetaFunction = ({data}) => {
 
   const {product, canonicalUrl: url} = data;
   const title = product.seo?.title || product.title || 'Produit';
+  const suffixedTitle = `${title} | My Hobbees`;
   const description = product.seo?.description || product.description || undefined;
   const image = product.selectedOrFirstAvailableVariant?.image?.url;
 
@@ -54,11 +55,11 @@ export const meta: Route.MetaFunction = ({data}) => {
   }
 
   return [
-    {title: `${title} | My Hobbees`},
+    {title: suffixedTitle},
     ...(description ? [{name: 'description', content: description}] : []),
     {tagName: 'link' as const, rel: 'canonical', href: url},
     ...buildOpenGraphTags({
-      title,
+      title: suffixedTitle,
       description,
       url,
       image,
