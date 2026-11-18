@@ -50,6 +50,7 @@ type NavItem = {
   disabled?: boolean
   superAdminOnly?: boolean
   stgOnly?: boolean
+  prdOnly?: boolean
 }
 
 const navGroups: { label: string; items: NavItem[] }[] = [
@@ -80,7 +81,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
         icon: ShieldCheck,
         superAdminOnly: true,
       },
-      { title: 'Staging DB', url: '/staging-db', icon: Database },
+      { title: 'Staging DB', url: '/staging-db', icon: Database, prdOnly: true },
     ],
   },
 ]
@@ -148,6 +149,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   {group.items
                     .filter((item) => !item.superAdminOnly || isSuperAdmin)
                     .filter((item) => !item.stgOnly || env === ('stg' satisfies Env))
+                    .filter((item) => !item.prdOnly || env === ('prd' satisfies Env))
                     .map((item) => (
                       <SidebarMenuItem key={item.title}>
                         {item.disabled ? (
