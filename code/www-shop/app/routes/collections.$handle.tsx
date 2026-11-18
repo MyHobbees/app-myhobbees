@@ -5,9 +5,27 @@ import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {ProductItem} from '~/components/ProductItem';
 import type {ProductItemFragment} from 'storefrontapi.generated';
+import {buildOpenGraphTags, canonicalUrl} from '~/lib/seo';
 
 export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `${data?.collection.title ?? 'Collection'} | My Hobbees`}];
+  if (!data) {
+    return [{title: 'Collection | My Hobbees'}];
+  }
+
+  const title = `${data.collection.title} | My Hobbees`;
+  const description = data.collection.description || data.collection.title;
+
+  return [
+    {title},
+    {name: 'description', content: description},
+    {tagName: 'link' as const, rel: 'canonical', href: data.canonicalUrl},
+    ...buildOpenGraphTags({
+      title,
+      description,
+      url: data.canonicalUrl,
+      type: 'website',
+    }),
+  ];
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -53,6 +71,7 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
 
   return {
     collection,
+    canonicalUrl: canonicalUrl(request, `/collections/${handle}`),
   };
 }
 

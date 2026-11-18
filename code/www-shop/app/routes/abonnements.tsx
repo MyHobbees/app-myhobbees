@@ -5,18 +5,34 @@ import {BoxIllustration} from '~/components/BoxIllustration';
 import {EditorialHero} from '~/components/EditorialHero';
 import {FaqSection} from '~/components/FaqSection';
 import {BOXES} from '~/lib/boxes';
+import {buildOpenGraphTags, canonicalUrl} from '~/lib/seo';
 
-export const meta: Route.MetaFunction = () => [
-  {
-    title:
-      'Les abonnements My Hobbees \u2014 Box créative et application',
-  },
-  {
-    name: 'description',
-    content:
-      'Choisis ton abonnement My Hobbees : une box créative surprise chaque mois, avec ou sans accès à l’application et à la communauté créative.',
-  },
+const TITLE =
+  'Les abonnements My Hobbees \u2014 Box créative et application';
+const DESCRIPTION =
+  'Choisis ton abonnement My Hobbees : une box créative surprise chaque mois, avec ou sans accès à l’application et à la communauté créative.';
+
+export const meta: Route.MetaFunction = ({data}) => [
+  {title: TITLE},
+  {name: 'description', content: DESCRIPTION},
+  ...(data?.canonicalUrl
+    ? [
+        {tagName: 'link' as const, rel: 'canonical', href: data.canonicalUrl},
+        ...buildOpenGraphTags({
+          title: TITLE,
+          description: DESCRIPTION,
+          url: data.canonicalUrl,
+          type: 'website',
+        }),
+      ]
+    : []),
 ];
+
+export async function loader({request}: Route.LoaderArgs) {
+  return {
+    canonicalUrl: canonicalUrl(request, '/abonnements'),
+  };
+}
 
 const PLANS = [
   {
