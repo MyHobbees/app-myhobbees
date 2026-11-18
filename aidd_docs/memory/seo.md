@@ -2,7 +2,7 @@
 
 ## Technical SEO foundations (www-shop)
 
-- Canonical URLs and Open Graph/Twitter meta are built from `app/lib/seo.ts` (`canonicalUrl`, `buildOpenGraphTags`, `organizationJsonLd`); canonical/OG URLs always come from `new URL(request.url).origin`, never from `header.shop.primaryDomain.url` (that field reflects the Shopify staging store domain, not the public domain the site is actually served from)
+- Canonical URLs and Open Graph/Twitter meta are built from `app/lib/seo.ts` (`canonicalUrl`, `buildOpenGraphTags`, `organizationJsonLd`); canonical/OG URLs never come from `header.shop.primaryDomain.url` (that field reflects the Shopify staging store domain, not the public domain the site is actually served from) — see below for where they do come from
 - `canonicalUrl()` pins its origin to `process.env.PUBLIC_SITE_URL` when that env var is set (falling back to the request's own origin otherwise, so local dev needs no config); production on Vercel must have it set to `https://www.myhobbees.fr` in the project's environment variables so a crawler reaching the site via the `*.vercel.app` alias doesn't get that host self-endorsed as canonical
 - Every live public route (`/`, `/me-prevenir`, `/qui-sommes-nous`, `/abonnements` and its three offer sub-pages, `/products/:handle`, `/collections`, `/collections/all`, `/collections/:handle`) emits a canonical `<link>` plus `og:*`/`twitter:*` tags; `/products/:handle` additionally emits `Product` JSON-LD built only from the fields `PRODUCT_QUERY` already returns (no invented catalog data)
 - `root.tsx` injects one schema.org `Organization`/`WebSite` JSON-LD block (via `organizationJsonLd`) into every page's `<head>`, populated from the real `header.shop` data already fetched by the root loader
