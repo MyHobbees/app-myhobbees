@@ -72,6 +72,15 @@ resource "aws_lambda_function" "Api" {
 
       STAGING_DB_IDENTIFIER = var.env == "prd" ? "${var.app}-stg-database" : ""
       GITHUB_ACTIONS_TOKEN  = var.env == "prd" ? var.github_actions_token : ""
+
+      MEDIA_VIDEO_BUCKET = "${var.app}-${var.env}-video"
+      MEDIA_IMAGE_BUCKET = "${var.app}-${var.env}-images"
+
+      MEDIA_VIDEO_CDN_DOMAIN = var.media_video_cdn_domain
+      MEDIA_IMAGE_CDN_DOMAIN = var.media_image_cdn_domain
+
+      CLOUDFRONT_VIDEO_KEY_ID      = var.cloudfront_video_key_id
+      CLOUDFRONT_VIDEO_PRIVATE_KEY = var.cloudfront_video_private_key
     }
   }
 
