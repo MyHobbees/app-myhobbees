@@ -24,10 +24,18 @@ output "back_office_cert_validation_type" {
   value = tolist(aws_acm_certificate.BackOffice.domain_validation_options)[0].resource_record_type
 }
 
-# Not consumed by this phase: the step-2 CloudFront wiring will reference
-# aws_acm_certificate.BackOffice.arn directly in HCL, not this output. Kept
-# so the ARN is visible in `terraform apply`/CI logs without a separate
-# `terraform output` call.
+# Kept for CI-log visibility only — the CloudFront wiring below references
+# aws_acm_certificate.BackOffice.arn directly in HCL, not this output.
 output "back_office_cert_arn" {
   value = aws_acm_certificate.BackOffice.arn
+}
+
+# Both environments' certificates are already confirmed ISSUED (validated
+# live against AWS before this resource was added), so this resolves on
+# its first real apply instead of polling — the hang this was split out to
+# avoid in step 1 no longer applies.
+resource "aws_acm_certificate_validation" "BackOffice" {
+  provider                = aws.us_east_1
+  certificate_arn         = aws_acm_certificate.BackOffice.arn
+  validation_record_fqdns = [tolist(aws_acm_certificate.BackOffice.domain_validation_options)[0].resource_record_name]
 }
