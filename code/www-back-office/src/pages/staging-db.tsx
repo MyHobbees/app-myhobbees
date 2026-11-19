@@ -24,9 +24,9 @@ const statusLabels: Record<string, string> = {
   available: 'Disponible',
 }
 
-// Once started, the instance usually takes well under a minute to report
-// 'available'; this is a generous ceiling so a stuck poll doesn't run
-// forever in the background rather than a real expectation.
+// A generous ceiling so a stuck poll doesn't run forever in the
+// background if something goes wrong, not a real expectation of how long
+// a start takes.
 const POLL_INTERVAL_MS = 5000
 const MAX_POLL_ATTEMPTS = 120 // ~10 minutes at POLL_INTERVAL_MS
 
@@ -82,23 +82,32 @@ export function StagingDbPage() {
 
     pollIntervalRef.current = setInterval(() => {
       pollAttemptsRef.current += 1
-      getStagingStatus().then((next) => {
-        setStatus(next)
+      getStagingStatus()
+        .then((next) => {
+          setStatus(next)
 
-        if (next.status === 'available' && !migrationTriggeredRef.current) {
-          migrationTriggeredRef.current = true
-          stopPolling()
-          triggerMigration()
-          return
-        }
+          if (next.status === 'available' && !migrationTriggeredRef.current) {
+            migrationTriggeredRef.current = true
+            stopPolling()
+            triggerMigration()
+            return
+          }
 
-        if (pollAttemptsRef.current >= MAX_POLL_ATTEMPTS) {
+          if (pollAttemptsRef.current >= MAX_POLL_ATTEMPTS) {
+            stopPolling()
+            setMigrateError(
+              "La base n'est pas devenue disponible à temps, migration non déclenchée",
+            )
+          }
+        })
+        .catch((error) => {
+          // A persistent failure (not just "not available yet" - getStagingStatus
+          // only resolves, see api.ts) must abandon the probe the same way running
+          // out of attempts does: otherwise it retries forever in the background,
+          // each tick leaving an unhandled rejection, with nothing shown to the user.
           stopPolling()
-          setMigrateError(
-            "La base n'est pas devenue disponible à temps, migration non déclenchée",
-          )
-        }
-      })
+          setMigrateError(error instanceof Error ? error.message : String(error))
+        })
     }, POLL_INTERVAL_MS)
   }
 

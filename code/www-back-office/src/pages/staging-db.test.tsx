@@ -108,6 +108,74 @@ describe('StagingDbPage', () => {
     expect(screen.getByText('Disponible')).toBeInTheDocument()
   })
 
+  it('stops polling once unmounted mid-sequence', async () => {
+    const user = userEvent.setup({
+      advanceTimers: (ms) => vi.advanceTimersByTime(ms),
+    })
+
+    vi.mocked(api.getStagingStatus)
+      .mockResolvedValueOnce({ connected: true, status: 'stopped' })
+      .mockResolvedValueOnce({ connected: true, status: 'starting' })
+      .mockResolvedValue({ connected: true, status: 'starting' })
+    vi.mocked(api.startStaging).mockResolvedValue({ status: 'starting' })
+
+    const { unmount } = render(<StagingDbPage />)
+
+    await waitFor(() => expect(api.getStagingStatus).toHaveBeenCalledTimes(1))
+    await user.click(screen.getByRole('button', { name: /démarrer le staging/i }))
+    await waitFor(() => expect(api.getStagingStatus).toHaveBeenCalledTimes(2))
+
+    unmount()
+
+    // The interval must be cleared on unmount (useEffect cleanup): letting
+    // several ticks' worth of time pass afterwards must call
+    // getStagingStatus exactly zero more times, not probe forever in the
+    // background for an unmounted page.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30000)
+    })
+    expect(api.getStagingStatus).toHaveBeenCalledTimes(2)
+    expect(api.migrateStaging).not.toHaveBeenCalled()
+  })
+
+  it('abandons the probe and shows an error when a poll tick rejects persistently', async () => {
+    const user = userEvent.setup({
+      advanceTimers: (ms) => vi.advanceTimersByTime(ms),
+    })
+
+    // getStagingStatus only resolves to {connected:false, error} for an
+    // ordinary API failure (see api.ts), but still rethrows on a 401 that
+    // forces a logout - that's the one path that reaches here as a real
+    // rejection, tick after tick, if nothing catches it.
+    vi.mocked(api.getStagingStatus)
+      .mockResolvedValueOnce({ connected: true, status: 'stopped' })
+      .mockResolvedValueOnce({ connected: true, status: 'starting' })
+      .mockRejectedValueOnce(new Error('Session expirée'))
+    vi.mocked(api.startStaging).mockResolvedValue({ status: 'starting' })
+
+    render(<StagingDbPage />)
+
+    await waitFor(() => expect(api.getStagingStatus).toHaveBeenCalledTimes(1))
+    await user.click(screen.getByRole('button', { name: /démarrer le staging/i }))
+    await waitFor(() => expect(api.getStagingStatus).toHaveBeenCalledTimes(2))
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5000)
+    })
+
+    await waitFor(() =>
+      expect(screen.getByText(/session expirée/i)).toBeInTheDocument(),
+    )
+
+    // The probe must have stopped, not kept rejecting every 5s: letting
+    // more time pass makes no further call.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30000)
+    })
+    expect(api.getStagingStatus).toHaveBeenCalledTimes(3)
+    expect(api.migrateStaging).not.toHaveBeenCalled()
+  })
+
   it('does not auto-trigger a migration when the page loads already available', async () => {
     vi.mocked(api.getStagingStatus).mockResolvedValue({
       connected: true,
