@@ -14,6 +14,7 @@ import {ProductForm} from '~/components/ProductForm';
 import {AccordionList} from '~/components/AccordionList';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {isMockShop} from '~/lib/storefront';
+import {buildOpenGraphTags, canonicalUrl} from '~/lib/seo';
 import {
   getSubscriptionCtaLabel,
   getSubscriptionKind,
@@ -21,12 +22,50 @@ import {
 } from '~/lib/subscriptions';
 
 export const meta: Route.MetaFunction = ({data}) => {
+  if (!data) {
+    return [{title: 'Produit | My Hobbees'}];
+  }
+
+  const {product, canonicalUrl: url} = data;
+  const title = product.seo?.title || product.title || 'Produit';
+  const suffixedTitle = `${title} | My Hobbees`;
+  const description = product.seo?.description || product.description || undefined;
+  const image = product.selectedOrFirstAvailableVariant?.image?.url;
+
+  const productJsonLd: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.title,
+  };
+  if (description) productJsonLd.description = description;
+  if (image) productJsonLd.image = image;
+
+  const variant = product.selectedOrFirstAvailableVariant;
+  if (variant) {
+    const offer: Record<string, unknown> = {
+      '@type': 'Offer',
+      priceCurrency: variant.price.currencyCode,
+      price: variant.price.amount,
+      availability: variant.availableForSale
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      url,
+    };
+    productJsonLd.offers = offer;
+  }
+
   return [
-    {title: `${data?.product.title ?? 'Produit'} | My Hobbees`},
-    {
-      rel: 'canonical',
-      href: `/products/${data?.product.handle}`,
-    },
+    {title: suffixedTitle},
+    ...(description ? [{name: 'description', content: description}] : []),
+    {tagName: 'link' as const, rel: 'canonical', href: url},
+    ...buildOpenGraphTags({
+      title: suffixedTitle,
+      description,
+      url,
+      image,
+      type: 'product',
+    }),
+    {'script:ld+json': productJsonLd},
   ];
 };
 
@@ -37,7 +76,11 @@ export async function loader(args: Route.LoaderArgs) {
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
 
-  return {...deferredData, ...criticalData};
+  return {
+    ...deferredData,
+    ...criticalData,
+    canonicalUrl: canonicalUrl(args.request, `/products/${criticalData.product.handle}`),
+  };
 }
 
 /**

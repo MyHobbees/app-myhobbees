@@ -6,22 +6,35 @@ import {Reassurance} from '~/components/Reassurance';
 import {FaqSection} from '~/components/FaqSection';
 import {capture} from '~/lib/posthog';
 import {isMockShop} from '~/lib/storefront';
+import {buildOpenGraphTags, canonicalUrl} from '~/lib/seo';
 import boxMyHobbees from '~/assets/box-my-hobbees.png';
 
-export const meta: Route.MetaFunction = () => {
+const TITLE = 'My Hobbees - Découvre un nouveau hobby à ton rythme';
+const DESCRIPTION =
+  'My Hobbees propose des box créatives surprise pour découvrir de nouvelles activités, apprendre à ton rythme et prendre du temps pour toi.';
+
+export const meta: Route.MetaFunction = ({data}) => {
   return [
-    {title: 'My Hobbees - Découvre un nouveau hobby à ton rythme'},
-    {
-      name: 'description',
-      content:
-        'My Hobbees propose des box créatives surprise pour découvrir de nouvelles activités, apprendre à ton rythme et prendre du temps pour toi.',
-    },
+    {title: TITLE},
+    {name: 'description', content: DESCRIPTION},
+    ...(data?.canonicalUrl
+      ? [
+          {tagName: 'link' as const, rel: 'canonical', href: data.canonicalUrl},
+          ...buildOpenGraphTags({
+            title: TITLE,
+            description: DESCRIPTION,
+            url: data.canonicalUrl,
+            type: 'website',
+          }),
+        ]
+      : []),
   ];
 };
 
-export async function loader({context}: Route.LoaderArgs) {
+export async function loader({context, request}: Route.LoaderArgs) {
   return {
     isMockShop: isMockShop(context.env.PUBLIC_STORE_DOMAIN),
+    canonicalUrl: canonicalUrl(request, '/'),
   };
 }
 

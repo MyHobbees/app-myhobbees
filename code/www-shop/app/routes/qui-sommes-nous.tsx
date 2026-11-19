@@ -3,15 +3,33 @@ import {UserRound} from 'lucide-react';
 import type {Route} from './+types/qui-sommes-nous';
 import {EditorialHero} from '~/components/EditorialHero';
 import {FaqSection} from '~/components/FaqSection';
+import {buildOpenGraphTags, canonicalUrl} from '~/lib/seo';
 
-export const meta: Route.MetaFunction = () => [
-  {title: 'Qui sommes-nous ? — My Hobbees'},
-  {
-    name: 'description',
-    content:
-      'Découvre l’histoire, la mission et les valeurs de My Hobbees, les box créatives surprise pensées pour prendre du temps pour soi.',
-  },
+const TITLE = 'Qui sommes-nous ? — My Hobbees';
+const DESCRIPTION =
+  'Découvre l’histoire, la mission et les valeurs de My Hobbees, les box créatives surprise pensées pour prendre du temps pour soi.';
+
+export const meta: Route.MetaFunction = ({data}) => [
+  {title: TITLE},
+  {name: 'description', content: DESCRIPTION},
+  ...(data?.canonicalUrl
+    ? [
+        {tagName: 'link' as const, rel: 'canonical', href: data.canonicalUrl},
+        ...buildOpenGraphTags({
+          title: TITLE,
+          description: DESCRIPTION,
+          url: data.canonicalUrl,
+          type: 'website',
+        }),
+      ]
+    : []),
 ];
+
+export async function loader({request}: Route.LoaderArgs) {
+  return {
+    canonicalUrl: canonicalUrl(request, '/qui-sommes-nous'),
+  };
+}
 
 const COMMITMENTS = [
   {

@@ -4,17 +4,35 @@ import {BoxIllustration} from '~/components/BoxIllustration';
 import {EditorialHero} from '~/components/EditorialHero';
 import {FaqSection} from '~/components/FaqSection';
 import {BOXES} from '~/lib/boxes';
+import {buildOpenGraphTags, canonicalUrl} from '~/lib/seo';
 
-export const meta: Route.MetaFunction = () => {
+const TITLE = 'Nos boxes | My Hobbees';
+const DESCRIPTION =
+  'Découvre les box créatives My Hobbees à l’unité : le matériel, les outils et le guide pas à pas pour explorer une nouvelle passion.';
+
+export const meta: Route.MetaFunction = ({data}) => {
   return [
-    {title: 'Nos boxes | My Hobbees'},
-    {
-      name: 'description',
-      content:
-        'Découvre les box créatives My Hobbees à l’unité : le matériel, les outils et le guide pas à pas pour explorer une nouvelle passion.',
-    },
+    {title: TITLE},
+    {name: 'description', content: DESCRIPTION},
+    ...(data?.canonicalUrl
+      ? [
+          {tagName: 'link' as const, rel: 'canonical', href: data.canonicalUrl},
+          ...buildOpenGraphTags({
+            title: TITLE,
+            description: DESCRIPTION,
+            url: data.canonicalUrl,
+            type: 'website',
+          }),
+        ]
+      : []),
   ];
 };
+
+export async function loader({request}: Route.LoaderArgs) {
+  return {
+    canonicalUrl: canonicalUrl(request, '/collections/all'),
+  };
+}
 
 const BOXES_ORDER = [BOXES.crochet, BOXES.couture, BOXES.peinture];
 
