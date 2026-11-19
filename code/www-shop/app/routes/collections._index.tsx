@@ -3,14 +3,26 @@ import type {Route} from './+types/collections._index';
 import {getPaginationVariables, Image} from '@shopify/hydrogen';
 import type {CollectionFragment} from 'storefrontapi.generated';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
+import {buildOpenGraphTags, canonicalUrl} from '~/lib/seo';
 
-export const meta: Route.MetaFunction = () => [
-  {title: 'Nos collections | My Hobbees'},
-  {
-    name: 'description',
-    content:
-      'Découvre toutes les collections My Hobbees : box créatives surprise et activités pour apprendre à ton rythme.',
-  },
+const TITLE = 'Nos collections | My Hobbees';
+const DESCRIPTION =
+  'Découvre toutes les collections My Hobbees : box créatives surprise et activités pour apprendre à ton rythme.';
+
+export const meta: Route.MetaFunction = ({data}) => [
+  {title: TITLE},
+  {name: 'description', content: DESCRIPTION},
+  ...(data?.canonicalUrl
+    ? [
+        {tagName: 'link' as const, rel: 'canonical', href: data.canonicalUrl},
+        ...buildOpenGraphTags({
+          title: TITLE,
+          description: DESCRIPTION,
+          url: data.canonicalUrl,
+          type: 'website',
+        }),
+      ]
+    : []),
 ];
 
 export async function loader(args: Route.LoaderArgs) {
@@ -20,7 +32,11 @@ export async function loader(args: Route.LoaderArgs) {
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
 
-  return {...deferredData, ...criticalData};
+  return {
+    ...deferredData,
+    ...criticalData,
+    canonicalUrl: canonicalUrl(args.request, '/collections'),
+  };
 }
 
 /**

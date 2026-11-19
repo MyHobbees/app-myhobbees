@@ -17,6 +17,7 @@ import favicon from '~/assets/favicon.svg';
 import {attributionCookie, captureAttribution, readAttribution} from '~/lib/attribution';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
 import {initPostHog} from '~/lib/posthog';
+import {canonicalUrl, organizationJsonLd} from '~/lib/seo';
 import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import {PageLayout} from './components/PageLayout';
@@ -109,9 +110,17 @@ export async function loader(args: Route.LoaderArgs) {
     ? null
     : captureAttribution(new URL(request.url), request.headers.get('Referer') ?? '');
 
+  const organizationSchema = organizationJsonLd({
+    name: criticalData.header.shop.name,
+    description: criticalData.header.shop.description,
+    url: canonicalUrl(request, '/'),
+    logo: criticalData.header.shop.brand?.logo?.image?.url,
+  });
+
   const payload = {
     ...deferredData,
     ...criticalData,
+    organizationSchema,
     publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
     posthog: {
       key: env.PUBLIC_POSTHOG_KEY,
@@ -187,6 +196,7 @@ function loadDeferredData({context}: Route.LoaderArgs) {
 
 export function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
+  const data = useRouteLoaderData<RootLoader>('root');
 
   return (
     <html lang="fr">
@@ -197,6 +207,12 @@ export function Layout({children}: {children?: React.ReactNode}) {
         <link rel="stylesheet" href={appStyles}></link>
         <Meta />
         <Links />
+        {data?.organizationSchema ? (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{__html: data.organizationSchema}}
+          />
+        ) : null}
       </head>
       <body>
         {children}

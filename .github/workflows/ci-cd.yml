@@ -165,10 +165,9 @@ jobs:
     runs-on: ubuntu-latest
     # Unlike prd, the stg database's running state is no longer CI's concern:
     # it's started/stopped on demand from the prd back-office (staging DB
-    # control) and auto-stops after idling, so migrate-database-stg routinely
-    # fails simply because the instance is off. Deploy API (stg) must not
-    # block on it — code deploys regardless, migrations catch up whenever
-    # the instance is next running.
+    # control), which also triggers migrate-stg-on-demand.yml once the
+    # instance is back up. Migrations no longer run as part of this push
+    # pipeline at all, so Deploy API (stg) only ever needs Terraform.
     needs: [terraform-api-stg]
     if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
     steps:
@@ -186,25 +185,6 @@ jobs:
         env:
           TF_STG__AWS_ACCESS_KEY: ${{ secrets.TF_STG__AWS_ACCESS_KEY }}
           TF_STG__AWS_SECRET_KEY: ${{ secrets.TF_STG__AWS_SECRET_KEY }}
-
-  migrate-database-stg:
-    name: Migrate Database (stg)
-    runs-on: ubuntu-latest
-    needs: [terraform-database-stg]
-    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.14"
-      - name: Install dependencies
-        run: pip install psycopg2-binary
-      - name: Migrate
-        run: python3.14 infrastructure/scripts/migrate.py stg
-        env:
-          TF_STG__DB_USERNAME: ${{ secrets.TF_STG__DB_USERNAME }}
-          TF_STG__DB_PASSWORD: ${{ secrets.TF_STG__DB_PASSWORD }}
-          TF_STG__DB_APP_PASSWORD: ${{ secrets.TF_STG__DB_APP_PASSWORD }}
 
   ##############################################
   # TERRAFORM - PRD (branch: main)

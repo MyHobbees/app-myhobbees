@@ -11,6 +11,7 @@ import {
 import type {Route} from './+types/me-prevenir';
 import {readAttribution} from '~/lib/attribution';
 import {capture} from '~/lib/posthog';
+import {buildOpenGraphTags, canonicalUrl} from '~/lib/seo';
 import {
   SUBSCRIPTION_OFFERS,
   type SubscriptionOfferSlug,
@@ -38,13 +39,24 @@ export type ActionResponse =
     }
   | {ok: false; error: string};
 
-export const meta: Route.MetaFunction = () => [
-  {title: 'Sois prévenu·e du lancement — My Hobbees'},
-  {
-    name: 'description',
-    content:
-      'Laisse ton email pour être prévenu·e dès l’ouverture des box créatives et des abonnements My Hobbees.',
-  },
+const TITLE = 'Sois prévenu·e du lancement — My Hobbees';
+const DESCRIPTION =
+  'Laisse ton email pour être prévenu·e dès l’ouverture des box créatives et des abonnements My Hobbees.';
+
+export const meta: Route.MetaFunction = ({data}) => [
+  {title: TITLE},
+  {name: 'description', content: DESCRIPTION},
+  ...(data?.canonicalUrl
+    ? [
+        {tagName: 'link' as const, rel: 'canonical', href: data.canonicalUrl},
+        ...buildOpenGraphTags({
+          title: TITLE,
+          description: DESCRIPTION,
+          url: data.canonicalUrl,
+          type: 'website',
+        }),
+      ]
+    : []),
 ];
 
 export async function loader({request}: Route.LoaderArgs) {
@@ -57,6 +69,7 @@ export async function loader({request}: Route.LoaderArgs) {
   return {
     offer,
     offers: Object.values(SUBSCRIPTION_OFFERS),
+    canonicalUrl: canonicalUrl(request, '/me-prevenir'),
   };
 }
 
