@@ -35,6 +35,7 @@ func TestFromEnv_NotConfigured(t *testing.T) {
 	t.Setenv("MEDIA_VIDEO_BUCKET", "")
 	t.Setenv("MEDIA_IMAGE_BUCKET", "")
 	t.Setenv("MEDIA_VIDEO_CDN_DOMAIN", "")
+	t.Setenv("MEDIA_IMAGE_CDN_DOMAIN", "")
 	t.Setenv("CLOUDFRONT_VIDEO_KEY_ID", "")
 	t.Setenv("CLOUDFRONT_VIDEO_PRIVATE_KEY", "")
 
