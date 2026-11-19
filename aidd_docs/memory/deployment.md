@@ -10,12 +10,13 @@
 flowchart LR
     push[push to dev/main] --> tf[terraform: fronts, database, api]
     tf --> deploy[deploy: assets, back-office, app]
-    tf --> migrate[migrate database]
+    tf --> migrate[migrate database - prd only]
     migrate --> deployapi[deploy: api]
     tf --> deployapi
 ```
 
-- `deploy-api-<env>` also needs `migrate-database-<env>` (not just `terraform-api-<env>`): the API now reads the `admins` table on every login (`bootstrapFirstSuperAdmin`), so it must never go live ahead of the migration that creates it — see [auth.md](auth.md)
+- `deploy-api-prd` also needs `migrate-database-prd` (not just `terraform-api-prd`): the API now reads the `admins` table on every login (`bootstrapFirstSuperAdmin`), so it must never go live ahead of the migration that creates it — see [auth.md](auth.md)
+- stg has no `migrate-database-stg` job in this push pipeline at all (removed): the stg instance is normally stopped (it auto-stops after idling — see [infra.md](infra.md)), so a push-triggered migration attempt routinely timed out against a database that wasn't running. `deploy-api-stg` only ever needs `terraform-api-stg`. Migrations for stg are now triggered on demand instead, straight from the back-office's "Démarrer le staging" action, once the instance reports `available` — see [infra.md](infra.md)'s "Staging DB control exception" section for the full mechanism.
 
 - All AWS-side work (Terraform apply, S3/Lambda deploy, migrations) runs through Python scripts in `infrastructure/scripts/` using `boto3`, not Terraform Cloud or a PaaS
 
