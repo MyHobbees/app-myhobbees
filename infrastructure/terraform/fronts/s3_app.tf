@@ -12,15 +12,15 @@ resource "aws_s3_bucket_ownership_controls" "App" {
 }
 
 resource "aws_s3_bucket_public_access_block" "App" {
-  bucket = aws_s3_bucket.App.id
-  block_public_acls       = false
-  block_public_policy     = false
+  bucket              = aws_s3_bucket.App.id
+  block_public_acls   = false
+  block_public_policy = false
 }
 
 resource "aws_s3_bucket_acl" "App" {
   depends_on = [aws_s3_bucket_ownership_controls.App]
-  bucket = aws_s3_bucket.App.id
-  acl    = "public-read"
+  bucket     = aws_s3_bucket.App.id
+  acl        = "public-read"
 }
 
 resource "aws_s3_bucket_website_configuration" "App" {
@@ -36,7 +36,7 @@ resource "aws_s3_bucket_website_configuration" "App" {
 }
 
 resource "aws_cloudfront_distribution" "App" {
-  price_class = var.cdn_price_class
+  price_class         = var.cdn_price_class
   default_root_object = "index.html"
   enabled             = true
   is_ipv6_enabled     = true
@@ -87,7 +87,7 @@ resource "aws_cloudfront_distribution" "App" {
 
   viewer_certificate {
     cloudfront_default_certificate = true
-    minimum_protocol_version = "TLSv1.1_2016"
+    minimum_protocol_version       = "TLSv1.1_2016"
   }
 }
 

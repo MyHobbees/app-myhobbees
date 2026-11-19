@@ -13,20 +13,20 @@ resource "aws_s3_bucket_ownership_controls" "Assets" {
 }
 
 resource "aws_s3_bucket_public_access_block" "Assets" {
-  bucket = aws_s3_bucket.Assets.id
-  block_public_acls       = false
-  block_public_policy     = false
+  bucket              = aws_s3_bucket.Assets.id
+  block_public_acls   = false
+  block_public_policy = false
 }
 
 resource "aws_s3_bucket_acl" "Assets" {
   depends_on = [aws_s3_bucket_ownership_controls.Assets]
-  bucket = aws_s3_bucket.Assets.id
-  acl    = "public-read"
+  bucket     = aws_s3_bucket.Assets.id
+  acl        = "public-read"
 }
 
 resource "aws_s3_bucket_policy" "AssetsPublicRead" {
   depends_on = [aws_s3_bucket_public_access_block.Assets]
-  bucket = aws_s3_bucket.Assets.id
+  bucket     = aws_s3_bucket.Assets.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -53,7 +53,7 @@ resource "aws_s3_bucket_website_configuration" "Assets" {
 }
 
 resource "aws_cloudfront_distribution" "Assets" {
-  price_class = var.cdn_price_class
+  price_class         = var.cdn_price_class
   default_root_object = "index.html"
   enabled             = true
   is_ipv6_enabled     = true
@@ -104,7 +104,7 @@ resource "aws_cloudfront_distribution" "Assets" {
 
   viewer_certificate {
     cloudfront_default_certificate = true
-    minimum_protocol_version = "TLSv1.1_2016"
+    minimum_protocol_version       = "TLSv1.1_2016"
   }
 }
 
