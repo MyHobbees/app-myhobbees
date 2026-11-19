@@ -36,18 +36,6 @@ jobs:
           AWS__TFSTATE_REGION: ${{ secrets.AWS__TFSTATE_REGION }}
           TF_STG__AWS_ACCESS_KEY: ${{ secrets.TF_STG__AWS_ACCESS_KEY }}
           TF_STG__AWS_SECRET_KEY: ${{ secrets.TF_STG__AWS_SECRET_KEY }}
-      # Diagnostic, temporary: read-only lookup of the back-office stg
-      # CloudFront distribution's domain_name, to hand over the final
-      # CNAME target for OVH. Reverted in a follow-up commit once read.
-      - name: Diagnostic - CloudFront domain name (back-office stg)
-        run: |
-          aws cloudfront list-distributions \
-            --query "DistributionList.Items[?contains(Aliases.Items, 'back-office-stg.myhobbees.fr')].{Id:Id,Domain:DomainName}" \
-            --output table
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.TF_STG__AWS_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_STG__AWS_SECRET_KEY }}
-          AWS_DEFAULT_REGION: eu-west-3
 
   terraform-database-stg:
     name: Terraform Database (stg)
@@ -223,18 +211,6 @@ jobs:
           AWS__TFSTATE_REGION: ${{ secrets.AWS__TFSTATE_REGION }}
           TF_PRD__AWS_ACCESS_KEY: ${{ secrets.TF_PRD__AWS_ACCESS_KEY }}
           TF_PRD__AWS_SECRET_KEY: ${{ secrets.TF_PRD__AWS_SECRET_KEY }}
-      # Diagnostic, temporary: read-only lookup of the back-office prd
-      # CloudFront distribution's domain_name, to hand over the final
-      # CNAME target for OVH. Reverted in a follow-up commit once read.
-      - name: Diagnostic - CloudFront domain name (back-office prd)
-        run: |
-          aws cloudfront list-distributions \
-            --query "DistributionList.Items[?contains(Aliases.Items, 'back-office.myhobbees.fr')].{Id:Id,Domain:DomainName}" \
-            --output table
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.TF_PRD__AWS_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_PRD__AWS_SECRET_KEY }}
-          AWS_DEFAULT_REGION: eu-west-3
 
   terraform-database-prd:
     name: Terraform Database (prd)
