@@ -71,6 +71,7 @@ resource "aws_lambda_function" "Api" {
       POSTHOG_HOST             = var.posthog_host
 
       STAGING_DB_IDENTIFIER = var.env == "prd" ? "${var.app}-stg-database" : ""
+      GITHUB_ACTIONS_TOKEN  = var.env == "prd" ? var.github_actions_token : ""
     }
   }
 

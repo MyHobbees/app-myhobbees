@@ -1,0 +1,28 @@
+name: Migrate Database (stg, on demand)
+
+# Dispatched by the prd Lambda API (POST /v1/staging/migrate) via a
+# dedicated GitHub token, right after it starts the stg RDS instance and
+# polls it back to 'available'. workflow_dispatch only: no push/PR
+# trigger, and only the TF_STG__* secrets this one job needs — kept
+# separate from ci-cd.yml so a leaked token can only ever re-run this one
+# job, never anything else in the shared pipeline.
+on:
+  workflow_dispatch:
+
+jobs:
+  migrate-database-stg:
+    name: Migrate Database (stg)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Install dependencies
+        run: pip install psycopg2-binary
+      - name: Migrate
+        run: python3.14 infrastructure/scripts/migrate.py stg
+        env:
+          TF_STG__DB_USERNAME: ${{ secrets.TF_STG__DB_USERNAME }}
+          TF_STG__DB_PASSWORD: ${{ secrets.TF_STG__DB_PASSWORD }}
+          TF_STG__DB_APP_PASSWORD: ${{ secrets.TF_STG__DB_APP_PASSWORD }}

@@ -157,3 +157,9 @@ variable "posthog_host" {
 variable "api_url" {
   default = "https://d0lz0ybs4c.execute-api.eu-west-3.amazonaws.com"
 }
+
+variable "github_actions_token" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
