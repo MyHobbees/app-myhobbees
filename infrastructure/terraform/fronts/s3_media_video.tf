@@ -28,7 +28,7 @@ resource "aws_s3_bucket_cors_configuration" "MediaVideo" {
   cors_rule {
     allowed_headers = ["*"]
     allowed_methods = ["PUT"]
-    allowed_origins = [var.back_office_endpoint, var.app_endpoint]
+    allowed_origins = [var.back_office_endpoint, var.app_endpoint, "https://${var.back_office_domain}"]
     expose_headers  = ["ETag"]
     max_age_seconds = 3000
   }

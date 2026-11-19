@@ -36,6 +36,7 @@ jobs:
           AWS__TFSTATE_REGION: ${{ secrets.AWS__TFSTATE_REGION }}
           TF_STG__AWS_ACCESS_KEY: ${{ secrets.TF_STG__AWS_ACCESS_KEY }}
           TF_STG__AWS_SECRET_KEY: ${{ secrets.TF_STG__AWS_SECRET_KEY }}
+          TF_STG__CLOUDFRONT_VIDEO_PUBLIC_KEY: ${{ secrets.TF_STG__CLOUDFRONT_VIDEO_PUBLIC_KEY }}
 
   terraform-database-stg:
     name: Terraform Database (stg)
@@ -93,6 +94,8 @@ jobs:
           TF_STG__CREDENTIAL_SHARE_SECRET: ${{ secrets.TF_STG__CREDENTIAL_SHARE_SECRET }}
           TF_STG__POSTHOG_PERSONAL_API_KEY: ${{ secrets.TF_STG__POSTHOG_PERSONAL_API_KEY }}
           TF_STG__POSTHOG_PROJECT_ID: ${{ secrets.TF_STG__POSTHOG_PROJECT_ID }}
+          TF_STG__CLOUDFRONT_VIDEO_PRIVATE_KEY: ${{ secrets.TF_STG__CLOUDFRONT_VIDEO_PRIVATE_KEY }}
+          TF_STG__CLOUDFRONT_VIDEO_KEY_ID: ${{ secrets.TF_STG__CLOUDFRONT_VIDEO_KEY_ID }}
 
   ##############################################
   # DEPLOY - STG (branch: dev)
@@ -211,6 +214,7 @@ jobs:
           AWS__TFSTATE_REGION: ${{ secrets.AWS__TFSTATE_REGION }}
           TF_PRD__AWS_ACCESS_KEY: ${{ secrets.TF_PRD__AWS_ACCESS_KEY }}
           TF_PRD__AWS_SECRET_KEY: ${{ secrets.TF_PRD__AWS_SECRET_KEY }}
+          TF_PRD__CLOUDFRONT_VIDEO_PUBLIC_KEY: ${{ secrets.TF_PRD__CLOUDFRONT_VIDEO_PUBLIC_KEY }}
 
   terraform-database-prd:
     name: Terraform Database (prd)
@@ -268,6 +272,8 @@ jobs:
           TF_PRD__CREDENTIAL_SHARE_SECRET: ${{ secrets.TF_PRD__CREDENTIAL_SHARE_SECRET }}
           TF_PRD__POSTHOG_PERSONAL_API_KEY: ${{ secrets.TF_PRD__POSTHOG_PERSONAL_API_KEY }}
           TF_PRD__POSTHOG_PROJECT_ID: ${{ secrets.TF_PRD__POSTHOG_PROJECT_ID }}
+          TF_PRD__CLOUDFRONT_VIDEO_PRIVATE_KEY: ${{ secrets.TF_PRD__CLOUDFRONT_VIDEO_PRIVATE_KEY }}
+          TF_PRD__CLOUDFRONT_VIDEO_KEY_ID: ${{ secrets.TF_PRD__CLOUDFRONT_VIDEO_KEY_ID }}
 
   ##############################################
   # DEPLOY - PRD (branch: main)
