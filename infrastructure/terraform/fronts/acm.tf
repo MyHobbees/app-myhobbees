@@ -32,10 +32,18 @@ output "back_office_cert_arn" {
 
 # Both environments' certificates are already confirmed ISSUED (validated
 # live against AWS before this resource was added), so this resolves on
-# its first real apply instead of polling — the hang this was split out to
-# avoid in step 1 no longer applies.
+# its first real apply instead of polling. The 10m timeout (well under the
+# provider's 75m default) still protects CI if a *future* cert replacement
+# (e.g. the create_before_destroy recreate above, or the ACM recycle after
+# 72h pending) ever lands without its validation CNAME in place at the
+# registrar first — that stays a possible operator slip, not something
+# this resource can enforce on its own.
 resource "aws_acm_certificate_validation" "BackOffice" {
   provider                = aws.us_east_1
   certificate_arn         = aws_acm_certificate.BackOffice.arn
   validation_record_fqdns = [tolist(aws_acm_certificate.BackOffice.domain_validation_options)[0].resource_record_name]
+
+  timeouts {
+    create = "10m"
+  }
 }
