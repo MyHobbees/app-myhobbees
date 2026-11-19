@@ -14,6 +14,7 @@
 - `/v1/shopify`: status, analytics, orders, products, customers proxying the Shopify Admin API — see [integration.md](integration.md)
 - `/v1/leads`: `POST /`, public, stores a `www-shop` "Me prévenir" pre-launch form submission — see [database.md](database.md); `GET /`, protected, lists submissions for the back-office; `POST /seed` and `DELETE /seed`, protected and additionally gated on `APP_ENV == "stg"` exactly (403 on `loc` and `prd` too), populate/clean test rows directly in Postgres — no Shopify involved, see [deployment.md](deployment.md)
 - `/v1/analytics`: `GET /posthog/overview`, protected, PostHog HogQL-derived overview (visitors, event counts, pageviews by day) cached per period; the "visitor → email" rate is sourced from the `leads` table count, not the PostHog event, for reliability
+- `/v1/infra/staging`: `GET /status`, `POST /start`, `POST /migrate` — protected, controls the stg RDS instance and its on-demand migrations from the prd back-office; documented in full in [infra.md](infra.md)'s "Staging DB control exception", not duplicated here
 
 ## Contracts
 

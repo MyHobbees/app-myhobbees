@@ -105,7 +105,7 @@ journey
 | Task | Acceptance criteria |
 | ---- | -------------------- |
 | 1... | `go test ./internal/githubactions/...` couvre succès, échec HTTP, et confirme le comportement 2xx réel (pas supposé) de l'API GitHub dispatch |
-| 2... | `go test ./internal/routes/... -run StagingMigrate` couvre les 3 scénarios ; aucun token ni corps de réponse GitHub ne fuit dans une réponse HTTP ou un message d'erreur client |
+| 2... | `go test ./internal/routes/... -run Staging_Migrate` couvre les 3 scénarios (le nom réel des tests suit la convention déjà en place dans le fichier, ex. `TestStaging_StartNotConfigured`) ; aucun token ni corps de réponse GitHub ne fuit dans une réponse HTTP ou un message d'erreur client |
 | 3... | Le nouveau fichier workflow est syntaxiquement valide (`yamllint`/lecture manuelle) et ne référence que des secrets `TF_STG__*` ; `ci-cd.yml` ne contient plus `migrate-database-stg` |
 | 4... | `terraform validate` passe pour `api` (stg et prd) avec la nouvelle variable |
 | — | `go vet ./...` et `go test ./...` passent sur tout `code/api` |

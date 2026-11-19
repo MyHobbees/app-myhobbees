@@ -17,6 +17,14 @@ import (
 // These target a single, fixed repo and a single, dedicated
 // workflow_dispatch-only workflow — never configurable otherwise, see
 // .github/workflows/migrate-stg-on-demand.yml.
+//
+// stagingMigrateRef only selects which branch's code the dispatched run
+// checks out — it does NOT select which branch's workflow *definition*
+// GitHub uses to accept the dispatch. workflow_dispatch only ever fires a
+// workflow file that exists on the repo's default branch (main); if this
+// file is ever moved/renamed without going through the normal dev -> main
+// promotion, GitHub will 404 the dispatch, which this handler cannot tell
+// apart from an invalid token (both surface as the generic 502 below).
 const (
 	stagingMigrateOwner        = "MyHobbees"
 	stagingMigrateRepo         = "app-myhobbees"

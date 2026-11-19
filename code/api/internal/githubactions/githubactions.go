@@ -35,12 +35,12 @@ func TriggerWorkflow(ctx context.Context, httpClient *http.Client, token, owner,
 
 	body, err := json.Marshal(map[string]string{"ref": ref})
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %v", ErrDispatchFailed, err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %v", ErrDispatchFailed, err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+token)

@@ -1,13 +1,37 @@
 name: Migrate Database (stg, on demand)
 
-# Dispatched by the prd Lambda API (POST /v1/staging/migrate) via a
+# Dispatched by the prd Lambda API (POST /v1/infra/staging/migrate) via a
 # dedicated GitHub token, right after it starts the stg RDS instance and
 # polls it back to 'available'. workflow_dispatch only: no push/PR
-# trigger, and only the TF_STG__* secrets this one job needs — kept
-# separate from ci-cd.yml so a leaked token can only ever re-run this one
-# job, never anything else in the shared pipeline.
+# trigger, and only the TF_STG__* secrets this one job needs. Separate
+# from ci-cd.yml so dispatch stays bounded to this one job (ci-cd.yml has
+# no workflow_dispatch trigger, so nothing else here is remotely
+# dispatchable) — but a leaked Actions:write token is still repo-wide for
+# everything else the Actions API exposes (rerun/cancel any run, delete
+# run logs); see aidd_docs/memory/infra.md's "Staging DB control
+# exception" for the full threat model and why that residual risk is
+# still preferable to giving the Lambda stg's master DB credentials.
+#
+# workflow_dispatch can only fire a workflow file that exists on the
+# repo's default branch (main) — `ref: dev` below only selects which
+# branch's code actually runs, not which branch's workflow definition is
+# used to accept the dispatch. This works in the normal flow because this
+# file and the Lambda that dispatches it both land on main together via
+# the usual dev -> main promotion; a future change that moves/renames this
+# file without going through that same promotion would silently break
+# dispatch (GitHub returns 404, indistinguishable from a bad token on the
+# API side — see staging.go).
+#
+# concurrency below serializes runs: migrate.py applies with
+# conn.autocommit = True and no advisory lock, so two dispatches racing
+# (e.g. a manual dispatch crossing the back-office's automatic one) could
+# otherwise run migrate.py twice in parallel against the same database.
 on:
   workflow_dispatch:
+
+concurrency:
+  group: migrate-stg
+  cancel-in-progress: false
 
 jobs:
   migrate-database-stg:
