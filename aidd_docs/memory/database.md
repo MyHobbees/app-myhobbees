@@ -14,4 +14,4 @@
 
 - Migrations are plain SQL files named `NNN_description.sql`, validated and applied by `infrastructure/scripts/migrate.py <stg|prd>`, which tracks what ran in a `_migrations` table it creates
 - The migration run connects as the privileged Terraform-managed user, then grants a separate, narrower app role (the one the API's `DB_USERNAME` targets) `SELECT/INSERT/UPDATE/DELETE` on all tables — migrations and runtime access are deliberately different roles
-- CI runs migrations per environment (`migrate-database-stg`/`-prd`) right after that environment's database Terraform step
+- For prd, CI still runs migrations in the push pipeline (`migrate-database-prd`) right after the database Terraform step. For stg, that push-triggered job is gone — migrations instead run on demand, dispatched from the back-office right after it starts the (normally stopped) stg instance — see [infra.md](infra.md)'s "Staging DB control exception" and [deployment.md](deployment.md)

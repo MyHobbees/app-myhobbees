@@ -350,3 +350,7 @@ export async function getStagingStatus(): Promise<StagingStatus> {
 export function startStaging() {
   return apiFetch<{ status: string }>('/v1/infra/staging/start', { method: 'POST' })
 }
+
+export function migrateStaging() {
+  return apiFetch<{ status: string }>('/v1/infra/staging/migrate', { method: 'POST' })
+}
