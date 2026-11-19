@@ -87,7 +87,7 @@ func TestStagingMountedAtStagingSubpath(t *testing.T) {
 	srv := httptest.NewServer(New())
 	defer srv.Close()
 
-	token, err := jwt.Sign(secret, "admin", "admin@myhobbees.fr", true, time.Hour)
+	token, err := jwt.Sign(secret, "admin", "admin@myhobbees.fr", true, jwt.AudienceBackoffice, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
@@ -130,7 +130,7 @@ func TestAdminsRouteRequiresSuperAdmin(t *testing.T) {
 	srv := httptest.NewServer(New())
 	defer srv.Close()
 
-	token, err := jwt.Sign(secret, "42", "admin@myhobbees.fr", false, time.Hour)
+	token, err := jwt.Sign(secret, "42", "admin@myhobbees.fr", false, jwt.AudienceBackoffice, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
@@ -166,6 +166,78 @@ func TestAdminsRouteRequiresSuperAdmin(t *testing.T) {
 				t.Fatalf("expected a non-super-admin to keep access to %s, got %d", path, res.StatusCode)
 			}
 		})
+	}
+}
+
+// TestAppRouteAcceptsAppToken and its siblings below cover the audience
+// separation this ticket requires: /v1/app/* and the admin group inside /v1
+// are mounted as sibling groups in app.go, each demanding its own aud.
+func TestAppRouteAcceptsAppToken(t *testing.T) {
+	secret := "test-secret-at-least-32-characters-long"
+	t.Setenv("JWT_SECRET", secret)
+	srv := httptest.NewServer(New())
+	defer srv.Close()
+
+	token, err := jwt.Sign(secret, "user-1", "user@myhobbees.fr", false, jwt.AudienceApp, time.Hour)
+	if err != nil {
+		t.Fatalf("sign: %v", err)
+	}
+
+	req, _ := http.NewRequest(http.MethodGet, srv.URL+"/v1/app/me", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("get: %v", err)
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200 for an app-audience token, got %d", res.StatusCode)
+	}
+}
+
+func TestAppRouteRejectsBackofficeToken(t *testing.T) {
+	secret := "test-secret-at-least-32-characters-long"
+	t.Setenv("JWT_SECRET", secret)
+	srv := httptest.NewServer(New())
+	defer srv.Close()
+
+	token, err := jwt.Sign(secret, "admin", "admin@myhobbees.fr", false, jwt.AudienceBackoffice, time.Hour)
+	if err != nil {
+		t.Fatalf("sign: %v", err)
+	}
+
+	req, _ := http.NewRequest(http.MethodGet, srv.URL+"/v1/app/me", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("get: %v", err)
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("expected 401 for a backoffice-audience token on /v1/app/me, got %d", res.StatusCode)
+	}
+}
+
+func TestAdminRouteRejectsAppToken(t *testing.T) {
+	secret := "test-secret-at-least-32-characters-long"
+	t.Setenv("JWT_SECRET", secret)
+	srv := httptest.NewServer(New())
+	defer srv.Close()
+
+	token, err := jwt.Sign(secret, "user-1", "user@myhobbees.fr", false, jwt.AudienceApp, time.Hour)
+	if err != nil {
+		t.Fatalf("sign: %v", err)
+	}
+
+	req, _ := http.NewRequest(http.MethodGet, srv.URL+"/v1/leads", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("get: %v", err)
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("expected 401 for an app-audience token on an admin route, got %d", res.StatusCode)
 	}
 }
 

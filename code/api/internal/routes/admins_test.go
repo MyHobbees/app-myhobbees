@@ -159,7 +159,7 @@ func adminsServer(t *testing.T) *httptest.Server {
 
 func tokenFor(t *testing.T, id int64, email string, isSuperAdmin bool) string {
 	t.Helper()
-	token, err := jwt.Sign(adminsTestJWTSecret, strconv.FormatInt(id, 10), email, isSuperAdmin, time.Hour)
+	token, err := jwt.Sign(adminsTestJWTSecret, strconv.FormatInt(id, 10), email, isSuperAdmin, jwt.AudienceBackoffice, time.Hour)
 	if err != nil {
 		t.Fatalf("sign token: %v", err)
 	}
