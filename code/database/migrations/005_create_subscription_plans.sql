@@ -2,7 +2,7 @@ CREATE TABLE subscription_plans (
     id                 SERIAL PRIMARY KEY,
     name               TEXT NOT NULL,
     frequency          TEXT NOT NULL CHECK (frequency IN ('monthly')),
-    price_cents        INTEGER NOT NULL,
+    price_cents        INTEGER NOT NULL CHECK (price_cents >= 0),
     stripe_product_id  TEXT NOT NULL,
     stripe_price_id    TEXT NOT NULL,
     active             BOOLEAN NOT NULL DEFAULT TRUE,

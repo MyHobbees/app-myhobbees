@@ -5,7 +5,7 @@ CREATE TABLE box_plans (
     name               TEXT NOT NULL,
     slug               TEXT NOT NULL UNIQUE,
     description        TEXT,
-    price_cents        INTEGER NOT NULL,
+    price_cents        INTEGER NOT NULL CHECK (price_cents >= 0),
     stripe_product_id  TEXT NOT NULL,
     stripe_price_id    TEXT NOT NULL,
     active             BOOLEAN NOT NULL DEFAULT TRUE,

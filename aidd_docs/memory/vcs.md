@@ -14,7 +14,7 @@
 ## Commits
 
 - Convention: conventional commits
-- Format: `type(scope): description`, scope names the app area (`app`, `shop`, `back-office`, `api`, `infra`, `theme`)
+- Format: `type(scope): description`, scope names the app area (`app`, `shop`, `back-office`, `api`, `infra`, `theme`, `database`)
 - Rules: lowercase, imperative mood
 
 ## Commit Strategy
