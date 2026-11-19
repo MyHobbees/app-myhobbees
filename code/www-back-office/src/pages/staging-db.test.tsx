@@ -138,7 +138,7 @@ describe('StagingDbPage', () => {
     expect(api.migrateStaging).not.toHaveBeenCalled()
   })
 
-  it('abandons the probe and shows an error when a poll tick rejects persistently', async () => {
+  it('abandons the probe and shows an error when a poll tick rejects', async () => {
     const user = userEvent.setup({
       advanceTimers: (ms) => vi.advanceTimersByTime(ms),
     })
@@ -194,5 +194,26 @@ describe('StagingDbPage', () => {
     })
     expect(api.getStagingStatus).toHaveBeenCalledTimes(1)
     expect(api.migrateStaging).not.toHaveBeenCalled()
+  })
+
+  it('lets "Migrer maintenant" re-trigger a migration on a base that was already available on load', async () => {
+    const user = userEvent.setup({
+      advanceTimers: (ms) => vi.advanceTimersByTime(ms),
+    })
+
+    vi.mocked(api.getStagingStatus).mockResolvedValue({
+      connected: true,
+      status: 'available',
+    })
+    vi.mocked(api.migrateStaging).mockResolvedValue({ status: 'triggered' })
+
+    render(<StagingDbPage />)
+
+    expect(await screen.findByText('Disponible')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /migrer maintenant/i }))
+
+    await waitFor(() => expect(api.migrateStaging).toHaveBeenCalledTimes(1))
+    expect(await screen.findByText(/migrations déclenchées/i)).toBeInTheDocument()
   })
 })

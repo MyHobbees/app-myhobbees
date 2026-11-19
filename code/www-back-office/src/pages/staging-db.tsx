@@ -36,6 +36,7 @@ export function StagingDbPage() {
   const [startError, setStartError] = useState<string | null>(null)
   const [migrateResult, setMigrateResult] = useState<string | null>(null)
   const [migrateError, setMigrateError] = useState<string | null>(null)
+  const [migrating, setMigrating] = useState(false)
 
   // Refs, not state: they drive the polling loop's own bookkeeping and
   // must never trigger a re-render on their own.
@@ -63,12 +64,27 @@ export function StagingDbPage() {
 
   async function triggerMigration() {
     setMigrateError(null)
+    setMigrating(true)
     try {
       await migrateStaging()
       setMigrateResult('Migrations déclenchées')
     } catch (error) {
       setMigrateError(error instanceof Error ? error.message : String(error))
+    } finally {
+      setMigrating(false)
     }
+  }
+
+  // The automatic poll-after-start only fires once, right after a fresh
+  // start — it never runs again once the base has settled on 'available'.
+  // Without this, there is no way back into /migrate for a base that was
+  // already running when the page loaded (e.g. a push landed on dev while
+  // stg was up, or someone started it from the AWS console instead of
+  // here): the workflow tab on GitHub becomes the only way to re-trigger
+  // it, which nothing in the UI points to.
+  async function handleMigrateNow() {
+    setMigrateResult(null)
+    await triggerMigration()
   }
 
   // Only ever called right after a start this session succeeds — a plain
@@ -189,10 +205,19 @@ export function StagingDbPage() {
             </Alert>
           ) : null}
 
-          <div>
+          <div className="flex gap-2">
             <Button disabled={busy || !canStart} onClick={handleStart}>
               Démarrer le staging
             </Button>
+            {status?.status === 'available' ? (
+              <Button
+                variant="outline"
+                disabled={migrating}
+                onClick={handleMigrateNow}
+              >
+                {migrating ? 'Migration en cours...' : 'Migrer maintenant'}
+              </Button>
+            ) : null}
           </div>
 
           <p className="text-sm text-muted-foreground">
