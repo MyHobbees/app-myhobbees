@@ -36,7 +36,7 @@ func TestStaging_StatusNotConfigured(t *testing.T) {
 	t.Setenv("JWT_SECRET", secret)
 	t.Setenv("STAGING_DB_IDENTIFIER", "")
 
-	token, err := jwt.Sign(secret, "admin", "admin@myhobbees.fr", true, time.Hour)
+	token, err := jwt.Sign(secret, "admin", "admin@myhobbees.fr", true, jwt.AudienceBackoffice, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
@@ -62,7 +62,7 @@ func TestStaging_StartNotConfigured(t *testing.T) {
 	t.Setenv("JWT_SECRET", secret)
 	t.Setenv("STAGING_DB_IDENTIFIER", "")
 
-	token, err := jwt.Sign(secret, "admin", "admin@myhobbees.fr", true, time.Hour)
+	token, err := jwt.Sign(secret, "admin", "admin@myhobbees.fr", true, jwt.AudienceBackoffice, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
@@ -88,7 +88,7 @@ func TestStaging_MigrateNotConfigured(t *testing.T) {
 	t.Setenv("JWT_SECRET", secret)
 	t.Setenv("GITHUB_ACTIONS_TOKEN", "")
 
-	token, err := jwt.Sign(secret, "admin", "admin@myhobbees.fr", true, time.Hour)
+	token, err := jwt.Sign(secret, "admin", "admin@myhobbees.fr", true, jwt.AudienceBackoffice, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
@@ -126,7 +126,7 @@ func TestStaging_MigrateSuccess(t *testing.T) {
 	githubactions.APIBaseURL = ghSrv.URL
 	defer func() { githubactions.APIBaseURL = original }()
 
-	token, err := jwt.Sign(secret, "admin", "admin@myhobbees.fr", true, time.Hour)
+	token, err := jwt.Sign(secret, "admin", "admin@myhobbees.fr", true, jwt.AudienceBackoffice, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
@@ -162,7 +162,7 @@ func TestStaging_MigrateGitHubError(t *testing.T) {
 	githubactions.APIBaseURL = ghSrv.URL
 	defer func() { githubactions.APIBaseURL = original }()
 
-	token, err := jwt.Sign(secret, "admin", "admin@myhobbees.fr", true, time.Hour)
+	token, err := jwt.Sign(secret, "admin", "admin@myhobbees.fr", true, jwt.AudienceBackoffice, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}

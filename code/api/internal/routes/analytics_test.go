@@ -24,7 +24,7 @@ func TestAnalytics_PostHogNotConfigured(t *testing.T) {
 	t.Setenv("POSTHOG_PERSONAL_API_KEY", "")
 	t.Setenv("POSTHOG_PROJECT_ID", "")
 
-	token, err := jwt.Sign(secret, "admin", "admin@myhobbees.fr", false, time.Hour)
+	token, err := jwt.Sign(secret, "admin", "admin@myhobbees.fr", false, jwt.AudienceBackoffice, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}

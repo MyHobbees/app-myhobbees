@@ -20,7 +20,7 @@ func withSecret(t *testing.T, secret string) {
 
 func TestMiddleware_ValidToken(t *testing.T) {
 	withSecret(t, testSecret)
-	token, err := jwt.Sign(testSecret, "admin", "admin@myhobbees.fr", false, time.Hour)
+	token, err := jwt.Sign(testSecret, "admin", "admin@myhobbees.fr", false, jwt.AudienceBackoffice, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
@@ -75,7 +75,7 @@ func TestMiddleware_MissingToken(t *testing.T) {
 
 func TestMiddleware_InvalidSignature(t *testing.T) {
 	withSecret(t, testSecret)
-	token, err := jwt.Sign("a-different-secret-at-least-32-chars", "admin", "admin@myhobbees.fr", false, time.Hour)
+	token, err := jwt.Sign("a-different-secret-at-least-32-chars", "admin", "admin@myhobbees.fr", false, jwt.AudienceBackoffice, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
@@ -99,7 +99,7 @@ func TestMiddleware_InvalidSignature(t *testing.T) {
 
 func TestMiddleware_ExpiredToken(t *testing.T) {
 	withSecret(t, testSecret)
-	token, err := jwt.Sign(testSecret, "admin", "admin@myhobbees.fr", false, -time.Hour)
+	token, err := jwt.Sign(testSecret, "admin", "admin@myhobbees.fr", false, jwt.AudienceBackoffice, -time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
@@ -141,6 +141,91 @@ func TestMiddleware_MalformedHeader(t *testing.T) {
 	}
 }
 
+func TestMiddleware_RejectsAppAudienceToken(t *testing.T) {
+	withSecret(t, testSecret)
+	token, err := jwt.Sign(testSecret, "user-1", "user@myhobbees.fr", false, jwt.AudienceApp, time.Hour)
+	if err != nil {
+		t.Fatalf("sign: %v", err)
+	}
+
+	called := false
+	next := okHandlerCalled(&called)
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/leads", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+
+	Middleware(next).ServeHTTP(rec, req)
+
+	if called {
+		t.Fatal("next handler must not be called with an app-audience token")
+	}
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", rec.Code)
+	}
+}
+
+func TestAppMiddleware_ValidToken(t *testing.T) {
+	withSecret(t, testSecret)
+	token, err := jwt.Sign(testSecret, "user-1", "user@myhobbees.fr", false, jwt.AudienceApp, time.Hour)
+	if err != nil {
+		t.Fatalf("sign: %v", err)
+	}
+
+	called := false
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		called = true
+		principal, ok := AppPrincipalFrom(r.Context())
+		if !ok {
+			t.Fatal("expected app principal in context")
+		}
+		if principal.UserID != "user-1" {
+			t.Fatalf("unexpected userID: %s", principal.UserID)
+		}
+		if principal.Email != "user@myhobbees.fr" {
+			t.Fatalf("unexpected email: %s", principal.Email)
+		}
+		w.WriteHeader(http.StatusOK)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/app/me", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+
+	AppMiddleware(next).ServeHTTP(rec, req)
+
+	if !called {
+		t.Fatal("expected next handler to be called")
+	}
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+}
+
+func TestAppMiddleware_RejectsBackofficeAudienceToken(t *testing.T) {
+	withSecret(t, testSecret)
+	token, err := jwt.Sign(testSecret, "admin", "admin@myhobbees.fr", false, jwt.AudienceBackoffice, time.Hour)
+	if err != nil {
+		t.Fatalf("sign: %v", err)
+	}
+
+	called := false
+	next := okHandlerCalled(&called)
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/app/me", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+
+	AppMiddleware(next).ServeHTTP(rec, req)
+
+	if called {
+		t.Fatal("next handler must not be called with a backoffice-audience token")
+	}
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", rec.Code)
+	}
+}
+
 func okHandlerCalled(called *bool) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		*called = true
@@ -155,7 +240,7 @@ func okHandlerCalled(called *bool) http.Handler {
 func TestMiddleware_EmptySecret(t *testing.T) {
 	withSecret(t, "")
 
-	forged, err := jwt.Sign("", "admin", "attacker@evil.com", false, time.Hour)
+	forged, err := jwt.Sign("", "admin", "attacker@evil.com", false, jwt.AudienceBackoffice, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
@@ -183,7 +268,7 @@ func TestMiddleware_ShortSecret(t *testing.T) {
 	shortSecret := "too-short"
 	withSecret(t, shortSecret)
 
-	forged, err := jwt.Sign(shortSecret, "admin", "attacker@evil.com", false, time.Hour)
+	forged, err := jwt.Sign(shortSecret, "admin", "attacker@evil.com", false, jwt.AudienceBackoffice, time.Hour)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}

@@ -18,14 +18,24 @@ type Claims struct {
 // ErrInvalidToken is returned when a token fails verification.
 var ErrInvalidToken = errors.New("invalid token")
 
-// Sign issues a signed token for the given subject, email and role, valid for ttl.
-func Sign(secret, subject, email string, isSuperAdmin bool, ttl time.Duration) (string, error) {
+// AudienceBackoffice is the aud claim for admin/back-office tokens, accepted
+// only by auth.Middleware.
+const AudienceBackoffice = "backoffice"
+
+// AudienceApp is the aud claim for app-user tokens, accepted only by
+// auth.AppMiddleware.
+const AudienceApp = "app"
+
+// Sign issues a signed token for the given subject, email, role and
+// audience, valid for ttl.
+func Sign(secret, subject, email string, isSuperAdmin bool, audience string, ttl time.Duration) (string, error) {
 	now := time.Now()
 	claims := Claims{
 		Email:        email,
 		IsSuperAdmin: isSuperAdmin,
 		RegisteredClaims: jwtlib.RegisteredClaims{
 			Subject:   subject,
+			Audience:  jwtlib.ClaimStrings{audience},
 			IssuedAt:  jwtlib.NewNumericDate(now),
 			ExpiresAt: jwtlib.NewNumericDate(now.Add(ttl)),
 		},
@@ -33,15 +43,16 @@ func Sign(secret, subject, email string, isSuperAdmin bool, ttl time.Duration) (
 	return jwtlib.NewWithClaims(jwtlib.SigningMethodHS256, claims).SignedString([]byte(secret))
 }
 
-// Verify parses and validates a token, returning its claims.
-func Verify(secret, token string) (*Claims, error) {
+// Verify parses and validates a token against the given audience, returning
+// its claims.
+func Verify(secret, token, audience string) (*Claims, error) {
 	claims := &Claims{}
 	parsed, err := jwtlib.ParseWithClaims(token, claims, func(t *jwtlib.Token) (any, error) {
 		if _, ok := t.Method.(*jwtlib.SigningMethodHMAC); !ok {
 			return nil, ErrInvalidToken
 		}
 		return []byte(secret), nil
-	})
+	}, jwtlib.WithAudience(audience))
 	if err != nil || !parsed.Valid {
 		return nil, ErrInvalidToken
 	}

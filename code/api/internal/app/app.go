@@ -80,6 +80,15 @@ func New() *chi.Mux {
 				r.Mount("/admins", routes.Admins())
 			})
 		})
+
+		// --- App-user routes : groupe distinct, protégé par AppMiddleware. ---
+		// Sibling to the admin group above, not nested inside it: an
+		// app-user token (aud=app) must never clear the admin group's
+		// auth.Middleware (aud=backoffice), and vice versa.
+		r.Group(func(r chi.Router) {
+			r.Use(auth.AppMiddleware)
+			r.Mount("/app", routes.App())
+		})
 	})
 
 	r.NotFound(func(w http.ResponseWriter, _ *http.Request) {

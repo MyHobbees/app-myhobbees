@@ -14,6 +14,7 @@ import (
 type ctxKey string
 
 const principalKey ctxKey = "principal"
+const appPrincipalKey ctxKey = "appPrincipal"
 
 // MinSecretBytes is the minimum acceptable length for JWT_SECRET. An empty
 // or short secret turns HS256 signing/verification into a trivially forgeable
@@ -24,6 +25,14 @@ type Principal struct {
 	Subject      string
 	Email        string
 	IsSuperAdmin bool
+}
+
+// AppPrincipal is the identity carried by an app-user JWT (aud=app), kept
+// separate from Principal so an app-user token can never be mistaken for an
+// admin Principal.
+type AppPrincipal struct {
+	UserID string
+	Email  string
 }
 
 // ValidateSecret returns an error when secret is too weak (empty, missing,
@@ -53,21 +62,12 @@ func ValidateShareSecret(secret string) error {
 
 func Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		secret := os.Getenv("JWT_SECRET")
-		if err := ValidateSecret(secret); err != nil {
-			// Defense in depth: even if a deployment skipped the boot-time
-			// check, never let a weak/empty secret validate any token.
-			httpjson.Error(w, http.StatusUnauthorized, "Server misconfigured")
-			return
-		}
-
-		token, ok := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
+		secret, token, ok := validatedBearerToken(w, r)
 		if !ok {
-			httpjson.Error(w, http.StatusUnauthorized, "Missing bearer token")
 			return
 		}
 
-		claims, err := jwt.Verify(secret, token)
+		claims, err := jwt.Verify(secret, token, jwt.AudienceBackoffice)
 		if err != nil {
 			httpjson.Error(w, http.StatusUnauthorized, "Invalid token")
 			return
@@ -83,6 +83,54 @@ func Middleware(next http.Handler) http.Handler {
 func PrincipalFrom(ctx context.Context) (Principal, bool) {
 	p, ok := ctx.Value(principalKey).(Principal)
 	return p, ok
+}
+
+// AppMiddleware authenticates an app-user request (aud=app), the sibling
+// of Middleware for /v1/app/* routes. A token that passes Middleware
+// (aud=backoffice) is rejected here, and vice versa.
+func AppMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		secret, token, ok := validatedBearerToken(w, r)
+		if !ok {
+			return
+		}
+
+		claims, err := jwt.Verify(secret, token, jwt.AudienceApp)
+		if err != nil {
+			httpjson.Error(w, http.StatusUnauthorized, "Invalid token")
+			return
+		}
+
+		principal := AppPrincipal{UserID: claims.Subject, Email: claims.Email}
+		next.ServeHTTP(w, r.WithContext(
+			context.WithValue(r.Context(), appPrincipalKey, principal),
+		))
+	})
+}
+
+func AppPrincipalFrom(ctx context.Context) (AppPrincipal, bool) {
+	p, ok := ctx.Value(appPrincipalKey).(AppPrincipal)
+	return p, ok
+}
+
+// validatedBearerToken checks JWT_SECRET's strength and extracts the Bearer
+// token from the request, writing the appropriate 401 itself when either
+// step fails. The bool return reports whether the caller should proceed.
+func validatedBearerToken(w http.ResponseWriter, r *http.Request) (secret, token string, ok bool) {
+	secret = os.Getenv("JWT_SECRET")
+	if err := ValidateSecret(secret); err != nil {
+		// Defense in depth: even if a deployment skipped the boot-time
+		// check, never let a weak/empty secret validate any token.
+		httpjson.Error(w, http.StatusUnauthorized, "Server misconfigured")
+		return "", "", false
+	}
+
+	token, ok = strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
+	if !ok {
+		httpjson.Error(w, http.StatusUnauthorized, "Missing bearer token")
+		return "", "", false
+	}
+	return secret, token, true
 }
 
 // RequireSuperAdmin must run after Middleware (which populates the
