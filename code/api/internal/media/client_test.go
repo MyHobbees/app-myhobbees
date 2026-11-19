@@ -220,6 +220,93 @@ func TestSignVideoURL_SignatureVerifiesAndExpires(t *testing.T) {
 	}
 }
 
+func TestImagePublicURL_NotConfigured(t *testing.T) {
+	t.Setenv("MEDIA_VIDEO_BUCKET", "myhobbees-stg-video")
+	t.Setenv("MEDIA_IMAGE_BUCKET", "myhobbees-stg-images")
+	t.Setenv("MEDIA_VIDEO_CDN_DOMAIN", "")
+	t.Setenv("MEDIA_IMAGE_CDN_DOMAIN", "")
+	t.Setenv("CLOUDFRONT_VIDEO_KEY_ID", "")
+	t.Setenv("CLOUDFRONT_VIDEO_PRIVATE_KEY", "")
+
+	client, err := FromEnv(context.Background())
+	if err != nil {
+		t.Fatalf("FromEnv: %v", err)
+	}
+
+	if _, err := client.ImagePublicURL("x.jpg"); !errors.Is(err, ErrNotConfigured) {
+		t.Fatalf("expected ErrNotConfigured, got %v", err)
+	}
+}
+
+func TestImagePublicURL_Success(t *testing.T) {
+	t.Setenv("MEDIA_VIDEO_BUCKET", "")
+	t.Setenv("MEDIA_IMAGE_BUCKET", "")
+	t.Setenv("MEDIA_VIDEO_CDN_DOMAIN", "")
+	t.Setenv("MEDIA_IMAGE_CDN_DOMAIN", "dimg456.cloudfront.net")
+	t.Setenv("CLOUDFRONT_VIDEO_KEY_ID", "")
+	t.Setenv("CLOUDFRONT_VIDEO_PRIVATE_KEY", "")
+
+	client, err := FromEnv(context.Background())
+	if err != nil {
+		t.Fatalf("FromEnv: %v", err)
+	}
+
+	readURL, err := client.ImagePublicURL("uploads/clip one.jpg")
+	if err != nil {
+		t.Fatalf("ImagePublicURL: %v", err)
+	}
+	const want = "https://dimg456.cloudfront.net/uploads/clip%20one.jpg"
+	if readURL != want {
+		t.Fatalf("ImagePublicURL = %q, want %q", readURL, want)
+	}
+}
+
+func TestSignVideoURL_EscapesSpecialCharactersInKey(t *testing.T) {
+	privateKey, pemKey := testKeyPair(t)
+
+	t.Setenv("MEDIA_VIDEO_BUCKET", "")
+	t.Setenv("MEDIA_IMAGE_BUCKET", "")
+	t.Setenv("MEDIA_VIDEO_CDN_DOMAIN", "d123.cloudfront.net")
+	t.Setenv("MEDIA_IMAGE_CDN_DOMAIN", "")
+	t.Setenv("CLOUDFRONT_VIDEO_KEY_ID", "K123TESTKEY")
+	t.Setenv("CLOUDFRONT_VIDEO_PRIVATE_KEY", pemKey)
+
+	client, err := FromEnv(context.Background())
+	if err != nil {
+		t.Fatalf("FromEnv: %v", err)
+	}
+
+	rawKey := "videos/clip #1 (final)?.mp4"
+	signedURL, expiresAt, err := client.SignVideoURL(rawKey, 15*time.Minute)
+	if err != nil {
+		t.Fatalf("SignVideoURL: %v", err)
+	}
+
+	parsed, err := url.Parse(signedURL)
+	if err != nil {
+		t.Fatalf("parse signed url: %v", err)
+	}
+	// A raw "#" or "?" in the key must not be mistaken for a URL fragment
+	// or the start of the query string the Expires/Signature/Key-Pair-Id
+	// params are appended to.
+	if parsed.Fragment != "" {
+		t.Fatalf("expected no URL fragment, got %q", parsed.Fragment)
+	}
+	for _, param := range []string{"Expires", "Signature", "Key-Pair-Id"} {
+		if parsed.Query().Get(param) == "" {
+			t.Fatalf("expected %q query param, got url %q", param, signedURL)
+		}
+	}
+
+	resourceURL := "https://d123.cloudfront.net/" + escapeObjectKey(rawKey)
+	policy := []byte(`{"Statement":[{"Resource":"` + resourceURL + `","Condition":{"DateLessThan":{"AWS:EpochTime":` + strconv.FormatInt(expiresAt.Unix(), 10) + `}}}]}`)
+	sum := sha1.Sum(policy)
+	signature := cloudFrontDecode(t, parsed.Query().Get("Signature"))
+	if err := rsa.VerifyPKCS1v15(&privateKey.PublicKey, crypto.SHA1, sum[:], signature); err != nil {
+		t.Fatalf("signature does not verify against the escaped resource url: %v", err)
+	}
+}
+
 func cloudFrontDecode(t *testing.T, s string) []byte {
 	t.Helper()
 	s = strings.ReplaceAll(s, "-", "+")

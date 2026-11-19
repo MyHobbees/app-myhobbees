@@ -14,6 +14,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -33,23 +34,27 @@ type Client struct {
 	videoBucket    string
 	imageBucket    string
 	videoCDNDomain string
+	imageCDNDomain string
 	keyPairID      string
 	privateKey     *rsa.PrivateKey
 }
 
 // FromEnv reads MEDIA_VIDEO_BUCKET, MEDIA_IMAGE_BUCKET,
-// MEDIA_VIDEO_CDN_DOMAIN, CLOUDFRONT_VIDEO_KEY_ID and
-// CLOUDFRONT_VIDEO_PRIVATE_KEY. It never fails outright when one of the two
-// capabilities' variables is missing — PresignUpload and SignVideoURL each
-// check their own prerequisites and return ErrNotConfigured individually.
+// MEDIA_VIDEO_CDN_DOMAIN, MEDIA_IMAGE_CDN_DOMAIN, CLOUDFRONT_VIDEO_KEY_ID
+// and CLOUDFRONT_VIDEO_PRIVATE_KEY. It never fails outright when one of the
+// three capabilities' variables is missing — PresignUpload, SignVideoURL
+// and ImagePublicURL each check their own prerequisites and return
+// ErrNotConfigured individually; FromEnv only bails out when none of them
+// have anything to work with.
 func FromEnv(ctx context.Context) (*Client, error) {
 	videoBucket := os.Getenv("MEDIA_VIDEO_BUCKET")
 	imageBucket := os.Getenv("MEDIA_IMAGE_BUCKET")
 	videoCDNDomain := os.Getenv("MEDIA_VIDEO_CDN_DOMAIN")
+	imageCDNDomain := os.Getenv("MEDIA_IMAGE_CDN_DOMAIN")
 	keyPairID := os.Getenv("CLOUDFRONT_VIDEO_KEY_ID")
 	privateKeyPEM := os.Getenv("CLOUDFRONT_VIDEO_PRIVATE_KEY")
 
-	if videoBucket == "" && imageBucket == "" && (videoCDNDomain == "" || keyPairID == "" || privateKeyPEM == "") {
+	if videoBucket == "" && imageBucket == "" && videoCDNDomain == "" && imageCDNDomain == "" && keyPairID == "" && privateKeyPEM == "" {
 		return nil, ErrNotConfigured
 	}
 
@@ -72,6 +77,7 @@ func FromEnv(ctx context.Context) (*Client, error) {
 		videoBucket:    videoBucket,
 		imageBucket:    imageBucket,
 		videoCDNDomain: videoCDNDomain,
+		imageCDNDomain: imageCDNDomain,
 		keyPairID:      keyPairID,
 		privateKey:     privateKey,
 	}, nil
@@ -135,7 +141,7 @@ func (c *Client) SignVideoURL(objectKey string, ttl time.Duration) (string, time
 	}
 
 	expiresAt := time.Now().Add(ttl)
-	resourceURL := fmt.Sprintf("https://%s/%s", c.videoCDNDomain, objectKey)
+	resourceURL := fmt.Sprintf("https://%s/%s", c.videoCDNDomain, escapeObjectKey(objectKey))
 
 	policy := fmt.Sprintf(
 		`{"Statement":[{"Resource":"%s","Condition":{"DateLessThan":{"AWS:EpochTime":%d}}}]}`,
@@ -164,4 +170,27 @@ func cloudFrontEncode(b []byte) string {
 	s = strings.ReplaceAll(s, "=", "_")
 	s = strings.ReplaceAll(s, "/", "~")
 	return s
+}
+
+// ImagePublicURL returns the public, unsigned CloudFront URL for objectKey
+// in the image CDN — images are served directly by CloudFront with no
+// signing (see infrastructure/terraform/fronts/s3_media_images.tf), unlike
+// the video bucket.
+func (c *Client) ImagePublicURL(objectKey string) (string, error) {
+	if c.imageCDNDomain == "" {
+		return "", ErrNotConfigured
+	}
+	return fmt.Sprintf("https://%s/%s", c.imageCDNDomain, escapeObjectKey(objectKey)), nil
+}
+
+// escapeObjectKey percent-escapes each "/"-separated path segment of an S3
+// object key, so a key containing a space, "?", "#" or non-ASCII character
+// doesn't corrupt the URL's path or the query parameters appended after it
+// (CloudFront signed URLs) or break with a false "object not found".
+func escapeObjectKey(objectKey string) string {
+	segments := strings.Split(objectKey, "/")
+	for i, segment := range segments {
+		segments[i] = url.PathEscape(segment)
+	}
+	return strings.Join(segments, "/")
 }

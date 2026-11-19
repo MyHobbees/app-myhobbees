@@ -133,6 +133,73 @@ func TestMedia_PresignUpload_Success(t *testing.T) {
 	}
 }
 
+func TestMedia_PresignUpload_VideoHasNoReadURL(t *testing.T) {
+	srv, token := mediaTestServer(t)
+	defer srv.Close()
+
+	t.Setenv("MEDIA_VIDEO_BUCKET", "myhobbees-stg-video")
+	t.Setenv("MEDIA_IMAGE_BUCKET", "myhobbees-stg-images")
+	t.Setenv("AWS_ACCESS_KEY_ID", "test-access-key")
+	t.Setenv("AWS_SECRET_ACCESS_KEY", "test-secret-key")
+	t.Setenv("AWS_REGION", "eu-west-3")
+
+	body, _ := json.Marshal(map[string]string{"bucket": "video", "key": "x.mp4"})
+	req, _ := http.NewRequest(http.MethodPost, srv.URL+"/presign-upload", bytes.NewReader(body))
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("post: %v", err)
+	}
+	defer res.Body.Close()
+
+	var out map[string]any
+	if err := json.NewDecoder(res.Body).Decode(&out); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if _, present := out["readUrl"]; present {
+		t.Fatalf("video is private: readUrl must not be returned, got %v", out)
+	}
+}
+
+func TestMedia_PresignUpload_ImageIncludesReadURL(t *testing.T) {
+	srv, token := mediaTestServer(t)
+	defer srv.Close()
+
+	t.Setenv("MEDIA_VIDEO_BUCKET", "myhobbees-stg-video")
+	t.Setenv("MEDIA_IMAGE_BUCKET", "myhobbees-stg-images")
+	t.Setenv("MEDIA_IMAGE_CDN_DOMAIN", "dimg456.cloudfront.net")
+	t.Setenv("AWS_ACCESS_KEY_ID", "test-access-key")
+	t.Setenv("AWS_SECRET_ACCESS_KEY", "test-secret-key")
+	t.Setenv("AWS_REGION", "eu-west-3")
+
+	body, _ := json.Marshal(map[string]string{"bucket": "image", "key": "photos/profile.jpg"})
+	req, _ := http.NewRequest(http.MethodPost, srv.URL+"/presign-upload", bytes.NewReader(body))
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("post: %v", err)
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", res.StatusCode)
+	}
+
+	var out struct {
+		ReadURL string `json:"readUrl"`
+	}
+	if err := json.NewDecoder(res.Body).Decode(&out); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	const want = "https://dimg456.cloudfront.net/photos/profile.jpg"
+	if out.ReadURL != want {
+		t.Fatalf("readUrl = %q, want %q", out.ReadURL, want)
+	}
+}
+
 func TestMedia_VideoURL_NotConfigured(t *testing.T) {
 	srv, token := mediaTestServer(t)
 	defer srv.Close()

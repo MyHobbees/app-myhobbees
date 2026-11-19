@@ -43,7 +43,7 @@ func Media() chi.Router {
 			return
 		}
 
-		url, expiresAt, err := client.PresignUpload(req.Context(), body.Bucket, body.Key)
+		uploadURL, expiresAt, err := client.PresignUpload(req.Context(), body.Bucket, body.Key)
 		if err != nil {
 			if errors.Is(err, media.ErrNotConfigured) {
 				httpjson.Error(w, http.StatusBadGateway, "Stockage média non configuré")
@@ -53,10 +53,20 @@ func Media() chi.Router {
 			return
 		}
 
-		httpjson.OK(w, http.StatusOK, map[string]any{
-			"url":       url,
+		response := map[string]any{
+			"url":       uploadURL,
 			"expiresAt": expiresAt,
-		})
+		}
+		// Images are served publicly once uploaded; give the caller the
+		// CloudFront read URL right away. Videos stay private: their read
+		// URL must go through GET /video-url instead.
+		if body.Bucket == "image" {
+			if readURL, err := client.ImagePublicURL(body.Key); err == nil {
+				response["readUrl"] = readURL
+			}
+		}
+
+		httpjson.OK(w, http.StatusOK, response)
 	})
 
 	r.Get("/video-url", func(w http.ResponseWriter, req *http.Request) {
