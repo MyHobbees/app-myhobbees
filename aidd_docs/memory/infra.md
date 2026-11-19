@@ -18,8 +18,13 @@ flowchart TD
 
 ## Conventions
 
-- Most resources in `fronts` and `api` (the S3 buckets/CloudFront distributions, the Lambda function, the API Gateway) are written but commented out in the `.tf` files; only the `database` module's VPC lookup, security group, parameter group, and subnet group are live. Enabling a resource is a deliberate uncomment-and-apply step, not automatic.
 - `www-shop` has no Terraform of its own; it deploys through Shopify Oxygen instead.
+
+## Back-office custom domain
+
+- `back-office.myhobbees.fr` (prd) and `back-office-stg.myhobbees.fr` (stg) are ACM-validated custom domains on `aws_cloudfront_distribution.BackOffice` (`infrastructure/terraform/fronts/s3_back-office.tf`/`acm.tf`), DNS-managed at OVH — not Route53, no OVH Terraform provider involved. The distribution's own `*.cloudfront.net` domain (`back_office_endpoint` output) keeps working unaffected: CloudFront serves the default cert there, the custom cert only via SNI for the configured alias.
+- The certificate is requested in a dedicated `us-east-1`-aliased provider — CloudFront only accepts ACM certs from that region, regardless of `var.aws_app_region` (`eu-west-3`) used everywhere else.
+- Two CNAMEs live at OVH per environment: the DNS *validation* record (keeps the cert renewable — AWS re-validates against it periodically; removing it after the cert first issues will let the certificate silently fail to auto-renew near its ~13-month expiry) and the *alias* record (the actual domain → CloudFront routing). Both must stay.
 
 ## Staging DB control exception (cross-env IAM)
 

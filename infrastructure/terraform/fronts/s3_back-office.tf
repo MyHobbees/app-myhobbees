@@ -12,15 +12,15 @@ resource "aws_s3_bucket_ownership_controls" "BackOffice" {
 }
 
 resource "aws_s3_bucket_public_access_block" "BackOffice" {
-  bucket = aws_s3_bucket.BackOffice.id
-  block_public_acls       = false
-  block_public_policy     = false
+  bucket              = aws_s3_bucket.BackOffice.id
+  block_public_acls   = false
+  block_public_policy = false
 }
 
 resource "aws_s3_bucket_acl" "BackOffice" {
   depends_on = [aws_s3_bucket_ownership_controls.BackOffice]
-  bucket = aws_s3_bucket.BackOffice.id
-  acl    = "public-read"
+  bucket     = aws_s3_bucket.BackOffice.id
+  acl        = "public-read"
 }
 
 resource "aws_s3_bucket_website_configuration" "BackOffice" {
@@ -36,10 +36,11 @@ resource "aws_s3_bucket_website_configuration" "BackOffice" {
 }
 
 resource "aws_cloudfront_distribution" "BackOffice" {
-  price_class = var.cdn_price_class
+  price_class         = var.cdn_price_class
   default_root_object = "index.html"
   enabled             = true
   is_ipv6_enabled     = true
+  aliases             = [var.back_office_domain]
 
   origin {
     domain_name = aws_s3_bucket_website_configuration.BackOffice.website_endpoint
@@ -86,8 +87,9 @@ resource "aws_cloudfront_distribution" "BackOffice" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
-    minimum_protocol_version = "TLSv1.1_2016"
+    acm_certificate_arn      = aws_acm_certificate_validation.BackOffice.certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 }
 
