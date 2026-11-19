@@ -231,11 +231,6 @@ jobs:
           AWS__TFSTATE_REGION: ${{ secrets.AWS__TFSTATE_REGION }}
           TF_PRD__AWS_ACCESS_KEY: ${{ secrets.TF_PRD__AWS_ACCESS_KEY }}
           TF_PRD__AWS_SECRET_KEY: ${{ secrets.TF_PRD__AWS_SECRET_KEY }}
-      - name: TEMP - check ACM cert status (remove after one run)
-        run: aws acm describe-certificate --certificate-arn arn:aws:acm:us-east-1:661526246221:certificate/727739f9-1fc0-4195-b520-fea2d23179d5 --region us-east-1 --query 'Certificate.Status' --output text
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.TF_PRD__AWS_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_PRD__AWS_SECRET_KEY }}
 
   terraform-database-prd:
     name: Terraform Database (prd)
