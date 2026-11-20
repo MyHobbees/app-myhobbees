@@ -73,6 +73,7 @@ body {
 body > main {
   flex: 1;
   margin: 0;
+  min-width: 0;
 }
 
 img {
@@ -1895,6 +1896,7 @@ aside main {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
   overflow-x: auto;
+  position: relative;
 }
 
 .subscription-comparison {
@@ -2591,6 +2593,11 @@ label.me-prevenir-field-body {
   font-weight: 700;
 }
 
+.me-prevenir-offer-price {
+  color: var(--color-pink);
+  font-weight: 800;
+}
+
 .me-prevenir-offer-text {
   color: var(--color-dream-text);
   font-size: 0.9375rem;
@@ -2729,7 +2736,7 @@ label.me-prevenir-field-body {
 
   .header {
     grid-template-columns: 1fr auto 1fr;
-    padding-inline: 2rem;
+    padding-inline: 1rem;
   }
 
   .header-menu-desktop {
@@ -2787,6 +2794,12 @@ label.me-prevenir-field-body {
 
   .order-search-inputs {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 56rem) {
+  .header {
+    padding-inline: 2rem;
   }
 }
 

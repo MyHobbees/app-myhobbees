@@ -70,11 +70,12 @@ function Hero() {
             prendre du temps pour toi.
           </p>
           <div className="hero-actions">
-            <Link className="button button-primary" to="/abonnements">
-              Découvrir nos abonnements
-            </Link>
-            <Link className="button button-outline" to="/collections/all">
-              Découvrir nos boxes
+            <Link
+              className="button button-primary"
+              to="/me-prevenir"
+              onClick={() => capture('cta_click', {placement: 'home_hero'})}
+            >
+              Me prévenir
             </Link>
           </div>
         </div>

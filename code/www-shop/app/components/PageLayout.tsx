@@ -8,7 +8,6 @@ import type {
 import {Aside} from '~/components/Aside';
 import {Footer} from '~/components/Footer';
 import {
-  CartToggle,
   Header,
   HeaderCtaLink,
   HeaderMenu,
@@ -33,7 +32,7 @@ export function PageLayout({
   return (
     <Aside.Provider>
       <CartAside cart={cart} />
-      <MobileMenuAside cart={cart} />
+      <MobileMenuAside />
       {header && (
         <Header header={header} cart={cart} publicStoreDomain={publicStoreDomain} />
       )}
@@ -59,13 +58,12 @@ function CartAside({cart}: {cart: PageLayoutProps['cart']}) {
   );
 }
 
-function MobileMenuAside({cart}: {cart: PageLayoutProps['cart']}) {
+function MobileMenuAside() {
   return (
     <Aside type="mobile" heading="MENU">
       <HeaderMenu viewport="mobile" />
       <div className="mobile-menu-actions">
         <HeaderCtaLink placement="mobile_menu" />
-        <CartToggle cart={cart} />
       </div>
     </Aside>
   );
