@@ -2593,6 +2593,11 @@ label.me-prevenir-field-body {
   font-weight: 700;
 }
 
+.me-prevenir-offer-price {
+  color: var(--color-pink);
+  font-weight: 800;
+}
+
 .me-prevenir-offer-text {
   color: var(--color-dream-text);
   font-size: 0.9375rem;

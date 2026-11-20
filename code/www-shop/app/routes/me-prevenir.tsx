@@ -27,6 +27,12 @@ const ACQUISITION_CHANNELS = [
   'Autre',
 ] as const;
 
+const OFFER_PRICES: Record<SubscriptionOfferSlug, string> = {
+  'box-creative': 'À partir de 30 €',
+  'box-app': '35 €',
+  'app-only': '10 €',
+};
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export type ActionResponse =
@@ -254,6 +260,9 @@ export default function MePrevenir() {
                         />
                         <span aria-hidden="true" className="me-prevenir-offer-radio" />
                         <span className="me-prevenir-offer-title">{item.title}</span>
+                        <span className="me-prevenir-offer-price">
+                          {OFFER_PRICES[item.slug]}
+                        </span>
                         <span className="me-prevenir-offer-text">{item.tagline}</span>
                       </label>
                     ))}

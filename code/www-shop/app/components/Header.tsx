@@ -47,7 +47,7 @@ export function Header({header, cart, publicStoreDomain}: HeaderProps) {
           <strong>My Hobbees</strong>
         </NavLink>
         <HeaderMenu viewport="desktop" />
-        <HeaderCtas cart={cart} />
+        <HeaderCtas />
       </header>
     </>
   );
@@ -90,14 +90,11 @@ export function HeaderMenu({viewport}: {viewport: Viewport}) {
   );
 }
 
-function HeaderCtas({cart}: Pick<HeaderProps, 'cart'>) {
+function HeaderCtas() {
   return (
     <nav className="header-ctas" aria-label="Actions rapides">
       <span className="header-cta-desktop">
         <HeaderCtaLink placement="header" />
-      </span>
-      <span className="header-cta-desktop">
-        <CartToggle cart={cart} />
       </span>
       <HeaderMenuMobileToggle />
     </nav>
