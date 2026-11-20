@@ -57,12 +57,8 @@ export async function loader({request, context, params}: Route.LoaderArgs) {
   // Update cart id in cookie
   const headers = cart.setCartId(cartResult.id);
 
-  // redirect to checkout
-  if (cartResult.checkoutUrl) {
-    return redirect(cartResult.checkoutUrl, {headers});
-  } else {
-    throw new Error('No checkout URL found');
-  }
+  // No real checkout available yet: send buy-now links to the waitlist instead of Shopify's checkout.
+  return redirect('/me-prevenir', {headers});
 }
 
 export default function Component() {

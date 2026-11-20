@@ -56,7 +56,7 @@ func Auth() chi.Router {
 			return
 		}
 
-		token, err := jwt.Sign(os.Getenv("JWT_SECRET"), strconv.FormatInt(a.ID, 10), a.Email, a.IsSuperAdmin, 24*time.Hour)
+		token, err := jwt.Sign(os.Getenv("JWT_SECRET"), strconv.FormatInt(a.ID, 10), a.Email, a.IsSuperAdmin, jwt.AudienceBackoffice, 24*time.Hour)
 		if err != nil {
 			httpjson.Error(w, http.StatusInternalServerError, "Could not sign token")
 			return

@@ -68,7 +68,7 @@ func TestLogin_BootstrapsAndSucceeds(t *testing.T) {
 		t.Fatal("expected a non-empty token")
 	}
 
-	claims, err := jwt.Verify(testJWTSecret, token)
+	claims, err := jwt.Verify(testJWTSecret, token, jwt.AudienceBackoffice)
 	if err != nil {
 		t.Fatalf("verify issued token: %v", err)
 	}
