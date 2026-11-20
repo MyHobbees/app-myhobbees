@@ -28,7 +28,7 @@ const ACQUISITION_CHANNELS = [
 ] as const;
 
 const OFFER_PRICES: Record<SubscriptionOfferSlug, string> = {
-  'box-creative': 'À partir de 30 €',
+  'box-creative': '30 €',
   'box-app': '35 €',
   'app-only': '10 €',
 };
