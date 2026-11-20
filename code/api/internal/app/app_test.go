@@ -54,6 +54,7 @@ func TestProtectedRoutesRequireAuth(t *testing.T) {
 		"/v1/analytics/posthog/overview?days=30",
 		"/v1/leads",
 		"/v1/admins",
+		"/v1/media/video-url?key=x.mp4",
 	}
 
 	for _, path := range protectedPaths {

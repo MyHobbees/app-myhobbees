@@ -67,6 +67,7 @@ func New() *chi.Mux {
 			r.Mount("/shopify", routes.Shopify())
 			r.Mount("/analytics", routes.Analytics())
 			r.Mount("/infra/staging", routes.Staging())
+			r.Mount("/media", routes.Media())
 			r.Get("/leads", routes.ListLeads)
 			r.Post("/leads/seed", routes.SeedLeads)
 			r.Delete("/leads/seed", routes.CleanupSeedLeads)

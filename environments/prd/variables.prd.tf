@@ -163,3 +163,30 @@ variable "github_actions_token" {
   sensitive = true
   default   = ""
 }
+
+variable "media_video_cdn_domain" {
+  type    = string
+  default = ""
+}
+
+variable "media_image_cdn_domain" {
+  type    = string
+  default = ""
+}
+
+variable "cloudfront_video_key_id" {
+  type    = string
+  default = ""
+}
+
+variable "cloudfront_video_private_key" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "cloudfront_video_public_key" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
